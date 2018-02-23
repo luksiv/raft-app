@@ -7,6 +7,8 @@ import android.widget.TextView;
 
 public class ClientActivity extends AppCompatActivity {
 
+    private static final String TAG = ClientActivity.class.getSimpleName();
+
     String mRoomId;
 
     @Override

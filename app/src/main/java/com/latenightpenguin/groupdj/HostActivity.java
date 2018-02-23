@@ -11,6 +11,7 @@ import org.w3c.dom.Text;
 import java.util.Random;
 
 public class HostActivity extends AppCompatActivity {
+    private static final String TAG = HostActivity.class.getSimpleName();
     // Declaring variables
     String mRoomId;
 

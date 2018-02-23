@@ -10,6 +10,8 @@ import android.widget.Toast;
 
 public class StartActivity extends AppCompatActivity {
 
+    private static final String TAG = StartActivity.class.getSimpleName();
+
     // View variables
     Button btn_Host;
     Button btn_Join;
