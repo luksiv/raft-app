@@ -5,9 +5,9 @@ Repository for android application.
 Project was created with **Android Studio 3.2 CANARY 3** (https://developer.android.com/studio/preview/index.html)
 
 If you're having troubles launching the project try :
- 1. Sync the project with gradle.
-    * ![Scheme](readmeimages/sync_gradle_icon.jpg)
 
+ 1. Sync the project with gradle.
+    * ![Scheme](readmeimages/sync_gradle_icon.png)
  2. Try using the aforementioned version.
 
 # Useful resources:
