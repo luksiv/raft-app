@@ -22,7 +22,7 @@ public class LogInActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_host_login);
+        setContentView(R.layout.activity_login);
 
         // Assigning a edit text fields for et_UserName and et_Password
         et_UserName = (EditText) findViewById(R.id.et_UserName);
