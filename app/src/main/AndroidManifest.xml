@@ -17,8 +17,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".HostActivity" />
-        <activity android:name=".ClientActivity"/>
-        <activity android:name=".LogInActivity"/>
+        <activity android:name=".ClientActivity" />
+        <activity android:name=".LogInActivity" />
+        <activity android:name=".AddSongActivity"></activity>
     </application>
 
 </manifest>
