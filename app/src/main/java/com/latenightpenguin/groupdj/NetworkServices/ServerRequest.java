@@ -1,5 +1,10 @@
 package com.latenightpenguin.groupdj.NetworkServices;
 
+import android.telecom.Call;
+import android.view.View;
+
+import java.io.InputStream;
+
 public class ServerRequest {
     private String path;
     private String body;
@@ -51,11 +56,26 @@ public class ServerRequest {
         return arguments;
     }
 
+    public String getArgumentsFormatted() {
+        StringBuilder formattedArguments = new StringBuilder();
+        formattedArguments.append("?");
+
+        for(int i = 0; i < arguments.length; i++) {
+            formattedArguments.append(arguments[i]);
+
+            if(i < arguments.length - 1) {
+                formattedArguments.append("&");
+            }
+        }
+
+        return formattedArguments.toString();
+    }
+
     public void setArguments(String[] arguments) {
         this.arguments = arguments;
     }
 
     public interface Callback {
-        void execute();
+        void execute(String response);
     }
 }
