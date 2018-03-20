@@ -43,7 +43,13 @@ public class HostActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_host);
+        // AUTHENTIFICATION
+        AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID, AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
+        builder.setScopes(new String[]{"user-read-private", "streaming"});
+        AuthenticationRequest request = builder.build();
+        AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
 
+        // ROOM CREATION
         Random rand = new Random();
         int userID = rand.nextInt();
 
@@ -61,11 +67,7 @@ public class HostActivity extends AppCompatActivity implements
             }
         });
 
-        // AUTHENTIFICATION
-        AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID, AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
-        builder.setScopes(new String[]{"user-read-private", "streaming"});
-        AuthenticationRequest request = builder.build();
-        AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
+
     }
 
     @Override
@@ -137,8 +139,11 @@ public class HostActivity extends AppCompatActivity implements
 
     @Override
     public void onLoginFailed(Error var1) {
-        Toast.makeText(this, "Login failed", Toast.LENGTH_LONG).show();
-        Log.d(TAG, "Login failed");
+        if(var1.toString() == "kSpErrorNeedsPremium"){
+            Toast.makeText(this, "Premium account needed to be a host", Toast.LENGTH_LONG).show();
+            finish();
+        }
+        Log.d(TAG, "Login failed : "+ var1.toString());
     }
 
     @Override
