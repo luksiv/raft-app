@@ -49,15 +49,6 @@ public class HostActivity extends AppCompatActivity implements
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
 
-        // ROOM CREATION
-        Random rand = new Random();
-        int userID = rand.nextInt();
-
-        TextView status = (TextView)findViewById(R.id.tw_RoomId);
-
-        ServerHelper serverHelper = new ServerHelper();
-        serverHelper.createRoom(userID, status);
-
         btnAdd = findViewById(R.id.btn_AddSong);
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -126,6 +117,15 @@ public class HostActivity extends AppCompatActivity implements
     public void onLoggedIn() {
         Log.d(TAG, "User logged in");
         Toast.makeText(this, "User logged in", Toast.LENGTH_LONG).show();
+
+        // ROOM CREATION
+        Random rand = new Random();
+        int userID = rand.nextInt();
+
+        TextView status = (TextView)findViewById(R.id.tw_RoomId);
+
+        ServerHelper serverHelper = new ServerHelper();
+        serverHelper.createRoom(userID, status);
 
         // This is the line that plays a song.
         mPlayer.playUri(null, "spotify:track:3K4HG9evC7dg3N0R9cYqk4", 0, 0);
