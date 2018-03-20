@@ -41,4 +41,7 @@ dependencies {
 
     // This library handles HTTP communications
     implementation 'com.squareup.okhttp3:okhttp:3.4.1'
+
+    // This library handles images from the internet
+    implementation 'com.squareup.picasso:picasso:2.5.2'
 }
