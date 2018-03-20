@@ -57,17 +57,5 @@ public class StartActivity extends AppCompatActivity {
                 }
             }
         });
-
-        btn_Login = (Button) findViewById(R.id.btn_Login);
-        btn_Login.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Creates a new intent to LogInActivity and starts it
-                Intent intent = new Intent(StartActivity.super.getApplicationContext(),
-                        LogInActivity.class);
-                startActivity(intent);
-            }
-        });
-
     }
 }
