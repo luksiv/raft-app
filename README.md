@@ -1,6 +1,6 @@
 # IMPORTANT
 * *As of **2018/03/21** release of the app in the master branch the app won't work properly.*
-* *Message **@Lukas** on **Slack** for more details and to fix the problem.*
+* *Message **@sivickas** on **Slack** for more details and to fix the problem.*
 
 
 # Android app
