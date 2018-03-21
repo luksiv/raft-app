@@ -139,7 +139,7 @@ public class HostActivity extends AppCompatActivity implements
     public void onLoginFailed(Error var1) {
         if(var1.toString() == "kSpErrorNeedsPremium"){
             Toast.makeText(this, "Premium account needed to be a host", Toast.LENGTH_LONG).show();
-            //finish();
+            finish();
         }
         Log.d(TAG, "Login failed : "+ var1.toString());
     }
