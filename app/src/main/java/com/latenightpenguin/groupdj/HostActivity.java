@@ -286,9 +286,7 @@ public class HostActivity extends AppCompatActivity implements
         Toast.makeText(this, "User logged in", Toast.LENGTH_LONG).show();
 
         // ROOM CREATION
-        // TODO: User id is not necessary, remove it and change it with spotify email or id.
-        Random rand = new Random();
-        int userID = rand.nextInt();
+        String userID = "test@test.com";
 
         TextView status = (TextView) findViewById(R.id.tw_RoomId);
 

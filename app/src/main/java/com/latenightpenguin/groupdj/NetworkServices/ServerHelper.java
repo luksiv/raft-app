@@ -34,7 +34,7 @@ public class ServerHelper {
      * @param id user id.
      * @param uiElement ui element to update after finishing task.
      */
-    public void createRoom(final int id, final TextView uiElement) {
+    public void createRoom(final String id, final TextView uiElement) {
         final ServerRequest.Callback callback = new ServerRequest.Callback() {
             TextView view = uiElement;
 
@@ -59,7 +59,7 @@ public class ServerHelper {
             }
         };
 
-        ServerRequest request = new ServerRequest(METHOD_POST, "api/rooms", String.valueOf(id), callback, null);
+        ServerRequest request = new ServerRequest(METHOD_POST, "api/rooms", id, callback, null);
         new ConnectionManager().execute(request);
     }
 
