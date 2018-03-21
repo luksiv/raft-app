@@ -23,7 +23,17 @@ import com.spotify.sdk.android.player.PlayerEvent;
 import com.spotify.sdk.android.player.Spotify;
 import com.spotify.sdk.android.player.SpotifyPlayer;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.Random;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class HostActivity extends AppCompatActivity implements
         SpotifyPlayer.NotificationCallback, ConnectionStateCallback{
@@ -33,8 +43,13 @@ public class HostActivity extends AppCompatActivity implements
     private static final String REDIRECT_URI = "lnpapp://callback";
     private static final int REQUEST_CODE = 1337;
 
+    // variables
+    private String mAccessToken;
     // Obejects
     private Player mPlayer;
+    User mUser;
+    private Call mCall;
+    private OkHttpClient mOkHttpClient = new OkHttpClient();
 
     // Declaring view elements
     ImageButton btnAdd;
@@ -46,7 +61,7 @@ public class HostActivity extends AppCompatActivity implements
 
         // AUTHENTIFICATION
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID, AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
-        builder.setScopes(new String[]{"user-read-private", "streaming"});
+        builder.setScopes(new String[]{"user-read-private", "user-read-email", "streaming"});
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
 
@@ -67,7 +82,9 @@ public class HostActivity extends AppCompatActivity implements
         if (requestCode == REQUEST_CODE) {
             AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
             if (response.getType() == AuthenticationResponse.Type.TOKEN) {
-                Config playerConfig = new Config(this, response.getAccessToken(), CLIENT_ID);
+                mAccessToken = response.getAccessToken();
+                getUserInfo();
+                Config playerConfig = new Config(this, mAccessToken, CLIENT_ID);
                 Spotify.getPlayer(playerConfig, this, new SpotifyPlayer.InitializationObserver() {
                     @Override
                     public void onInitialized(SpotifyPlayer spotifyPlayer) {
@@ -154,5 +171,52 @@ public class HostActivity extends AppCompatActivity implements
     public void onConnectionMessage(String message) {
         Log.d(TAG, "Received connection message: " + message);
         Toast.makeText(this, "Received connection message: " + message, Toast.LENGTH_LONG).show();
+    }
+
+    public void getUserInfo() {
+
+        final Request request = new Request.Builder()
+                .url("https://api.spotify.com/v1/me")
+                .addHeader("Authorization", "Bearer " + mAccessToken)
+                .build();
+
+        cancelCall();
+        mCall = mOkHttpClient.newCall(request);
+
+        mCall.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Toast.makeText(HostActivity.this, "Failed to fetch data: " + e, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    final JSONObject jsonObject = new JSONObject(response.body().string());
+                    mUser = new User(jsonObject.getString("id"),
+                            jsonObject.getString("display_name"),
+                            jsonObject.getString("email"),
+                            jsonObject.getString("country"));
+                    updateUserView();
+                } catch (JSONException e) {
+                    Toast.makeText(HostActivity.this, "Failed to parse data: " + e, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    private void cancelCall() {
+        if (mCall != null) {
+            mCall.cancel();
+        }
+    }
+
+    private void updateUserView() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ((TextView)findViewById(R.id.tw_user)).setText(mUser.toString());
+            }
+        });
     }
 }
