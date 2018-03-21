@@ -6,119 +6,146 @@
     android:layout_height="match_parent"
     tools:context=".HostActivity">
 
-    <TextView
-        android:id="@+id/tw_user"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="null"/>
-    <TextView
-        android:id="@+id/tw_RoomId"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:text="@string/creating_room" />
+
     <LinearLayout
+        android:id="@+id/root_playerControls"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_centerInParent="true">
+        android:layout_centerHorizontal="true"
+        android:orientation="vertical">
+
         <ImageView
             android:id="@+id/iv_albumArt"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/tw_RoomId"
-            android:padding="16dp"/>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-            <Button
-                android:id="@+id/btn_queue_1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Queue 50 cent - candy shop"
-                android:onClick="queue1"/>
-            <Button
-                android:id="@+id/btn_queue_2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Queue Hoobastank - The reason"
-                android:onClick="queue2"/>
-            <Button
-                android:id="@+id/btn_queue_3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Queue Future - Mask Off"
-                android:onClick="queue3"/>
-        </LinearLayout>
+            android:layout_width="182dp"
+            android:layout_height="182dp"
+            android:layout_gravity="center" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
+
             <Button
-                android:id="@+id/btn_previous"
-                android:layout_weight="1"
+                android:id="@+id/btn_playPause"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="PREVIOUS" />
-            <Button
-                android:id="@+id/btn_play"
                 android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="PLAY"/>
-            <Button
-                android:id="@+id/btn_pause"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="PAUSE"/>
+                android:text="PAUSE" />
+
             <Button
                 android:id="@+id/btn_next"
-                android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="NEXT"/>
+                android:layout_weight="1"
+                android:text="NEXT" />
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
             android:orientation="vertical">
+
             <TextView
                 android:id="@+id/tw_artist"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Artist"/>
+                android:text="Artist" />
+
             <TextView
                 android:id="@+id/tw_songName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Song name"/>
+                android:text="Song name" />
+
             <TextView
                 android:id="@+id/tw_album"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Album"/>
-            <TextView
-                android:id="@+id/tw_prevTrack"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Prev"/>
+                android:text="Album" />
+
             <TextView
                 android:id="@+id/tw_nextTrack"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Next"/>
+                android:text="Next" />
+        </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tv_trackTime"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:text="0:00"/>
+            <SeekBar
+                android:id="@+id/sb_seekTrack"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="10" />
+            <TextView
+                android:id="@+id/tv_trackLenght"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:text="0:00"/>
         </LinearLayout>
 
     </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/root_playerControls"
+        android:layout_marginTop="32dp"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/btn_queue_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="queue1"
+            android:text="Queue 50 cent - candy shop" />
+
+        <Button
+            android:id="@+id/btn_queue_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="queue2"
+            android:text="Queue Hoobastank - The reason" />
+
+        <Button
+            android:id="@+id/btn_queue_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="queue3"
+            android:text="Queue Future - Mask Off" />
+    </LinearLayout>
+
     <ImageButton
         android:id="@+id/btn_AddSong"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:src="@android:drawable/ic_input_add"/>
+        android:src="@android:drawable/ic_input_add" />
+
+    <TextView
+        android:id="@+id/tw_RoomId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/tw_user"
+        android:text="@string/creating_room" />
+
+    <TextView
+        android:id="@+id/tw_user"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:text="null" />
 
 </RelativeLayout>
