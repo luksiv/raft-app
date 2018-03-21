@@ -38,4 +38,7 @@ dependencies {
 
     // This library handles music playback
     implementation 'com.spotify.sdk:spotify-player-24-noconnect-2.20b@aar'
+
+    // This library handles HTTP communications
+    implementation 'com.squareup.okhttp3:okhttp:3.4.1'
 }

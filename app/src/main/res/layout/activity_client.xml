@@ -12,6 +12,12 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:text="RoomID"/>
+    <TextView
+        android:id="@+id/tw_user"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="null"/>
+
     <ImageButton
         android:id="@+id/btn_AddSong"
         android:layout_width="wrap_content"
