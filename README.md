@@ -13,9 +13,6 @@ If you're having troubles launching the project try :
 
  1. Sync the project with gradle.
     * ![Scheme](readmeimages/sync_gradle_icon.png)
-    
-# IMPORTANT
-* The app won't work until your debug key is in the spotify api permissions. ( Message @Lukas on Slack )
 
 ## Guidelines 
 * Android project and code guidelines (https://github.com/ribot/android-guidelines/blob/master/project_and_code_guidelines.md)
