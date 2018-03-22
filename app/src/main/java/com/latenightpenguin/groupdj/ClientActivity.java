@@ -120,7 +120,7 @@ public class ClientActivity extends AppCompatActivity {
                             jsonObject.getString("display_name"),
                             jsonObject.getString("email"),
                             jsonObject.getString("country"));
-                            updateUserView();
+                    updateUserView();
                 } catch (JSONException e) {
                     Toast.makeText(ClientActivity.this, "Failed to parse data: " + e, Toast.LENGTH_SHORT).show();
                 }
@@ -138,7 +138,7 @@ public class ClientActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                ((TextView)findViewById(R.id.tw_user)).setText(mUser.toString());
+                ((TextView) findViewById(R.id.tw_user)).setText(mUser.toString());
             }
         });
     }

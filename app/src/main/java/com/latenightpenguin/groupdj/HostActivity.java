@@ -258,7 +258,7 @@ public class HostActivity extends AppCompatActivity implements
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyPause) {
             btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_media_play));
         }
-        if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged){
+        if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged) {
 
         }
         updateView();

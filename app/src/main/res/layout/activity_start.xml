@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".StartActivity">
-    
+
     <EditText
         android:id="@+id/et_RoomId"
         android:layout_width="128dp"
@@ -20,15 +20,15 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/et_RoomId"
         android:layout_centerHorizontal="true"
-        android:text="Join"/>
+        android:text="Join" />
 
     <Button
         android:id="@+id/btn_HostRoom"
         android:layout_width="128dp"
         android:layout_height="wrap_content"
         android:layout_below="@id/btn_JoinRoom"
-        android:layout_marginTop="64dp"
         android:layout_centerHorizontal="true"
-        android:text="Host"/>
+        android:layout_marginTop="64dp"
+        android:text="Host" />
 
 </RelativeLayout>

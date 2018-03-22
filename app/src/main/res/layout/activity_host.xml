@@ -9,49 +9,53 @@
     <!-- top bar -->
     <RelativeLayout
         android:id="@+id/root_topBar"
-        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:background="@android:color/background_dark">
+        android:background="@android:color/background_dark"
+        android:orientation="horizontal">
+
         <Button
-            android:text="Room info"
-            android:textSize="8sp"
             android:id="@+id/btn_roomInfo"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_alignParentLeft="true"/>
+            android:layout_alignParentLeft="true"
+            android:text="Room info"
+            android:textSize="8sp" />
+
         <Button
-            android:text="Show playlist"
-            android:textSize="8sp"
             android:id="@+id/btn_toggleView"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_toLeftOf="@id/btn_AddSong"/>
+            android:layout_toLeftOf="@id/btn_AddSong"
+            android:text="Show playlist"
+            android:textSize="8sp" />
+
         <Button
-            android:text="Add song"
-            android:textSize="8sp"
             android:id="@+id/btn_AddSong"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_toLeftOf="@id/btn_roomSettings"/>
+            android:layout_toLeftOf="@id/btn_roomSettings"
+            android:text="Add song"
+            android:textSize="8sp" />
+
         <Button
-            android:text="Settings"
-            android:textSize="8sp"
             android:id="@+id/btn_roomSettings"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_alignParentRight="true"/>
+            android:layout_alignParentRight="true"
+            android:text="Settings"
+            android:textSize="8sp" />
     </RelativeLayout>
 
     <!-- player -->
     <LinearLayout
         android:id="@+id/root_player"
-        android:layout_marginTop="48dp"
-        android:padding="8dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:orientation="vertical">
+        android:layout_marginTop="48dp"
+        android:orientation="vertical"
+        android:padding="8dp">
 
         <!-- album art -->
         <ImageView
@@ -87,27 +91,29 @@
             <TextView
                 android:id="@+id/tv_trackTime"
                 android:layout_width="0dp"
-                android:layout_weight="1"
                 android:layout_height="match_parent"
-                android:text="0:00"/>
+                android:layout_weight="1"
+                android:text="0:00" />
+
             <SeekBar
                 android:id="@+id/sb_seekTrack"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="10" />
+
             <TextView
                 android:id="@+id/tv_trackLenght"
                 android:layout_width="0dp"
-                android:layout_weight="1"
                 android:layout_height="match_parent"
-                android:text="0:00"/>
+                android:layout_weight="1"
+                android:text="0:00" />
         </LinearLayout>
         <!-- player controls -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_gravity="center">
+            android:layout_gravity="center"
+            android:orientation="horizontal">
 
             <ImageButton
                 android:id="@+id/btn_playPause"
