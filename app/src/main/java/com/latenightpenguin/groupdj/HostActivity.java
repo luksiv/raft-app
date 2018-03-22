@@ -291,7 +291,7 @@ public class HostActivity extends AppCompatActivity implements
         TextView status = (TextView) findViewById(R.id.tw_RoomId);
 
         ServerHelper serverHelper = new ServerHelper();
-        serverHelper.createRoom(userID, status);
+        serverHelper.registerUser(userID, status);
 
         mCurrentPlaybackState = mPlayer.getPlaybackState();
         mMetadata = mPlayer.getMetadata();
@@ -310,7 +310,7 @@ public class HostActivity extends AppCompatActivity implements
     public void onLoginFailed(Error error) {
         if (error.toString() == "kSpErrorNeedsPremium") {
             Toast.makeText(this, "Premium account needed to be a host", Toast.LENGTH_LONG).show();
-            finish();
+            //finish();
         }
         Log.d(TAG, "Login failed : " + error.toString());
     }

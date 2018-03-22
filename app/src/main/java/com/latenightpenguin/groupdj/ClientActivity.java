@@ -9,6 +9,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -44,15 +45,20 @@ public class ClientActivity extends AppCompatActivity {
 
     // Declaring view elements
     ImageButton btnAdd;
-    String mRoomId;
+    int mRoomId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_client);
         try {
-            mRoomId = getIntent().getStringExtra("roomId");
-            ((TextView) findViewById(R.id.tw_RoomId)).setText(mRoomId);
+            mRoomId = getIntent().getIntExtra("roomId", 0);
+
+            String email = "testas123@gmail.com";
+            TextView status = findViewById(R.id.tw_RoomId);
+
+            ServerHelper serverHelper = new ServerHelper();
+            serverHelper.connectUser(email, status);
         } catch (Exception e) {
             Log.v(TAG, e.getMessage());
         }
@@ -71,6 +77,7 @@ public class ClientActivity extends AppCompatActivity {
         builder.setScopes(new String[]{"user-read-email"});
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
+
 
     }
 

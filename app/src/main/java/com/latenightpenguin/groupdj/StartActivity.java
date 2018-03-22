@@ -43,22 +43,14 @@ public class StartActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 // Getting the room id
-                String roomId = ((EditText) findViewById(R.id.et_RoomId)).getText().toString();
-                if(roomId.length() == getResources().getInteger(R.integer.room_id_lenght)) {
-                    // Creates a new intent to ClientActivity and starts it
-                    Intent intent = new Intent(StartActivity.super.getApplicationContext(),
-                            ClientActivity.class);
-                    // Put roomId to intent
-                    intent.putExtra("roomId", roomId.toUpperCase());
-                    // Hiding the keyboard to make the transition more clean
-                    hideKeyboard(StartActivity.this);
-                    startActivity(intent);
-                } else {
-                    // Shows a toast message informing that the room id is invalid
-                    Toast.makeText(StartActivity.super.getApplicationContext(),
-                            "Invalid Room ID",
-                            Toast.LENGTH_SHORT).show();
-                }
+                int roomId = Integer.parseInt(((EditText) findViewById(R.id.et_RoomId)).getText().toString());
+                // Creates a new intent to ClientActivity and starts it
+                Intent intent = new Intent(StartActivity.super.getApplicationContext(), ClientActivity.class);
+                // Put roomId to intent
+                intent.putExtra("roomId", roomId);
+                // Hiding the keyboard to make the transition more clean
+                hideKeyboard(StartActivity.this);
+                startActivity(intent);
             }
         });
     }

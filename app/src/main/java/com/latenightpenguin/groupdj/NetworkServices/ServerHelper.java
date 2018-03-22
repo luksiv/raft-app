@@ -22,6 +22,7 @@ public class ServerHelper {
     private static final String SERVER_URL = "https://group-dj-app.herokuapp.com/";
     private static final String METHOD_GET = "GET";
     private static final String METHOD_POST = "POST";
+    private static final String METHOD_PUT = "PUT";
     private static final String CONNECTION_ERROR = "There was error connecting to the server";
     private static final String RESPONSE_ERROR = "There was error getting response";
 
@@ -59,7 +60,70 @@ public class ServerHelper {
             }
         };
 
-        ServerRequest request = new ServerRequest(METHOD_POST, "api/rooms", id, callback, null);
+        ServerRequest request = new ServerRequest(METHOD_POST, "api/rooms", "\"" + id + "\"", callback, null);
+        new ConnectionManager().execute(request);
+    }
+
+    /**
+     * Registers user and creates room
+     * @param id users email
+     * @param uiElement ui element for login code
+     */
+    public void registerUser(final String id, final TextView uiElement) {
+        final ServerRequest.Callback callback = new ServerRequest.Callback() {
+
+            @Override
+            public void execute(String response) {
+                createRoom(id, uiElement);
+            }
+        };
+
+        ServerRequest request = new ServerRequest(METHOD_POST, "api/users", "\"" + id + "\"", callback, null);
+        new ConnectionManager().execute(request);
+    }
+
+    public void connectUser(final String id, final TextView uiElement) {
+        final ServerRequest.Callback callback = new ServerRequest.Callback() {
+            TextView view = uiElement;
+
+            @Override
+            public void execute(String response) {
+                connectToRoom(id, uiElement);
+            }
+        };
+
+        ServerRequest request = new ServerRequest(METHOD_POST, "api/users", "\"" + id + "\"", callback, null);
+        new ConnectionManager().execute(request);
+    }
+
+    public void connectToRoom(final String id, final TextView uiElement) {
+        final ServerRequest.Callback callback = new ServerRequest.Callback() {
+            TextView view = uiElement;
+
+            @Override
+            public void execute(String response) {
+                if(response != null) {
+                    if(response.equals(CONNECTION_ERROR) || response.equals(RESPONSE_ERROR)){
+                        uiElement.setText(response);
+                    }
+
+                    try {
+                        JSONObject roomInfo = new JSONObject(response.toString());
+                        int roomId = roomInfo.getInt("id");
+                        int loginCode = roomInfo.getInt("logincode");
+                        uiElement.setText("Login code is " + String.valueOf(loginCode));
+                    } catch (JSONException e) {
+                        Log.d("MusicDJ", response.toString());
+                        uiElement.setText("Not connected");
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+
+        String body = "{ \"email\": \"test@test.test\", \"logincode\": 434282 }";
+
+        ServerRequest request = new ServerRequest(METHOD_PUT, "api/users", body, callback, null);
         new ConnectionManager().execute(request);
     }
 
