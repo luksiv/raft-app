@@ -13,12 +13,9 @@ import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
-import com.spotify.sdk.android.player.ConnectionStateCallback;
-import com.spotify.sdk.android.player.Error;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.IOException;
 
@@ -55,7 +52,7 @@ public class ClientActivity extends AppCompatActivity {
             mRoomId = getIntent().getIntExtra("roomId", 0);
 
             String email = "testas123@gmail.com";
-            TextView status = findViewById(R.id.tw_RoomId);
+            TextView status = findViewById(R.id.tv_RoomId);
 
             ServerHelper serverHelper = new ServerHelper();
             serverHelper.connectUser(email, status);

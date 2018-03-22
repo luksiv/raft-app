@@ -38,7 +38,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.Random;
+import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -92,9 +92,9 @@ public class HostActivity extends AppCompatActivity implements
     private Handler mHandler = new Handler();
     // UI ELEMENTS
 
-    private ImageButton btnAdd;
-    private Button btnPause;
-    private Button btnNext;
+    private Button btnAdd;
+    private ImageButton btnPause;
+    private ImageButton btnNext;
     private SeekBar sbTrack;
 
 
@@ -246,18 +246,17 @@ public class HostActivity extends AppCompatActivity implements
 
     @Override
     public void onPlaybackEvent(PlayerEvent playerEvent) {
-        // TODO: Clean up the macaroni code with proper playerEvent handling
         Log.d(TAG, "Playback event received: " + playerEvent.name());
         mCurrentPlaybackState = mPlayer.getPlaybackState();
         mMetadata = mPlayer.getMetadata();
         Log.d(TAG, "Playback State: " + mCurrentPlaybackState.toString());
         Log.d(TAG, "Metadata: " + mMetadata.toString());
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyPlay) {
-            btnPause.setText("Pause");
+            btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_media_pause));
             seekUpdation();
         }
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyPause) {
-            btnPause.setText("Play");
+            btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_media_play));
         }
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged){
 
@@ -288,7 +287,7 @@ public class HostActivity extends AppCompatActivity implements
         // ROOM CREATION
         String userID = "test@test.com";
 
-        TextView status = (TextView) findViewById(R.id.tw_RoomId);
+        TextView status = findViewById(R.id.tv_RoomId);
 
         ServerHelper serverHelper = new ServerHelper();
         serverHelper.registerUser(userID, status);
@@ -308,7 +307,7 @@ public class HostActivity extends AppCompatActivity implements
 
     @Override
     public void onLoginFailed(Error error) {
-        if (error.toString() == "kSpErrorNeedsPremium") {
+        if (Objects.equals(error.toString(), "kSpErrorNeedsPremium")) {
             Toast.makeText(this, "Premium account needed to be a host", Toast.LENGTH_LONG).show();
             //finish();
         }
@@ -353,7 +352,6 @@ public class HostActivity extends AppCompatActivity implements
                             jsonObject.getString("display_name"),
                             jsonObject.getString("email"),
                             jsonObject.getString("country"));
-                    updateUserView();
                 } catch (JSONException e) {
                     Toast.makeText(HostActivity.this, "Failed to parse data: " + e, Toast.LENGTH_SHORT).show();
                 }
@@ -365,15 +363,6 @@ public class HostActivity extends AppCompatActivity implements
         if (mCall != null) {
             mCall.cancel();
         }
-    }
-
-    private void updateUserView() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ((TextView) findViewById(R.id.tw_user)).setText(mUser.toString());
-            }
-        });
     }
 
     private void updateTextView(final int id, final String text) {
@@ -390,21 +379,13 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void run() {
                 try {
-                    updateTextView(R.id.tw_album, mMetadata.currentTrack.albumName);
-                    updateTextView(R.id.tw_artist, mMetadata.currentTrack.artistName);
-                    updateTextView(R.id.tw_songName, mMetadata.currentTrack.name);
+                    updateTextView(R.id.tv_artist, mMetadata.currentTrack.artistName);
+                    updateTextView(R.id.tv_songName, mMetadata.currentTrack.name);
                     updateTextView(R.id.tv_trackLenght,
                             Utilities.formatSeconds(mMetadata.currentTrack.durationMs));
                     Picasso.with(HostActivity.this).
                             load(mMetadata.currentTrack.albumCoverWebUrl)
                             .into((ImageView) findViewById(R.id.iv_albumArt));
-                    if (mMetadata.nextTrack != null) {
-                        updateTextView(R.id.tw_nextTrack, "Next song: "
-                                + mMetadata.nextTrack.name + " by " + mMetadata.nextTrack.artistName);
-                    } else {
-                        updateTextView(R.id.tw_nextTrack, "Next song: none");
-                    }
-
                 } catch (NullPointerException e) {
                     Log.e(TAG, "Metadata is null: " + mMetadata);
                 }
@@ -451,33 +432,4 @@ public class HostActivity extends AppCompatActivity implements
         Spotify.destroyPlayer(this);
         super.onDestroy();
     }
-
-
-    // DEMONSTRATIONAL PURPOSES ONLY
-    // TODO: Remove queue1,2,3 after we show them off
-
-    public void queue1(View view) {
-        if (mCurrentPlaybackState.isPlaying) {
-            mPlayer.queue(mOperationCallback, "spotify:track:3VzJE6yGuj8fDExUh6TLnc");
-        } else {
-            mPlayer.playUri(mOperationCallback, "spotify:track:3VzJE6yGuj8fDExUh6TLnc", 0, 0);
-        }
-    }
-
-    public void queue2(View view) {
-        if (mCurrentPlaybackState.isPlaying) {
-            mPlayer.queue(mOperationCallback, "spotify:track:6Gn02ZC8juXwQ10Xk7ACXx");
-        } else {
-            mPlayer.playUri(mOperationCallback, "spotify:track:6Gn02ZC8juXwQ10Xk7ACXx", 0, 0);
-        }
-    }
-
-    public void queue3(View view) {
-        if (mCurrentPlaybackState.isPlaying) {
-            mPlayer.queue(mOperationCallback, "spotify:track:0VgkVdmE4gld66l8iyGjgx");
-        } else {
-            mPlayer.playUri(mOperationCallback, "spotify:track:0VgkVdmE4gld66l8iyGjgx", 0, 0);
-        }
-    }
-
 }
