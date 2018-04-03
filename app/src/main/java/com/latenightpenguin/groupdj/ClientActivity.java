@@ -10,11 +10,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
+import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Error;
+import com.spotify.sdk.android.player.Spotify;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,6 +24,11 @@ import org.w3c.dom.Text;
 
 import java.io.IOException;
 
+import kaaes.spotify.webapi.android.SpotifyApi;
+import kaaes.spotify.webapi.android.SpotifyCallback;
+import kaaes.spotify.webapi.android.SpotifyError;
+import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Album;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -144,5 +151,10 @@ public class ClientActivity extends AppCompatActivity {
                 ((TextView)findViewById(R.id.tw_user)).setText(mUser.toString());
             }
         });
+
+        SpotifyData data = new SpotifyData(mAccessToken);
+
+        Log.v("AAA", data.searchTracks("eminem").toString());
+
     }
 }
