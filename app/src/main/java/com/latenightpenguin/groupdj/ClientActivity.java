@@ -65,6 +65,7 @@ public class ClientActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(ClientActivity.super.getApplicationContext(), AddSongActivity.class);
+                intent.putExtra("accessToken", mAccessToken);
                 startActivity(intent);
             }
         });

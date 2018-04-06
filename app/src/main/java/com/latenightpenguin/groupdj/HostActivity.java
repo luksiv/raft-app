@@ -57,7 +57,7 @@ public class HostActivity extends AppCompatActivity implements
 
     private static final String REDIRECT_URI = "lnpapp://callback";
 
-    private static final int REQUEST_CODE = 1337;
+    private static final int AUTH_CODE = 1337;
 
     // FIELDS
 
@@ -72,12 +72,12 @@ public class HostActivity extends AppCompatActivity implements
     private final Player.OperationCallback mOperationCallback = new Player.OperationCallback() {
         @Override
         public void onSuccess() {
-            Log.e("Callback", "OK!");
+            Log.d("Callback", "OK!");
         }
 
         @Override
         public void onError(Error error) {
-            Log.e("Callback", "ERROR:" + error);
+            Log.d("Callback", "ERROR:" + error);
         }
     };
 
@@ -108,15 +108,16 @@ public class HostActivity extends AppCompatActivity implements
                 AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
         builder.setScopes(new String[]{"user-read-private", "user-read-email", "streaming"});
         AuthenticationRequest request = builder.build();
-        AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
+        AuthenticationClient.openLoginActivity(this, AUTH_CODE, request);
 
         btnAdd = findViewById(R.id.btn_AddSong);
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(HostActivity.super.getApplicationContext(),
+                Intent intent = new Intent(HostActivity.this,
                         AddSongActivity.class);
-                startActivity(intent);
+                intent.putExtra("accessToken", mAccessToken);
+                startActivityForResult(intent, 333);
             }
         });
         btnPause = findViewById(R.id.btn_playPause);
@@ -220,7 +221,8 @@ public class HostActivity extends AppCompatActivity implements
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        if (requestCode == REQUEST_CODE) {
+        // Authentication result
+        if (requestCode == AUTH_CODE) {
             AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
             if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                 mAccessToken = response.getAccessToken();
@@ -240,6 +242,13 @@ public class HostActivity extends AppCompatActivity implements
                     }
                 });
                 getUserInfo();
+            }
+        }
+
+        // AddSongActivity result
+        if (requestCode == 333){
+            if(resultCode == AddSongActivity.RESULT_OK){
+                mPlayer.queue(mOperationCallback, intent.getStringExtra("uri"));
             }
         }
     }

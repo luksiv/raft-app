@@ -6,4 +6,32 @@
     android:layout_height="match_parent"
     tools:context=".AddSongActivity">
 
+
+    <LinearLayout
+        android:id="@+id/root_searchBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/et_searchInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="12" />
+
+        <ImageButton
+            android:id="@+id/ib_searchTestButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_menu_search" />
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/lw_searchResults"
+        android:layout_below="@id/root_searchBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"></ListView>
+
 </RelativeLayout>
