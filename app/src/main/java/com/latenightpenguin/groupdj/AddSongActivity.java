@@ -102,7 +102,7 @@ public class AddSongActivity extends AppCompatActivity {
                     public void run() {
                         getTracks();
                     }
-                }, 250); // 600ms delay before the timer executes the „run“ method from TimerTask
+                }, 750); // 750ms delay before the timer executes the „run“ method from TimerTask
 
             }
         });
