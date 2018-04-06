@@ -16,6 +16,8 @@ import kaaes.spotify.webapi.android.models.UserPrivate;
 import retrofit.RetrofitError;
 
 public class SpotifyData {
+    final static String TAG = SpotifyData.class.getSimpleName();
+
     SpotifyApi api;
     SpotifyService services;
 
@@ -106,13 +108,16 @@ public class SpotifyData {
     {
         try
         {
-            return getUser().email;
+            UserPrivate user = getUser();
+            Log.i(TAG, user.toString());
+            return user.email;
         }catch (RetrofitError er)
         {
             SpotifyError spotifyError = SpotifyError.fromRetrofitError(er);
+            Log.e(TAG, spotifyError.getMessage());
         }catch (Exception ex)
         {
-
+            Log.e(TAG, ex.getMessage());
         }
 
         return null;

@@ -98,6 +98,9 @@ public class ClientActivity extends AppCompatActivity {
                 mAccessToken = response.getAccessToken();
                 getUserInfo();
             }
+            if (response.getType() == AuthenticationResponse.Type.ERROR){
+                Log.e("Authentification", response.getError());
+            }
         }
     }
 
