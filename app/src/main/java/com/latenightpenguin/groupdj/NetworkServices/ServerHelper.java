@@ -4,6 +4,9 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.latenightpenguin.groupdj.RoomInfo;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -17,6 +20,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class ServerHelper {
     private static final String SERVER_URL = "https://group-dj-app.herokuapp.com/";
@@ -35,7 +39,7 @@ public class ServerHelper {
      * @param id user id.
      * @param uiElement ui element to update after finishing task.
      */
-    public void createRoom(final String id, final TextView uiElement) {
+    public void createRoom(final RoomInfo room, final String id, final TextView uiElement) {
         final ServerRequest.Callback callback = new ServerRequest.Callback() {
             TextView view = uiElement;
 
@@ -50,6 +54,10 @@ public class ServerHelper {
                         JSONObject roomInfo = new JSONObject(response.toString());
                         int roomId = roomInfo.getInt("id");
                         int loginCode = roomInfo.getInt("logincode");
+
+                        room.setId(roomId);
+                        room.setLoginCode(loginCode);
+
                         uiElement.setText("Login code is " + String.valueOf(loginCode));
                     } catch (JSONException e) {
                         Log.d("MusicDJ", response.toString());
@@ -69,12 +77,12 @@ public class ServerHelper {
      * @param id users email
      * @param uiElement ui element for login code
      */
-    public void registerUser(final String id, final TextView uiElement) {
+    public void registerUser(final RoomInfo room, final String id, final TextView uiElement) {
         final ServerRequest.Callback callback = new ServerRequest.Callback() {
 
             @Override
             public void execute(String response) {
-                createRoom(id, uiElement);
+                createRoom(room, id, uiElement);
             }
         };
 
@@ -82,13 +90,13 @@ public class ServerHelper {
         new ConnectionManager().execute(request);
     }
 
-    public void connectUser(final String id, final TextView uiElement) {
+    public void connectUser(final RoomInfo room, final String id, final TextView uiElement) {
         final ServerRequest.Callback callback = new ServerRequest.Callback() {
             TextView view = uiElement;
 
             @Override
             public void execute(String response) {
-                connectToRoom(id, uiElement);
+                connectToRoom(room, id, uiElement);
             }
         };
 
@@ -96,7 +104,7 @@ public class ServerHelper {
         new ConnectionManager().execute(request);
     }
 
-    public void connectToRoom(final String id, final TextView uiElement) {
+    public void connectToRoom(final RoomInfo room, final String id, final TextView uiElement) {
         final ServerRequest.Callback callback = new ServerRequest.Callback() {
             TextView view = uiElement;
 
@@ -111,6 +119,10 @@ public class ServerHelper {
                         JSONObject roomInfo = new JSONObject(response.toString());
                         int roomId = roomInfo.getInt("id");
                         int loginCode = roomInfo.getInt("logincode");
+
+                        room.setId(roomId);
+                        room.setLoginCode(loginCode);
+
                         uiElement.setText("Login code is " + String.valueOf(loginCode));
                     } catch (JSONException e) {
                         Log.d("MusicDJ", response.toString());
@@ -124,6 +136,67 @@ public class ServerHelper {
         String body = "{ \"email\": \"test@test.test\", \"logincode\": 434282 }";
 
         ServerRequest request = new ServerRequest(METHOD_PUT, "api/users", body, callback, null);
+        new ConnectionManager().execute(request);
+    }
+
+    public void getSongs(final RoomInfo room, final List<String> songIds) {
+        final ServerRequest.Callback callback = new ServerRequest.Callback() {
+            @Override
+            public void execute(String response) {
+                if(response != null || response != "") {
+                    if(response.equals(CONNECTION_ERROR) || response.equals(RESPONSE_ERROR)){
+                    }
+
+                    try {
+                        JSONArray array = new JSONArray(response);
+
+                        for(int i = 0; i < array.length(); i++) {
+                            JSONObject song = array.getJSONObject(i);
+                            songIds.add(song.getString("id"));
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+
+        ServerRequest request = new ServerRequest(METHOD_GET, "api/rooms/" + room.getId() + "/songs", "", callback, null);
+        new ConnectionManager().execute(request);
+    }
+
+    public void playNextSong(final RoomInfo room, final StringBuilder song) {
+        final ServerRequest.Callback callback = new ServerRequest.Callback() {
+            @Override
+            public void execute(String response) {
+                if(response != null || response != "") {
+                    if(response.equals(CONNECTION_ERROR) || response.equals(RESPONSE_ERROR)){
+                    }
+
+                    try {
+                        JSONObject songObject = new JSONObject(response);
+
+                        song.append(songObject.getString("id"));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+
+        ServerRequest request = new ServerRequest(METHOD_PUT, "api/rooms/" + room.getId() + "/next", "", callback, null);
+        new ConnectionManager().execute(request);
+    }
+
+    public void addSong(final RoomInfo room, final String song) {
+        final ServerRequest.Callback callback = new ServerRequest.Callback() {
+            @Override
+            public void execute(String response) {
+
+            }
+        };
+
+        ServerRequest request = new ServerRequest(METHOD_PUT, "api/rooms/" + room.getId() + "/" + song, "", callback, null);
         new ConnectionManager().execute(request);
     }
 

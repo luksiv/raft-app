@@ -39,6 +39,7 @@ public class ClientActivity extends AppCompatActivity {
     private String mAccessToken;
 
     User mUser;
+    RoomInfo mRoom;
 
     private OkHttpClient mOkHttpClient = new OkHttpClient();
     private Call mCall;
@@ -58,7 +59,7 @@ public class ClientActivity extends AppCompatActivity {
             TextView status = findViewById(R.id.tw_RoomId);
 
             ServerHelper serverHelper = new ServerHelper();
-            serverHelper.connectUser(email, status);
+            serverHelper.connectUser(mRoom, email, status);
         } catch (Exception e) {
             Log.v(TAG, e.getMessage());
         }

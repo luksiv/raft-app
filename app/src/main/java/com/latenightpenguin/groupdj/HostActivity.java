@@ -84,6 +84,7 @@ public class HostActivity extends AppCompatActivity implements
     private Player mPlayer;
 
     private User mUser;
+    private RoomInfo mRoom;
 
     private Call mCall;
 
@@ -291,7 +292,7 @@ public class HostActivity extends AppCompatActivity implements
         TextView status = (TextView) findViewById(R.id.tw_RoomId);
 
         ServerHelper serverHelper = new ServerHelper();
-        serverHelper.registerUser(userID, status);
+        serverHelper.registerUser(mRoom, userID, status);
 
         mCurrentPlaybackState = mPlayer.getPlaybackState();
         mMetadata = mPlayer.getMetadata();
