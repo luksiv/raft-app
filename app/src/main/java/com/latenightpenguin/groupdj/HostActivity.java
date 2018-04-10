@@ -20,7 +20,6 @@ import android.widget.Toast;
 
 import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
-import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrapedTrack;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -40,9 +39,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.Random;
 
-import kaaes.spotify.webapi.android.SpotifyApi;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -179,11 +176,11 @@ public class HostActivity extends AppCompatActivity implements
         test.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.i("wrapper test", "Email : " + wrap.getUserEmail());
-//                for (WrapedTrack track : wrap.getUserTracks()){
+       //         Log.i("wrapper test", "Email : " + wrap.getUserEmail());
+//                for (WrappedTrack track : wrap.getUserTracks()){
 //                    Log.i("User track", track.getName());
 //                }
-//                for (WrapedTrack track : wrap.searchTracks("drake") ){
+//                for (WrappedTrack track : wrap.searchTracks("drake") ){
 //                    Log.i("drake search", track.getName());
 //                }
             }

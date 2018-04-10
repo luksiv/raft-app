@@ -5,31 +5,26 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
-import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrapedTrack;
+import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrappedSpotifyCallback;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
-import com.spotify.sdk.android.player.ConnectionStateCallback;
-import com.spotify.sdk.android.player.Error;
-import com.spotify.sdk.android.player.Spotify;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.IOException;
 
-import kaaes.spotify.webapi.android.SpotifyApi;
-import kaaes.spotify.webapi.android.SpotifyCallback;
-import kaaes.spotify.webapi.android.SpotifyError;
-import kaaes.spotify.webapi.android.SpotifyService;
-import kaaes.spotify.webapi.android.models.Album;
+import kaaes.spotify.webapi.android.models.Track;
+import kaaes.spotify.webapi.android.models.TracksPager;
+import kaaes.spotify.webapi.android.models.UserPrivate;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -86,7 +81,37 @@ public class ClientActivity extends AppCompatActivity {
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
 
+        //WRAPPER TESTING
+        final Button test = findViewById(R.id.btn_test);
+        final TextView testOutput = findViewById(R.id.test_output);
+        test.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
+                SpotifyData data = new SpotifyData(mAccessToken);
+                /*
+                data.getUser(new WrappedSpotifyCallback<UserPrivate>() {
+                    @Override
+                    public void success(UserPrivate userPrivate, retrofit.client.Response response) {
+                        testOutput.setText(userPrivate.email + "\n" + userPrivate.id);
+                    }
+                });
+                data.getTrack("09BxJMIz6CkunwqTPgpEWV",new WrappedSpotifyCallback<Track>() {
+                    @Override
+                    public void success(Track track, retrofit.client.Response response) {
+                        testOutput.setText(track.name + "\n" + track.artists.get(0).name + "\n" + track.id);
+                    }
+                });
+                data.searchTracks("Twilight Zone",new WrappedSpotifyCallback<TracksPager>() {
+                    @Override
+                    public void success(TracksPager tracks, retrofit.client.Response response) {
+                        testOutput.setText(SpotifyData.ConvertTracks(tracks).get(0).getName() + "\n" + SpotifyData.ConvertTracks(tracks).get(0).getId());
+                    }
+                });
+                */
+
+        }
+        });
     }
 
     @Override
@@ -155,21 +180,5 @@ public class ClientActivity extends AppCompatActivity {
                 ((TextView)findViewById(R.id.tw_user)).setText(mUser.toString());
             }
         });
-
-        SpotifyData data = new SpotifyData(mAccessToken);
-
-      for(WrapedTrack track : data.searchTracks("eminem stan"))
-        {
-            Log.v("Wraper", track.getName() + " " + track.getUri() + " " + track.getId() + " " + track.getArtist());
-        }
-
-//      for(WrapedTrack track : data.getUserTracks())
-//        {
-//            Log.v("Wraper", track.getName() + " " + track.getUri() + " " + track.getId() + " " + track.getArtist());
-//        }
-
-        Log.v("Wraper", data.getUserEmail());
-        Log.v("Wraper", data.getUserId());
-        Log.v("Wraper", data.getTrack("67nAU2VBR1i9eBrVLuvajz").getName());
     }
 }

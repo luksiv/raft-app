@@ -11,11 +11,11 @@ import java.util.ListIterator;
 import kaaes.spotify.webapi.android.models.ArtistSimple;
 import kaaes.spotify.webapi.android.models.Track;
 
-public class WrapedTrack {
+public class WrappedTrack {
 
     Track track;
 
-    public  WrapedTrack(Track track)
+    public WrappedTrack(Track track)
     {
         this.track = track;
     }
