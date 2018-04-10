@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
+import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrapedTrack;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -154,7 +155,18 @@ public class ClientActivity extends AppCompatActivity {
 
         SpotifyData data = new SpotifyData(mAccessToken);
 
-        Log.v("AAA", data.searchTracks("eminem").toString());
+      for(WrapedTrack track : data.searchTracks("eminem stan"))
+        {
+            Log.v("Wraper", track.getName() + " " + track.getUri() + " " + track.getId() + " " + track.getArtist());
+        }
 
+//      for(WrapedTrack track : data.getUserTracks())
+//        {
+//            Log.v("Wraper", track.getName() + " " + track.getUri() + " " + track.getId() + " " + track.getArtist());
+//        }
+
+        Log.v("Wraper", data.getUserEmail());
+        Log.v("Wraper", data.getUserId());
+        Log.v("Wraper", data.getTrack("67nAU2VBR1i9eBrVLuvajz").getName());
     }
 }
