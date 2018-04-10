@@ -103,6 +103,7 @@ public class HostActivity extends AppCompatActivity implements
     private ImageButton btnNext;
     private SeekBar sbTrack;
     private Button btnSettings;
+    private Button btnInfo;
 
 
     @Override
@@ -153,6 +154,13 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 changeBitRate();
+            }
+        });
+        btnInfo = findViewById(R.id.btn_roomInfo);
+        btnInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showInfoRoom();
             }
         });
 
@@ -495,5 +503,21 @@ public class HostActivity extends AppCompatActivity implements
                 dialog.dismiss();
             }
         });
+    }
+
+    public void showInfoRoom(){
+        final AlertDialog.Builder mBuilder = new AlertDialog.Builder(HostActivity.this);
+        View mView = getLayoutInflater().inflate(R.layout.dialog_info, null);
+        mBuilder.setView(mView);
+        final AlertDialog dialog = mBuilder.create();
+        TextView tvUsername = mView.findViewById(R.id.tv_userName);
+        TextView tvCountry = mView.findViewById(R.id.tv_country);
+        TextView tvEmail = mView.findViewById(R.id.tv_email);
+        TextView tvID = mView.findViewById(R.id.tv_userID);
+        tvUsername.setText(mUser.getDisplayName());
+        tvCountry.setText(mUser.getCountry());
+        tvEmail.setText(mUser.getEmail());
+        tvID.setText(mUser.getId());
+        dialog.show();
     }
 }
