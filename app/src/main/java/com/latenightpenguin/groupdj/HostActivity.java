@@ -8,6 +8,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -27,6 +28,7 @@ import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Connectivity;
 import com.spotify.sdk.android.player.Error;
 import com.spotify.sdk.android.player.Metadata;
+import com.spotify.sdk.android.player.PlaybackBitrate;
 import com.spotify.sdk.android.player.PlaybackState;
 import com.spotify.sdk.android.player.Player;
 import com.spotify.sdk.android.player.PlayerEvent;
@@ -45,6 +47,10 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
+import static com.spotify.sdk.android.player.PlaybackBitrate.BITRATE_HIGH;
+import static com.spotify.sdk.android.player.PlaybackBitrate.BITRATE_LOW;
+import static com.spotify.sdk.android.player.PlaybackBitrate.BITRATE_NORMAL;
 
 public class HostActivity extends AppCompatActivity implements
         SpotifyPlayer.NotificationCallback, ConnectionStateCallback {
@@ -96,6 +102,7 @@ public class HostActivity extends AppCompatActivity implements
     private ImageButton btnPause;
     private ImageButton btnNext;
     private SeekBar sbTrack;
+    private Button btnSettings;
 
 
     @Override
@@ -141,6 +148,14 @@ public class HostActivity extends AppCompatActivity implements
                 }
             }
         });
+        btnSettings = findViewById(R.id.btn_roomSettings);
+        btnSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                changeBitRate();
+            }
+        });
+
         sbTrack = findViewById(R.id.sb_seekTrack);
         sbTrack.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -440,5 +455,45 @@ public class HostActivity extends AppCompatActivity implements
     protected void onDestroy() {
         Spotify.destroyPlayer(this);
         super.onDestroy();
+    }
+
+    protected void changeBitRate(){
+        final AlertDialog.Builder mBuilder = new AlertDialog.Builder(HostActivity.this);
+        View mView = getLayoutInflater().inflate(R.layout.dialog_bitratesettings, null);
+        final String[] bitratesValues = getResources().getStringArray(R.array.bitratesValues);
+        final PlaybackBitrate[] bitrates = {BITRATE_LOW,BITRATE_NORMAL,BITRATE_HIGH};
+        mBuilder.setView(mView);
+        final AlertDialog dialog = mBuilder.create();
+        dialog.show();
+        Button btn_low = (Button) mView.findViewById(R.id.btn_lowBitrate);
+        btn_low.setText(bitratesValues[0]);
+        btn_low.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[0]);
+                Toast.makeText(HostActivity.this, "Bit rate = "+ bitratesValues[0], Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            }
+        });
+        Button btn_normal = (Button) mView.findViewById(R.id.btn_normalBitrate);
+        btn_normal.setText(bitratesValues[1]);
+        btn_normal.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[1]);
+                Toast.makeText(HostActivity.this, "Bit rate = "+ bitratesValues[1], Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            }
+        });
+        Button btn_high = (Button) mView.findViewById(R.id.btn_highBitrate);
+        btn_high.setText(bitratesValues[2]);
+        btn_high.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[2]);
+                Toast.makeText(HostActivity.this, "Bit rate = "+ bitratesValues[2], Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            }
+        });
     }
 }
