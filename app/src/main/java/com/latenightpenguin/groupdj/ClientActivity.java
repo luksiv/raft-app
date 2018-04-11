@@ -51,6 +51,7 @@ public class ClientActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_client);
+        ErrorHandler.setContext(ClientActivity.this);
         try {
             mRoomId = getIntent().getIntExtra("roomId", 0);
 
@@ -67,8 +68,16 @@ public class ClientActivity extends AppCompatActivity {
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(ClientActivity.super.getApplicationContext(), AddSongActivity.class);
-                startActivity(intent);
+             //   Intent intent = new Intent(ClientActivity.super.getApplicationContext(), AddSongActivity.class);
+             //   startActivity(intent);
+                try {
+                    throw new Exception("Messege of some sort");
+                }
+                catch (Exception ex)
+                {
+                //    ErrorHandler.handle(ex);
+                    ErrorHandler.handleWithToast(ex, R.string.default_error);
+                }
             }
         });
 
