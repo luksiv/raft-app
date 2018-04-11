@@ -20,6 +20,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -86,11 +87,14 @@ public class ClientActivity extends AppCompatActivity {
         getSongsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ServerHelper serverHelper = new ServerHelper();
+                final ServerHelper serverHelper = new ServerHelper();
                 ServerRequest.Callback getSongsCallback = new ServerRequest.Callback() {
                     @Override
                     public void execute(String response) {
-                        Log.d("MusicDJ", response);
+                        ArrayList<String> songs = serverHelper.convertToList(response);
+                        for(String song : songs) {
+                            Log.d("MusicDJ", song);
+                        }
                     }
                 };
                 serverHelper.getSongs(mRoom, getSongsCallback);
@@ -100,11 +104,12 @@ public class ClientActivity extends AppCompatActivity {
         playNextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ServerHelper serverHelper = new ServerHelper();
+                final ServerHelper serverHelper = new ServerHelper();
                 ServerRequest.Callback playNextCallback = new ServerRequest.Callback() {
                     @Override
                     public void execute(String response) {
-                        Log.d("MusicDJ", response);
+                        String song = serverHelper.getSongId(response);
+                        Log.d("MusicDJ", song);
                     }
                 };
                 serverHelper.playNextSong(mRoom, playNextCallback);
@@ -188,7 +193,7 @@ public class ClientActivity extends AppCompatActivity {
     }
 
     private void connectToRoom() {
-        final TextView status = findViewById(R.id.tw_RoomId);
+        final TextView status = findViewById(R.id.tv_RoomId);
         final ServerHelper serverHelper = new ServerHelper();
         ServerRequest.Callback callback = new ServerRequest.Callback() {
 

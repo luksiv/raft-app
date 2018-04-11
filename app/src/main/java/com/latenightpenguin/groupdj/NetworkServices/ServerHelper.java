@@ -21,6 +21,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ServerHelper {
@@ -193,6 +194,28 @@ public class ServerHelper {
         new ConnectionManager().execute(request);
     }
 
+    public ArrayList<String> convertToList(String response) {
+        ArrayList<String> songs = new ArrayList<>();
+
+        if(response != null || response != "") {
+            if(response.equals(CONNECTION_ERROR) || response.equals(RESPONSE_ERROR)){
+            }
+
+            try {
+                JSONArray array = new JSONArray(response);
+
+                for(int i = 0; i < array.length(); i++) {
+                    JSONObject song = array.getJSONObject(i);
+                    songs.add(song.getString("id"));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return songs;
+    }
+
     /**
      * Gets songs from room
      *
@@ -250,6 +273,25 @@ public class ServerHelper {
         };
 
         playNextSong(room, callback);
+    }
+
+    public String getSongId(String response) {
+        String songId = "";
+
+        if(response != null || response != "") {
+            if(response.equals(CONNECTION_ERROR) || response.equals(RESPONSE_ERROR)){
+            }
+
+            try {
+                JSONObject songObject = new JSONObject(response);
+
+                songId = songObject.getString("id");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return songId;
     }
 
     public void addSong(RoomInfo room, final String song, ServerRequest.Callback callback) {

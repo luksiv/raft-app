@@ -470,7 +470,7 @@ public class HostActivity extends AppCompatActivity implements
     public void createRoom() {
         final String userID = "test@test.com";
 
-        final TextView status = (TextView) findViewById(R.id.tw_RoomId);
+        final TextView status = (TextView) findViewById(R.id.tv_RoomId);
 
         final ServerHelper serverHelper = new ServerHelper();
         final ServerRequest.Callback callback = new ServerRequest.Callback() {
