@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -44,6 +45,7 @@ public class StartActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 // Getting the room id
+                try {
                 int roomId = Integer.parseInt(((EditText) findViewById(R.id.et_RoomId)).getText().toString());
                 // Creates a new intent to ClientActivity and starts it
                 Intent intent = new Intent(StartActivity.super.getApplicationContext(), ClientActivity.class);
@@ -51,7 +53,9 @@ public class StartActivity extends AppCompatActivity {
                 intent.putExtra("roomId", roomId);
                 // Hiding the keyboard to make the transition more clean
                 hideKeyboard(StartActivity.this);
-                startActivity(intent);
+                startActivity(intent); } catch (NumberFormatException e){
+                    Toast.makeText(StartActivity.this, "Incorrect room id format.", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }

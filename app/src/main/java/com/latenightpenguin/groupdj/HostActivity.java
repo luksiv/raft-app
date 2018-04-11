@@ -20,6 +20,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
+import com.latenightpenguin.groupdj.NetworkServices.ServerRequest;
+import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -67,6 +69,8 @@ public class HostActivity extends AppCompatActivity implements
 
     // FIELDS
 
+    SpotifyData wrap;
+
     private String mAccessToken;
 
     private PlaybackState mCurrentPlaybackState;
@@ -90,6 +94,7 @@ public class HostActivity extends AppCompatActivity implements
     private Player mPlayer;
 
     private User mUser;
+    private RoomInfo mRoom;
 
     private Call mCall;
 
@@ -110,6 +115,7 @@ public class HostActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_host);
+        mRoom = new RoomInfo();
 
         // AUTHENTIFICATION
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
@@ -194,6 +200,20 @@ public class HostActivity extends AppCompatActivity implements
             }
         });
 
+        Button test = findViewById(R.id.btn_testavimas);
+        test.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+       //         Log.i("wrapper test", "Email : " + wrap.getUserEmail());
+//                for (WrappedTrack track : wrap.getUserTracks()){
+//                    Log.i("User track", track.getName());
+//                }
+//                for (WrappedTrack track : wrap.searchTracks("drake") ){
+//                    Log.i("drake search", track.getName());
+//                }
+            }
+        });
+
     }
 
     @Override
@@ -249,6 +269,7 @@ public class HostActivity extends AppCompatActivity implements
             AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
             if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                 mAccessToken = response.getAccessToken();
+                wrap = new SpotifyData(mAccessToken);
                 Config playerConfig = new Config(this, mAccessToken, CLIENT_ID);
                 Spotify.getPlayer(playerConfig, this, new SpotifyPlayer.InitializationObserver() {
                     @Override
@@ -271,7 +292,17 @@ public class HostActivity extends AppCompatActivity implements
         // AddSongActivity result
         if (requestCode == 333){
             if(resultCode == AddSongActivity.RESULT_OK){
-                mPlayer.queue(mOperationCallback, intent.getStringExtra("uri"));
+                String songId = intent.getStringExtra("uri");
+                mPlayer.queue(mOperationCallback, songId);
+
+                ServerHelper serverHelper = new ServerHelper();
+                ServerRequest.Callback addSongCallback = new ServerRequest.Callback() {
+                    @Override
+                    public void execute(String response) {
+                        Toast.makeText(HostActivity.this, "Song added", Toast.LENGTH_SHORT).show();
+                    }
+                };
+                serverHelper.addSong(mRoom, songId, addSongCallback);
             }
         }
     }
@@ -315,14 +346,6 @@ public class HostActivity extends AppCompatActivity implements
     public void onLoggedIn() {
         Log.d(TAG, "User logged in");
         Toast.makeText(this, "User logged in", Toast.LENGTH_LONG).show();
-
-        // ROOM CREATION
-        String userID = "test@test.com";
-
-        TextView status = findViewById(R.id.tv_RoomId);
-
-        ServerHelper serverHelper = new ServerHelper();
-        serverHelper.registerUser(userID, status);
 
         mCurrentPlaybackState = mPlayer.getPlaybackState();
         mMetadata = mPlayer.getMetadata();
@@ -384,6 +407,8 @@ public class HostActivity extends AppCompatActivity implements
                             jsonObject.getString("display_name"),
                             jsonObject.getString("email"),
                             jsonObject.getString("country"));
+
+                    createRoom();
                 } catch (JSONException e) {
                     Toast.makeText(HostActivity.this, "Failed to parse data: " + e, Toast.LENGTH_SHORT).show();
                 }
@@ -519,5 +544,45 @@ public class HostActivity extends AppCompatActivity implements
         tvEmail.setText(mUser.getEmail());
         tvID.setText(mUser.getId());
         dialog.show();
+    }
+
+    public void createRoom() {
+        final String userID = "test@test.com";
+
+        final TextView status = (TextView) findViewById(R.id.tv_RoomId);
+
+        final ServerHelper serverHelper = new ServerHelper();
+        final ServerRequest.Callback callback = new ServerRequest.Callback() {
+            @Override
+            public void execute(String response) {
+                ServerRequest.Callback insideCallback = new ServerRequest.Callback() {
+                    @Override
+                    public void execute(String response) {
+                        if(response != null) {
+                            if(response.equals(ServerHelper.CONNECTION_ERROR) || response.equals(ServerHelper.RESPONSE_ERROR)){
+                                status.setText(response);
+                            }
+
+                            try {
+                                JSONObject roomInfo = new JSONObject(response.toString());
+                                int roomId = roomInfo.getInt("id");
+                                int loginCode = roomInfo.getInt("logincode");
+
+                                mRoom.setId(roomId);
+                                mRoom.setLoginCode(loginCode);
+
+                                status.setText("Login code is " + String.valueOf(loginCode));
+                            } catch (JSONException e) {
+                                Log.d("MusicDJ", response.toString());
+                                status.setText("Error parsing response");
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                };
+                serverHelper.createRoom(mUser.getEmail(), insideCallback);
+            }
+        };
+        serverHelper.registerUser(userID, callback);
     }
 }
