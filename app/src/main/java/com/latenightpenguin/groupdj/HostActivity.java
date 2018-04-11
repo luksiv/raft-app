@@ -19,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
+import com.latenightpenguin.groupdj.NetworkServices.ServerRequest;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -103,6 +104,7 @@ public class HostActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_host);
+        mRoom = new RoomInfo();
 
         // AUTHENTIFICATION
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
@@ -286,13 +288,7 @@ public class HostActivity extends AppCompatActivity implements
         Log.d(TAG, "User logged in");
         Toast.makeText(this, "User logged in", Toast.LENGTH_LONG).show();
 
-        // ROOM CREATION
-        String userID = "test@test.com";
-
-        TextView status = (TextView) findViewById(R.id.tw_RoomId);
-
-        ServerHelper serverHelper = new ServerHelper();
-        serverHelper.registerUser(mRoom, userID, status);
+        createRoom();
 
         mCurrentPlaybackState = mPlayer.getPlaybackState();
         mMetadata = mPlayer.getMetadata();
@@ -481,4 +477,43 @@ public class HostActivity extends AppCompatActivity implements
         }
     }
 
+    public void createRoom() {
+        final String userID = "test@test.com";
+
+        final TextView status = (TextView) findViewById(R.id.tw_RoomId);
+
+        final ServerHelper serverHelper = new ServerHelper();
+        final ServerRequest.Callback callback = new ServerRequest.Callback() {
+            @Override
+            public void execute(String response) {
+                ServerRequest.Callback insideCallback = new ServerRequest.Callback() {
+                    @Override
+                    public void execute(String response) {
+                        if(response != null) {
+                            if(response.equals(ServerHelper.CONNECTION_ERROR) || response.equals(ServerHelper.RESPONSE_ERROR)){
+                                status.setText(response);
+                            }
+
+                            try {
+                                JSONObject roomInfo = new JSONObject(response.toString());
+                                int roomId = roomInfo.getInt("id");
+                                int loginCode = roomInfo.getInt("logincode");
+
+                                mRoom.setId(roomId);
+                                mRoom.setLoginCode(loginCode);
+
+                                status.setText("Login code is " + String.valueOf(loginCode));
+                            } catch (JSONException e) {
+                                Log.d("MusicDJ", response.toString());
+                                status.setText("Error parsing response");
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                };
+                serverHelper.createRoom(userID, insideCallback);
+            }
+        };
+        serverHelper.registerUser(userID, callback);
+    }
 }

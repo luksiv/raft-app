@@ -1,6 +1,7 @@
 package com.latenightpenguin.groupdj.NetworkServices;
 
 import android.os.AsyncTask;
+import android.telecom.Call;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -27,10 +28,21 @@ public class ServerHelper {
     private static final String METHOD_GET = "GET";
     private static final String METHOD_POST = "POST";
     private static final String METHOD_PUT = "PUT";
-    private static final String CONNECTION_ERROR = "There was error connecting to the server";
-    private static final String RESPONSE_ERROR = "There was error getting response";
+    public static final String CONNECTION_ERROR = "There was error connecting to the server";
+    public static final String RESPONSE_ERROR = "There was error getting response";
 
     public ServerHelper() {
+    }
+
+    /**
+     * Creates new room and connects to it.
+     *
+     * @param id user id.
+     * @param callback callback to execute.
+     */
+    public void createRoom(final String id, final ServerRequest.Callback callback) {
+        ServerRequest request = new ServerRequest(METHOD_POST, "api/rooms", "\"" + id + "\"", callback, null);
+        new ConnectionManager().execute(request);
     }
 
     /**
@@ -68,7 +80,17 @@ public class ServerHelper {
             }
         };
 
-        ServerRequest request = new ServerRequest(METHOD_POST, "api/rooms", "\"" + id + "\"", callback, null);
+        createRoom(id, callback);
+    }
+
+    /**
+     * Registers user and executes callback
+     *
+     * @param id user id
+     * @param callback callback to execute
+     */
+    public void registerUser(final String id, final ServerRequest.Callback callback) {
+        ServerRequest request = new ServerRequest(METHOD_POST, "api/users", "\"" + id + "\"", callback, null);
         new ConnectionManager().execute(request);
     }
 
@@ -86,10 +108,26 @@ public class ServerHelper {
             }
         };
 
+        registerUser(id, callback);
+    }
+
+    /**
+     * Connects user to room.
+     *
+     * @param id user id.
+     * @param callback callback to execute.
+     */
+    public void connectUser(final String id, final ServerRequest.Callback callback) {
         ServerRequest request = new ServerRequest(METHOD_POST, "api/users", "\"" + id + "\"", callback, null);
         new ConnectionManager().execute(request);
     }
 
+    /**
+     * Connects user and connects him to room
+     * @param room Room info.
+     * @param id user id.
+     * @param uiElement ui element to update.
+     */
     public void connectUser(final RoomInfo room, final String id, final TextView uiElement) {
         final ServerRequest.Callback callback = new ServerRequest.Callback() {
             TextView view = uiElement;
@@ -100,10 +138,23 @@ public class ServerHelper {
             }
         };
 
-        ServerRequest request = new ServerRequest(METHOD_POST, "api/users", "\"" + id + "\"", callback, null);
+        connectUser(id, callback);
+    }
+
+    public void connectToRoom(int roomLoginCode, String id, ServerRequest.Callback callback) {
+        String body = "{ \"email\": \"" + id + "\", \"logincode\": " + roomLoginCode + " }";
+        Log.d("MusicDJ", body);
+
+        ServerRequest request = new ServerRequest(METHOD_PUT, "api/users", body, callback, null);
         new ConnectionManager().execute(request);
     }
 
+    /**
+     * Connects user to room
+     * @param room room info.
+     * @param id user id.
+     * @param uiElement ui element to update.
+     */
     public void connectToRoom(final RoomInfo room, final String id, final TextView uiElement) {
         final ServerRequest.Callback callback = new ServerRequest.Callback() {
             TextView view = uiElement;
@@ -133,12 +184,21 @@ public class ServerHelper {
             }
         };
 
-        String body = "{ \"email\": \"test@test.test\", \"logincode\": 434282 }";
+        connectToRoom(room.getLoginCode(), id, callback);
+    }
 
-        ServerRequest request = new ServerRequest(METHOD_PUT, "api/users", body, callback, null);
+    public void getSongs(final RoomInfo room, ServerRequest.Callback callback) {
+        Log.d("MusicDJ", "api/rooms/" + room.getId() + "/songs");
+        ServerRequest request = new ServerRequest(METHOD_GET, "api/rooms/" + room.getId() + "/songs", null, callback, null);
         new ConnectionManager().execute(request);
     }
 
+    /**
+     * Gets songs from room
+     *
+     * @param room room info.
+     * @param songIds list where to put songs
+     */
     public void getSongs(final RoomInfo room, final List<String> songIds) {
         final ServerRequest.Callback callback = new ServerRequest.Callback() {
             @Override
@@ -161,7 +221,12 @@ public class ServerHelper {
             }
         };
 
-        ServerRequest request = new ServerRequest(METHOD_GET, "api/rooms/" + room.getId() + "/songs", "", callback, null);
+        getSongs(room, callback);
+    }
+
+    public void playNextSong(final RoomInfo room, ServerRequest.Callback callback) {
+        Log.d("MusicDJ", "api/rooms/" + room.getId() + "/next");
+        ServerRequest request = new ServerRequest(METHOD_PUT, "api/rooms/" + room.getId() + "/next", "", callback, null);
         new ConnectionManager().execute(request);
     }
 
@@ -184,7 +249,11 @@ public class ServerHelper {
             }
         };
 
-        ServerRequest request = new ServerRequest(METHOD_PUT, "api/rooms/" + room.getId() + "/next", "", callback, null);
+        playNextSong(room, callback);
+    }
+
+    public void addSong(RoomInfo room, final String song, ServerRequest.Callback callback) {
+        ServerRequest request = new ServerRequest(METHOD_PUT, "api/rooms/" + room.getId() + "/" + song, "", callback, null);
         new ConnectionManager().execute(request);
     }
 
@@ -196,8 +265,7 @@ public class ServerHelper {
             }
         };
 
-        ServerRequest request = new ServerRequest(METHOD_PUT, "api/rooms/" + room.getId() + "/" + song, "", callback, null);
-        new ConnectionManager().execute(request);
+        addSong(room, song, callback);
     }
 
     private class ConnectionManager extends AsyncTask<ServerRequest, Void, String> {
@@ -221,6 +289,8 @@ public class ServerHelper {
                 } else {
                     url = new URL(SERVER_URL + requests[0].getPath());
                 }
+
+                Log.d("MusicDJAsync", url.toString());
 
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod(requests[0].getMethod());

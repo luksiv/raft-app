@@ -5,11 +5,13 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
+import com.latenightpenguin.groupdj.NetworkServices.ServerRequest;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -46,20 +48,15 @@ public class ClientActivity extends AppCompatActivity {
 
     // Declaring view elements
     ImageButton btnAdd;
-    int mRoomId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_client);
+        mRoom = new RoomInfo();
+
         try {
-            mRoomId = getIntent().getIntExtra("roomId", 0);
-
-            String email = "testas123@gmail.com";
-            TextView status = findViewById(R.id.tw_RoomId);
-
-            ServerHelper serverHelper = new ServerHelper();
-            serverHelper.connectUser(mRoom, email, status);
+            mRoom.setLoginCode(getIntent().getIntExtra("roomId", 0));
         } catch (Exception e) {
             Log.v(TAG, e.getMessage());
         }
@@ -70,6 +67,49 @@ public class ClientActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(ClientActivity.super.getApplicationContext(), AddSongActivity.class);
                 startActivity(intent);
+            }
+        });
+
+        Button addSongButton = findViewById(R.id.btn_add_song);
+        addSongButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ServerHelper serverHelper = new ServerHelper();
+                ServerRequest.Callback addSongCallback = new ServerRequest.Callback() {
+                    @Override
+                    public void execute(String response) {
+                        Toast.makeText(ClientActivity.this, "Song added", Toast.LENGTH_SHORT).show();
+                    }
+                };
+                serverHelper.addSong(mRoom, "testSong", addSongCallback);
+            }
+        });
+        Button getSongsButton = findViewById(R.id.btn_get_songs);
+        getSongsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ServerHelper serverHelper = new ServerHelper();
+                ServerRequest.Callback getSongsCallback = new ServerRequest.Callback() {
+                    @Override
+                    public void execute(String response) {
+                        Log.d("MusicDJ", response);
+                    }
+                };
+                serverHelper.getSongs(mRoom, getSongsCallback);
+            }
+        });
+        Button playNextButton = findViewById(R.id.btn_play_next);
+        playNextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ServerHelper serverHelper = new ServerHelper();
+                ServerRequest.Callback playNextCallback = new ServerRequest.Callback() {
+                    @Override
+                    public void execute(String response) {
+                        Log.d("MusicDJ", response);
+                    }
+                };
+                serverHelper.playNextSong(mRoom, playNextCallback);
             }
         });
 
@@ -125,6 +165,8 @@ public class ClientActivity extends AppCompatActivity {
                             jsonObject.getString("email"),
                             jsonObject.getString("country"));
                             updateUserView();
+
+                    connectToRoom();
                 } catch (JSONException e) {
                     Toast.makeText(ClientActivity.this, "Failed to parse data: " + e, Toast.LENGTH_SHORT).show();
                 }
@@ -145,5 +187,43 @@ public class ClientActivity extends AppCompatActivity {
                 ((TextView)findViewById(R.id.tw_user)).setText(mUser.toString());
             }
         });
+    }
+
+    private void connectToRoom() {
+        final TextView status = findViewById(R.id.tw_RoomId);
+        final ServerHelper serverHelper = new ServerHelper();
+        ServerRequest.Callback callback = new ServerRequest.Callback() {
+
+            @Override
+            public void execute(String response) {
+                ServerRequest.Callback insideCallback = new ServerRequest.Callback() {
+                    @Override
+                    public void execute(String response) {
+                        if(response != null) {
+                            if(response.equals(ServerHelper.CONNECTION_ERROR) || response.equals(ServerHelper.RESPONSE_ERROR)){
+                                status.setText(response);
+                            }
+
+                            try {
+                                JSONObject roomInfo = new JSONObject(response.toString());
+                                int roomId = roomInfo.getInt("id");
+                                int loginCode = roomInfo.getInt("logincode");
+
+                                mRoom.setId(roomId);
+                                mRoom.setLoginCode(loginCode);
+
+                                status.setText("Login code is " + String.valueOf(mRoom.getLoginCode()));
+                            } catch (JSONException e) {
+                                Log.d("MusicDJ", response.toString());
+                                status.setText("Not connected");
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                };
+                serverHelper.connectToRoom(mRoom.getLoginCode(), mUser.getEmail(), insideCallback);
+            }
+        };
+        serverHelper.connectUser(mUser.getEmail(), callback);
     }
 }

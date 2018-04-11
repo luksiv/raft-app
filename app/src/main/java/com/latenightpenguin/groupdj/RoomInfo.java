@@ -4,6 +4,11 @@ public class RoomInfo {
     private int loginCode;
     private int id;
 
+    public RoomInfo() {
+        loginCode = -1;
+        id = -1;
+    }
+
     public int getLoginCode() {
         return loginCode;
     }
