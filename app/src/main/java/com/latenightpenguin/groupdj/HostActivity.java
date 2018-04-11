@@ -39,7 +39,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.Random;
+import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -58,7 +58,7 @@ public class HostActivity extends AppCompatActivity implements
 
     private static final String REDIRECT_URI = "lnpapp://callback";
 
-    private static final int REQUEST_CODE = 1337;
+    private static final int AUTH_CODE = 1337;
 
     // FIELDS
 
@@ -73,12 +73,12 @@ public class HostActivity extends AppCompatActivity implements
     private final Player.OperationCallback mOperationCallback = new Player.OperationCallback() {
         @Override
         public void onSuccess() {
-            Log.e("Callback", "OK!");
+            Log.d("Callback", "OK!");
         }
 
         @Override
         public void onError(Error error) {
-            Log.e("Callback", "ERROR:" + error);
+            Log.d("Callback", "ERROR:" + error);
         }
     };
 
@@ -94,9 +94,9 @@ public class HostActivity extends AppCompatActivity implements
     private Handler mHandler = new Handler();
     // UI ELEMENTS
 
-    private ImageButton btnAdd;
-    private Button btnPause;
-    private Button btnNext;
+    private Button btnAdd;
+    private ImageButton btnPause;
+    private ImageButton btnNext;
     private SeekBar sbTrack;
 
 
@@ -111,15 +111,16 @@ public class HostActivity extends AppCompatActivity implements
                 AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
         builder.setScopes(new String[]{"user-read-private", "user-read-email", "streaming"});
         AuthenticationRequest request = builder.build();
-        AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
+        AuthenticationClient.openLoginActivity(this, AUTH_CODE, request);
 
         btnAdd = findViewById(R.id.btn_AddSong);
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(HostActivity.super.getApplicationContext(),
+                Intent intent = new Intent(HostActivity.this,
                         AddSongActivity.class);
-                startActivity(intent);
+                intent.putExtra("accessToken", mAccessToken);
+                startActivityForResult(intent, 333);
             }
         });
         btnPause = findViewById(R.id.btn_playPause);
@@ -223,7 +224,8 @@ public class HostActivity extends AppCompatActivity implements
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        if (requestCode == REQUEST_CODE) {
+        // Authentication result
+        if (requestCode == AUTH_CODE) {
             AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
             if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                 mAccessToken = response.getAccessToken();
@@ -245,24 +247,30 @@ public class HostActivity extends AppCompatActivity implements
                 getUserInfo();
             }
         }
+
+        // AddSongActivity result
+        if (requestCode == 333){
+            if(resultCode == AddSongActivity.RESULT_OK){
+                mPlayer.queue(mOperationCallback, intent.getStringExtra("uri"));
+            }
+        }
     }
 
     @Override
     public void onPlaybackEvent(PlayerEvent playerEvent) {
-        // TODO: Clean up the macaroni code with proper playerEvent handling
         Log.d(TAG, "Playback event received: " + playerEvent.name());
         mCurrentPlaybackState = mPlayer.getPlaybackState();
         mMetadata = mPlayer.getMetadata();
         Log.d(TAG, "Playback State: " + mCurrentPlaybackState.toString());
         Log.d(TAG, "Metadata: " + mMetadata.toString());
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyPlay) {
-            btnPause.setText("Pause");
+            btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_media_pause));
             seekUpdation();
         }
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyPause) {
-            btnPause.setText("Play");
+            btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_media_play));
         }
-        if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged){
+        if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged) {
 
         }
         updateView();
@@ -305,7 +313,7 @@ public class HostActivity extends AppCompatActivity implements
 
     @Override
     public void onLoginFailed(Error error) {
-        if (error.toString() == "kSpErrorNeedsPremium") {
+        if (Objects.equals(error.toString(), "kSpErrorNeedsPremium")) {
             Toast.makeText(this, "Premium account needed to be a host", Toast.LENGTH_LONG).show();
             //finish();
         }
@@ -350,7 +358,6 @@ public class HostActivity extends AppCompatActivity implements
                             jsonObject.getString("display_name"),
                             jsonObject.getString("email"),
                             jsonObject.getString("country"));
-                    updateUserView();
                 } catch (JSONException e) {
                     Toast.makeText(HostActivity.this, "Failed to parse data: " + e, Toast.LENGTH_SHORT).show();
                 }
@@ -362,15 +369,6 @@ public class HostActivity extends AppCompatActivity implements
         if (mCall != null) {
             mCall.cancel();
         }
-    }
-
-    private void updateUserView() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ((TextView) findViewById(R.id.tw_user)).setText(mUser.toString());
-            }
-        });
     }
 
     private void updateTextView(final int id, final String text) {
@@ -387,21 +385,13 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void run() {
                 try {
-                    updateTextView(R.id.tw_album, mMetadata.currentTrack.albumName);
-                    updateTextView(R.id.tw_artist, mMetadata.currentTrack.artistName);
-                    updateTextView(R.id.tw_songName, mMetadata.currentTrack.name);
+                    updateTextView(R.id.tv_artist, mMetadata.currentTrack.artistName);
+                    updateTextView(R.id.tv_songName, mMetadata.currentTrack.name);
                     updateTextView(R.id.tv_trackLenght,
                             Utilities.formatSeconds(mMetadata.currentTrack.durationMs));
                     Picasso.with(HostActivity.this).
                             load(mMetadata.currentTrack.albumCoverWebUrl)
                             .into((ImageView) findViewById(R.id.iv_albumArt));
-                    if (mMetadata.nextTrack != null) {
-                        updateTextView(R.id.tw_nextTrack, "Next song: "
-                                + mMetadata.nextTrack.name + " by " + mMetadata.nextTrack.artistName);
-                    } else {
-                        updateTextView(R.id.tw_nextTrack, "Next song: none");
-                    }
-
                 } catch (NullPointerException e) {
                     Log.e(TAG, "Metadata is null: " + mMetadata);
                 }

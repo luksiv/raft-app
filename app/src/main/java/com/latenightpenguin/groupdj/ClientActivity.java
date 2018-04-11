@@ -15,12 +15,9 @@ import com.latenightpenguin.groupdj.NetworkServices.ServerRequest;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
-import com.spotify.sdk.android.player.ConnectionStateCallback;
-import com.spotify.sdk.android.player.Error;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.IOException;
 
@@ -66,6 +63,7 @@ public class ClientActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(ClientActivity.super.getApplicationContext(), AddSongActivity.class);
+                intent.putExtra("accessToken", mAccessToken);
                 startActivity(intent);
             }
         });
@@ -184,7 +182,7 @@ public class ClientActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                ((TextView)findViewById(R.id.tw_user)).setText(mUser.toString());
+                ((TextView) findViewById(R.id.tw_user)).setText(mUser.toString());
             }
         });
     }
