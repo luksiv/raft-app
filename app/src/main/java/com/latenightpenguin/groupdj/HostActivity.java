@@ -199,21 +199,6 @@ public class HostActivity extends AppCompatActivity implements
                 }
             }
         });
-
-        Button test = findViewById(R.id.btn_testavimas);
-        test.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-       //         Log.i("wrapper test", "Email : " + wrap.getUserEmail());
-//                for (WrappedTrack track : wrap.getUserTracks()){
-//                    Log.i("User track", track.getName());
-//                }
-//                for (WrappedTrack track : wrap.searchTracks("drake") ){
-//                    Log.i("drake search", track.getName());
-//                }
-            }
-        });
-
     }
 
     @Override

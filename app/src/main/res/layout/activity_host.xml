@@ -7,45 +7,42 @@
     tools:context=".HostActivity">
 
     <!-- top bar -->
-    <RelativeLayout
+    <LinearLayout
         android:id="@+id/root_topBar"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:background="@android:color/background_dark"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:background="@android:color/black">
 
         <Button
             android:id="@+id/btn_roomInfo"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_alignParentLeft="true"
-            android:text="Room info"
-            android:textSize="8sp" />
+            android:text="Info"
+            android:textSize="12sp"
+            android:layout_weight="1"/>
 
         <Button
             android:id="@+id/btn_toggleView"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_toLeftOf="@id/btn_AddSong"
             android:text="Show playlist"
-            android:textSize="8sp" />
+            android:textSize="12sp" />
 
         <Button
             android:id="@+id/btn_AddSong"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_toLeftOf="@id/btn_roomSettings"
             android:text="Add song"
-            android:textSize="8sp" />
+            android:textSize="12sp" />
 
         <Button
             android:id="@+id/btn_roomSettings"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_alignParentRight="true"
             android:text="Settings"
-            android:textSize="8sp" />
-    </RelativeLayout>
+            android:textSize="12sp" />
+    </LinearLayout>
 
     <!-- player -->
     <LinearLayout
@@ -136,10 +133,4 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:text="null" />
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/btn_testavimas"
-        android:text="test"/>
-
 </RelativeLayout>
