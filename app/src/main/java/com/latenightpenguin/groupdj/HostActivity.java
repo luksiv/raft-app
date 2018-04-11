@@ -52,6 +52,7 @@ import java.util.Objects;
 import kaaes.spotify.webapi.android.SpotifyError;
 import kaaes.spotify.webapi.android.models.ArtistSimple;
 import kaaes.spotify.webapi.android.models.Track;
+import kaaes.spotify.webapi.android.models.Tracks;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -65,14 +66,14 @@ import static com.spotify.sdk.android.player.PlaybackBitrate.BITRATE_NORMAL;
 public class HostActivity extends AppCompatActivity implements
         SpotifyPlayer.NotificationCallback, ConnectionStateCallback {
 
-    // CONSTANTS
+    //region Constants
     private static final String TAG = "HostActivity";
     private static final String CLIENT_ID = "1b02f619aa8142db8cd6d3d9bc3d505e";
     private static final String REDIRECT_URI = "lnpapp://callback";
     private static final int AUTH_CODE = 1337;
+    //endregion
 
-    // FIELDS
-    SpotifyData wrap;
+    //region Fields
     private String mAccessToken;
     private PlaybackState mCurrentPlaybackState;
     private BroadcastReceiver mNetworkStateReceiver;
@@ -97,8 +98,9 @@ public class HostActivity extends AppCompatActivity implements
     private ArrayList<String> mSongs;
     private PlaylistArrayAdapter mPlaylistAdapter;
     private SpotifyData mSpotifyData;
+    //endregion
 
-    // UI ELEMENTS
+    //region UI elements
     private Button btnAdd;
     private ImageButton btnPause;
     private ImageButton btnNext;
@@ -108,7 +110,10 @@ public class HostActivity extends AppCompatActivity implements
     private Button btnToggleViews;
     private Button btnRefreshPlaylist;
     private ListView lwPlaylist;
+    //endregion
 
+    //TODO: Remove count variable
+    int count = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,7 +130,8 @@ public class HostActivity extends AppCompatActivity implements
         setUpElements();
     }
 
-    private void setUpElements(){
+    //region Methods that onCreate uses
+    private void setUpElements() {
         btnAdd = findViewById(R.id.btn_AddSong);
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -183,28 +189,11 @@ public class HostActivity extends AppCompatActivity implements
         btnRefreshPlaylist.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                final ServerHelper serverHelper = new ServerHelper();
-//                ServerRequest.Callback getSongsCallback = new ServerRequest.Callback() {
-//                    @Override
-//                    public void execute(String response) {
-//                        mSongs = serverHelper.convertToList(response);
-//                        for (String song : mSongs) {
-//                            Log.d(TAG, song);
-//                        }
-//                    }
-//                };
-//                serverHelper.getSongs(mRoom, getSongsCallback);
-                mSpotifyData.getTrack("1cbTLb5mdv3E0Lcv0su6v7", new WrappedSpotifyCallback<Track>(){
-                    @Override
-                    public void success(Track track, retrofit.client.Response response) {
-                        Log.d(TAG, "success: " + track.name);
-                    }
 
-                    @Override
-                    public void failure(SpotifyError spotifyError) {
-                        Log.e(TAG, "failure: "+ spotifyError.getMessage() );
-                    }
-                });
+                updatePlaylist();
+                updatePlaylistView();
+
+
             }
         });
 
@@ -238,28 +227,25 @@ public class HostActivity extends AppCompatActivity implements
             }
         });
 
-        ArrayList<SongItem> testList = new ArrayList<>();
-        testList.add(new SongItem("TestName1", "TestArtist", "TestAlbum", "TestUri"));
-        testList.add(new SongItem("TestName2", "TestArtist", "TestAlbum", "TestUri"));
-        testList.add(new SongItem("TestName3", "TestArtist", "TestAlbum", "TestUri"));
-        testList.add(new SongItem("TestName4", "TestArtist", "TestAlbum", "TestUri"));
-        testList.add(new SongItem("TestName5", "TestArtist", "TestAlbum", "TestUri"));
         lwPlaylist = findViewById(R.id.lw_playlist);
-        mPlaylistAdapter = new PlaylistArrayAdapter(this, testList);
+        mPlaylistAdapter = new PlaylistArrayAdapter(this, new ArrayList<SongItem>());
         lwPlaylist.setAdapter(mPlaylistAdapter);
 
 
-
-
     }
-    private void authentication(){
+
+
+
+    private void authentication() {
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
                 AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
         builder.setScopes(new String[]{"user-read-private", "user-read-email", "streaming"});
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, AUTH_CODE, request);
     }
+    //endregion
 
+    //region Network
     @Override
     protected void onResume() {
         super.onResume();
@@ -303,6 +289,7 @@ public class HostActivity extends AppCompatActivity implements
             return Connectivity.OFFLINE;
         }
     }
+    //endregion
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
@@ -334,8 +321,8 @@ public class HostActivity extends AppCompatActivity implements
         }
 
         // AddSongActivity result
-        if (requestCode == 333){
-            if(resultCode == AddSongActivity.RESULT_OK){
+        if (requestCode == 333) {
+            if (resultCode == AddSongActivity.RESULT_OK) {
                 String songId = intent.getStringExtra("uri");
                 mPlayer.queue(mOperationCallback, songId);
 
@@ -351,6 +338,7 @@ public class HostActivity extends AppCompatActivity implements
         }
     }
 
+    //region Playback events
     @Override
     public void onPlaybackEvent(PlayerEvent playerEvent) {
         Log.d(TAG, "Playback event received: " + playerEvent.name());
@@ -381,11 +369,9 @@ public class HostActivity extends AppCompatActivity implements
                 break;
         }
     }
+    //endregion
 
-    //
-    // CALLBACK METHODS
-    //
-
+    //region Callback methods
     @Override
     public void onLoggedIn() {
         Log.d(TAG, "User logged in");
@@ -424,8 +410,49 @@ public class HostActivity extends AppCompatActivity implements
         Log.d(TAG, "Received connection message: " + message);
         Toast.makeText(this, "Received connection message: " + message, Toast.LENGTH_LONG).show();
     }
+    //endregion
 
-    // Random methods
+    //region Random methods
+
+    private void updatePlaylist(){
+        final ServerHelper serverHelper = new ServerHelper();
+        ServerRequest.Callback getSongsCallback = new ServerRequest.Callback() {
+            @Override
+            public void execute(String response) {
+                mSongs = serverHelper.convertToList(response);
+                for (String song : mSongs) {
+                    Log.d(TAG, song);
+                }
+            }
+        };
+        serverHelper.getSongs(mRoom, getSongsCallback);
+    }
+
+    private void updatePlaylistView() {
+        mSpotifyData.getTracks(mSongs, new WrappedSpotifyCallback<Tracks>() {
+            @Override
+            public void success(Tracks tracks, retrofit.client.Response response) {
+
+                final ArrayList<SongItem> results = new ArrayList<>();
+
+                for (Track track : tracks.tracks) {
+                    String song = track.name;
+                    String artist = Utilities.convertArtistListToString(track.artists);
+                    String album = track.album.name;
+                    String uri = track.uri;
+                    results.add(new SongItem(song, artist, album, uri));
+                }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mPlaylistAdapter.clear();
+                        mPlaylistAdapter.addAll(results);
+                    }
+                });
+            }
+        });
+    }
 
     public void getUserInfo() {
 
@@ -510,11 +537,11 @@ public class HostActivity extends AppCompatActivity implements
         mHandler.postDelayed(run, 1000);
     }
 
-    private void changeViews(Button button){
+    private void changeViews(Button button) {
         LinearLayout player = findViewById(R.id.root_player);
         LinearLayout playlist = findViewById(R.id.root_playlist);
 
-        if(player.getVisibility() == View.VISIBLE){
+        if (player.getVisibility() == View.VISIBLE) {
             player.setVisibility(View.INVISIBLE);
             playlist.setVisibility(View.VISIBLE);
             button.setText("Show player");
@@ -526,71 +553,47 @@ public class HostActivity extends AppCompatActivity implements
 
     }
 
-    // DESTRUCTION
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        unregisterReceiver(mNetworkStateReceiver);
-
-        // Note that calling Spotify.destroyPlayer() will also remove any callbacks on whatever
-        // instance was passed as the refcounted owner. So in the case of this particular example,
-        // it's not strictly necessary to call these methods, however it is generally good practice
-        // and also will prevent your application from doing extra work in the background when
-        // paused.
-        if (mPlayer != null) {
-            mPlayer.removeNotificationCallback(HostActivity.this);
-            mPlayer.removeConnectionStateCallback(HostActivity.this);
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        Spotify.destroyPlayer(this);
-        super.onDestroy();
-    }
-
-    protected void changeBitRate(){
+    protected void changeBitRate() {
         final AlertDialog.Builder mBuilder = new AlertDialog.Builder(HostActivity.this);
         View mView = getLayoutInflater().inflate(R.layout.dialog_bitratesettings, null);
         final String[] bitratesValues = getResources().getStringArray(R.array.bitratesValues);
-        final PlaybackBitrate[] bitrates = {BITRATE_LOW,BITRATE_NORMAL,BITRATE_HIGH};
+        final PlaybackBitrate[] bitrates = {BITRATE_LOW, BITRATE_NORMAL, BITRATE_HIGH};
         mBuilder.setView(mView);
         final AlertDialog dialog = mBuilder.create();
         dialog.show();
         Button btn_low = (Button) mView.findViewById(R.id.btn_lowBitrate);
         btn_low.setText(bitratesValues[0]);
-        btn_low.setOnClickListener(new View.OnClickListener(){
+        btn_low.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
+            public void onClick(View view) {
                 mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[0]);
-                Toast.makeText(HostActivity.this, "Bit rate = "+ bitratesValues[0], Toast.LENGTH_SHORT).show();
+                Toast.makeText(HostActivity.this, "Bit rate = " + bitratesValues[0], Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             }
         });
         Button btn_normal = (Button) mView.findViewById(R.id.btn_normalBitrate);
         btn_normal.setText(bitratesValues[1]);
-        btn_normal.setOnClickListener(new View.OnClickListener(){
+        btn_normal.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
+            public void onClick(View view) {
                 mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[1]);
-                Toast.makeText(HostActivity.this, "Bit rate = "+ bitratesValues[1], Toast.LENGTH_SHORT).show();
+                Toast.makeText(HostActivity.this, "Bit rate = " + bitratesValues[1], Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             }
         });
         Button btn_high = (Button) mView.findViewById(R.id.btn_highBitrate);
         btn_high.setText(bitratesValues[2]);
-        btn_high.setOnClickListener(new View.OnClickListener(){
+        btn_high.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
+            public void onClick(View view) {
                 mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[2]);
-                Toast.makeText(HostActivity.this, "Bit rate = "+ bitratesValues[2], Toast.LENGTH_SHORT).show();
+                Toast.makeText(HostActivity.this, "Bit rate = " + bitratesValues[2], Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             }
         });
     }
 
-    public void showInfoRoom(){
+    public void showInfoRoom() {
         final AlertDialog.Builder mBuilder = new AlertDialog.Builder(HostActivity.this);
         View mView = getLayoutInflater().inflate(R.layout.dialog_info, null);
         mBuilder.setView(mView);
@@ -618,8 +621,8 @@ public class HostActivity extends AppCompatActivity implements
                 ServerRequest.Callback insideCallback = new ServerRequest.Callback() {
                     @Override
                     public void execute(String response) {
-                        if(response != null) {
-                            if(response.equals(ServerHelper.CONNECTION_ERROR) || response.equals(ServerHelper.RESPONSE_ERROR)){
+                        if (response != null) {
+                            if (response.equals(ServerHelper.CONNECTION_ERROR) || response.equals(ServerHelper.RESPONSE_ERROR)) {
                                 status.setText(response);
                             }
 
@@ -645,4 +648,32 @@ public class HostActivity extends AppCompatActivity implements
         };
         serverHelper.registerUser(userID, callback);
     }
+
+    //endregion
+
+    //region Destruction
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mNetworkStateReceiver);
+
+        // Note that calling Spotify.destroyPlayer() will also remove any callbacks on whatever
+        // instance was passed as the refcounted owner. So in the case of this particular example,
+        // it's not strictly necessary to call these methods, however it is generally good practice
+        // and also will prevent your application from doing extra work in the background when
+        // paused.
+        if (mPlayer != null) {
+            mPlayer.removeNotificationCallback(HostActivity.this);
+            mPlayer.removeConnectionStateCallback(HostActivity.this);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        Spotify.destroyPlayer(this);
+        super.onDestroy();
+    }
+    //endregion
 }
+
+

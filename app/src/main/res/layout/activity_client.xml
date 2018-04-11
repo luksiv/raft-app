@@ -6,67 +6,55 @@
     android:layout_height="match_parent"
     tools:context=".ClientActivity">
 
+    <!-- top bar -->
+    <LinearLayout
+        android:id="@+id/root_topBar"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:background="@android:color/black">
+
+        <Button
+            android:id="@+id/btn_roomInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Info"
+            android:textSize="12sp"
+            android:layout_weight="1"/>
+
+        <Button
+            android:id="@+id/btn_toggleView"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Show playlist"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btn_AddSong"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Add song"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btn_roomSettings"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Settings"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- player -->
+    <include layout="@layout/layout_player"/>
+
+    <!-- playlist -->
+    <include layout="@layout/layout_playlist"/>
+
     <TextView
         android:id="@+id/tv_RoomId"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:text="RoomID" />
-
-    <TextView
-        android:id="@+id/tw_user"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="null" />
-
-    <ImageButton
-        android:id="@+id/btn_AddSong"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:src="@android:drawable/ic_input_add" />
-
-    <Button
-        android:id="@+id/btn_add_song"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true"
-        android:text="Add Song" />
-
-    <Button
-        android:id="@+id/btn_get_songs"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/btn_AddSong"
-        android:layout_alignParentStart="true"
-        android:text="Get Songs" />
-
-    <Button
-        android:id="@+id/btn_play_next"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/btn_get_songs"
-        android:layout_alignParentStart="true"
-        android:text="Play Next" />
-
-    <Button
-        android:id="@+id/btn_test"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="123dp"
-        android:text="Button" />
-
-    <TextView
-        android:id="@+id/test_output"
-        android:layout_width="221dp"
-        android:layout_height="143dp"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="244dp"
-        android:text="Test" />
-
+        android:text="RoomID" />
 </RelativeLayout>

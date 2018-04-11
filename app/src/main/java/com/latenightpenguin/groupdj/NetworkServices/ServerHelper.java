@@ -29,6 +29,7 @@ public class ServerHelper {
     private static final String METHOD_GET = "GET";
     private static final String METHOD_POST = "POST";
     private static final String METHOD_PUT = "PUT";
+    private static final String METHOD_DELETE = "DELETE";
     public static final String CONNECTION_ERROR = "There was error connecting to the server";
     public static final String RESPONSE_ERROR = "There was error getting response";
 
