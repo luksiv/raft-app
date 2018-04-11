@@ -19,7 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
-import com.latenightpenguin.groupdj.NetworkServices.ServerRequest;
+import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -61,6 +61,8 @@ public class HostActivity extends AppCompatActivity implements
     private static final int AUTH_CODE = 1337;
 
     // FIELDS
+
+    SpotifyData wrap;
 
     private String mAccessToken;
 
@@ -174,6 +176,20 @@ public class HostActivity extends AppCompatActivity implements
             }
         });
 
+        Button test = findViewById(R.id.btn_testavimas);
+        test.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+       //         Log.i("wrapper test", "Email : " + wrap.getUserEmail());
+//                for (WrappedTrack track : wrap.getUserTracks()){
+//                    Log.i("User track", track.getName());
+//                }
+//                for (WrappedTrack track : wrap.searchTracks("drake") ){
+//                    Log.i("drake search", track.getName());
+//                }
+            }
+        });
+
     }
 
     @Override
@@ -229,6 +245,7 @@ public class HostActivity extends AppCompatActivity implements
             AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
             if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                 mAccessToken = response.getAccessToken();
+                wrap = new SpotifyData(mAccessToken);
                 Config playerConfig = new Config(this, mAccessToken, CLIENT_ID);
                 Spotify.getPlayer(playerConfig, this, new SpotifyPlayer.InitializationObserver() {
                     @Override

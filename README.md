@@ -23,4 +23,11 @@ If you're having troubles launching the project try :
 * Android material design handbook (https://material.io/guidelines/material-design/introduction.html#introduction-goals)
 * BitBucket markdown syntax guide (https://confluence.atlassian.com/bitbucketserver/markdown-syntax-guide-776639995.html)
 
+# Spotify API wrapper
+* We use [NOTE: README is not updated there] https://github.com/kaaes/spotify-web-api-android
+* Our wrapper - Network Services/Spotify API
+* SpotifyData - bread and butter, almost all API calls should go through there. Returns String or WrappedTrack (might be List).
+SpotifyData data = new SpotifyData(token);
+* WrappedTrack - wraps Track from kaaes/spotify-web-api-android and encapsulates it.
+
 
