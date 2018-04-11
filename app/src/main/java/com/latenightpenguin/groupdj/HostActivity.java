@@ -8,6 +8,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -19,6 +20,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
+import com.latenightpenguin.groupdj.NetworkServices.ServerRequest;
+import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -27,6 +30,7 @@ import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Connectivity;
 import com.spotify.sdk.android.player.Error;
 import com.spotify.sdk.android.player.Metadata;
+import com.spotify.sdk.android.player.PlaybackBitrate;
 import com.spotify.sdk.android.player.PlaybackState;
 import com.spotify.sdk.android.player.Player;
 import com.spotify.sdk.android.player.PlayerEvent;
@@ -38,13 +42,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.Random;
+import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
+import static com.spotify.sdk.android.player.PlaybackBitrate.BITRATE_HIGH;
+import static com.spotify.sdk.android.player.PlaybackBitrate.BITRATE_LOW;
+import static com.spotify.sdk.android.player.PlaybackBitrate.BITRATE_NORMAL;
 
 public class HostActivity extends AppCompatActivity implements
         SpotifyPlayer.NotificationCallback, ConnectionStateCallback {
@@ -57,9 +65,11 @@ public class HostActivity extends AppCompatActivity implements
 
     private static final String REDIRECT_URI = "lnpapp://callback";
 
-    private static final int REQUEST_CODE = 1337;
+    private static final int AUTH_CODE = 1337;
 
     // FIELDS
+
+    SpotifyData wrap;
 
     private String mAccessToken;
 
@@ -72,18 +82,19 @@ public class HostActivity extends AppCompatActivity implements
     private final Player.OperationCallback mOperationCallback = new Player.OperationCallback() {
         @Override
         public void onSuccess() {
-            Log.e("Callback", "OK!");
+            Log.d("Callback", "OK!");
         }
 
         @Override
         public void onError(Error error) {
-            Log.e("Callback", "ERROR:" + error);
+            Log.d("Callback", "ERROR:" + error);
         }
     };
 
     private Player mPlayer;
 
     private User mUser;
+    private RoomInfo mRoom;
 
     private Call mCall;
 
@@ -92,31 +103,35 @@ public class HostActivity extends AppCompatActivity implements
     private Handler mHandler = new Handler();
     // UI ELEMENTS
 
-    private ImageButton btnAdd;
-    private Button btnPause;
-    private Button btnNext;
+    private Button btnAdd;
+    private ImageButton btnPause;
+    private ImageButton btnNext;
     private SeekBar sbTrack;
+    private Button btnSettings;
+    private Button btnInfo;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_host);
+        mRoom = new RoomInfo();
 
         // AUTHENTIFICATION
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
                 AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
         builder.setScopes(new String[]{"user-read-private", "user-read-email", "streaming"});
         AuthenticationRequest request = builder.build();
-        AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
+        AuthenticationClient.openLoginActivity(this, AUTH_CODE, request);
 
         btnAdd = findViewById(R.id.btn_AddSong);
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(HostActivity.super.getApplicationContext(),
+                Intent intent = new Intent(HostActivity.this,
                         AddSongActivity.class);
-                startActivity(intent);
+                intent.putExtra("accessToken", mAccessToken);
+                startActivityForResult(intent, 333);
             }
         });
         btnPause = findViewById(R.id.btn_playPause);
@@ -140,6 +155,21 @@ public class HostActivity extends AppCompatActivity implements
                 }
             }
         });
+        btnSettings = findViewById(R.id.btn_roomSettings);
+        btnSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                changeBitRate();
+            }
+        });
+        btnInfo = findViewById(R.id.btn_roomInfo);
+        btnInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showInfoRoom();
+            }
+        });
+
         sbTrack = findViewById(R.id.sb_seekTrack);
         sbTrack.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -167,6 +197,20 @@ public class HostActivity extends AppCompatActivity implements
                     mPlayer.seekToPosition(mOperationCallback, pos);
                     mPlayer.resume(mOperationCallback);
                 }
+            }
+        });
+
+        Button test = findViewById(R.id.btn_testavimas);
+        test.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+       //         Log.i("wrapper test", "Email : " + wrap.getUserEmail());
+//                for (WrappedTrack track : wrap.getUserTracks()){
+//                    Log.i("User track", track.getName());
+//                }
+//                for (WrappedTrack track : wrap.searchTracks("drake") ){
+//                    Log.i("drake search", track.getName());
+//                }
             }
         });
 
@@ -220,10 +264,12 @@ public class HostActivity extends AppCompatActivity implements
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        if (requestCode == REQUEST_CODE) {
+        // Authentication result
+        if (requestCode == AUTH_CODE) {
             AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
             if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                 mAccessToken = response.getAccessToken();
+                wrap = new SpotifyData(mAccessToken);
                 Config playerConfig = new Config(this, mAccessToken, CLIENT_ID);
                 Spotify.getPlayer(playerConfig, this, new SpotifyPlayer.InitializationObserver() {
                     @Override
@@ -242,24 +288,40 @@ public class HostActivity extends AppCompatActivity implements
                 getUserInfo();
             }
         }
+
+        // AddSongActivity result
+        if (requestCode == 333){
+            if(resultCode == AddSongActivity.RESULT_OK){
+                String songId = intent.getStringExtra("uri");
+                mPlayer.queue(mOperationCallback, songId);
+
+                ServerHelper serverHelper = new ServerHelper();
+                ServerRequest.Callback addSongCallback = new ServerRequest.Callback() {
+                    @Override
+                    public void execute(String response) {
+                        Toast.makeText(HostActivity.this, "Song added", Toast.LENGTH_SHORT).show();
+                    }
+                };
+                serverHelper.addSong(mRoom, songId, addSongCallback);
+            }
+        }
     }
 
     @Override
     public void onPlaybackEvent(PlayerEvent playerEvent) {
-        // TODO: Clean up the macaroni code with proper playerEvent handling
         Log.d(TAG, "Playback event received: " + playerEvent.name());
         mCurrentPlaybackState = mPlayer.getPlaybackState();
         mMetadata = mPlayer.getMetadata();
         Log.d(TAG, "Playback State: " + mCurrentPlaybackState.toString());
         Log.d(TAG, "Metadata: " + mMetadata.toString());
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyPlay) {
-            btnPause.setText("Pause");
+            btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_media_pause));
             seekUpdation();
         }
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyPause) {
-            btnPause.setText("Play");
+            btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_media_play));
         }
-        if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged){
+        if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged) {
 
         }
         updateView();
@@ -285,14 +347,6 @@ public class HostActivity extends AppCompatActivity implements
         Log.d(TAG, "User logged in");
         Toast.makeText(this, "User logged in", Toast.LENGTH_LONG).show();
 
-        // ROOM CREATION
-        String userID = "test@test.com";
-
-        TextView status = (TextView) findViewById(R.id.tw_RoomId);
-
-        ServerHelper serverHelper = new ServerHelper();
-        serverHelper.registerUser(userID, status);
-
         mCurrentPlaybackState = mPlayer.getPlaybackState();
         mMetadata = mPlayer.getMetadata();
 
@@ -308,7 +362,7 @@ public class HostActivity extends AppCompatActivity implements
 
     @Override
     public void onLoginFailed(Error error) {
-        if (error.toString() == "kSpErrorNeedsPremium") {
+        if (Objects.equals(error.toString(), "kSpErrorNeedsPremium")) {
             Toast.makeText(this, "Premium account needed to be a host", Toast.LENGTH_LONG).show();
             //finish();
         }
@@ -353,7 +407,8 @@ public class HostActivity extends AppCompatActivity implements
                             jsonObject.getString("display_name"),
                             jsonObject.getString("email"),
                             jsonObject.getString("country"));
-                    updateUserView();
+
+                    createRoom();
                 } catch (JSONException e) {
                     Toast.makeText(HostActivity.this, "Failed to parse data: " + e, Toast.LENGTH_SHORT).show();
                 }
@@ -365,15 +420,6 @@ public class HostActivity extends AppCompatActivity implements
         if (mCall != null) {
             mCall.cancel();
         }
-    }
-
-    private void updateUserView() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ((TextView) findViewById(R.id.tw_user)).setText(mUser.toString());
-            }
-        });
     }
 
     private void updateTextView(final int id, final String text) {
@@ -390,21 +436,13 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void run() {
                 try {
-                    updateTextView(R.id.tw_album, mMetadata.currentTrack.albumName);
-                    updateTextView(R.id.tw_artist, mMetadata.currentTrack.artistName);
-                    updateTextView(R.id.tw_songName, mMetadata.currentTrack.name);
+                    updateTextView(R.id.tv_artist, mMetadata.currentTrack.artistName);
+                    updateTextView(R.id.tv_songName, mMetadata.currentTrack.name);
                     updateTextView(R.id.tv_trackLenght,
                             Utilities.formatSeconds(mMetadata.currentTrack.durationMs));
                     Picasso.with(HostActivity.this).
                             load(mMetadata.currentTrack.albumCoverWebUrl)
                             .into((ImageView) findViewById(R.id.iv_albumArt));
-                    if (mMetadata.nextTrack != null) {
-                        updateTextView(R.id.tw_nextTrack, "Next song: "
-                                + mMetadata.nextTrack.name + " by " + mMetadata.nextTrack.artistName);
-                    } else {
-                        updateTextView(R.id.tw_nextTrack, "Next song: none");
-                    }
-
                 } catch (NullPointerException e) {
                     Log.e(TAG, "Metadata is null: " + mMetadata);
                 }
@@ -452,32 +490,99 @@ public class HostActivity extends AppCompatActivity implements
         super.onDestroy();
     }
 
-
-    // DEMONSTRATIONAL PURPOSES ONLY
-    // TODO: Remove queue1,2,3 after we show them off
-
-    public void queue1(View view) {
-        if (mCurrentPlaybackState.isPlaying) {
-            mPlayer.queue(mOperationCallback, "spotify:track:3VzJE6yGuj8fDExUh6TLnc");
-        } else {
-            mPlayer.playUri(mOperationCallback, "spotify:track:3VzJE6yGuj8fDExUh6TLnc", 0, 0);
-        }
+    protected void changeBitRate(){
+        final AlertDialog.Builder mBuilder = new AlertDialog.Builder(HostActivity.this);
+        View mView = getLayoutInflater().inflate(R.layout.dialog_bitratesettings, null);
+        final String[] bitratesValues = getResources().getStringArray(R.array.bitratesValues);
+        final PlaybackBitrate[] bitrates = {BITRATE_LOW,BITRATE_NORMAL,BITRATE_HIGH};
+        mBuilder.setView(mView);
+        final AlertDialog dialog = mBuilder.create();
+        dialog.show();
+        Button btn_low = (Button) mView.findViewById(R.id.btn_lowBitrate);
+        btn_low.setText(bitratesValues[0]);
+        btn_low.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[0]);
+                Toast.makeText(HostActivity.this, "Bit rate = "+ bitratesValues[0], Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            }
+        });
+        Button btn_normal = (Button) mView.findViewById(R.id.btn_normalBitrate);
+        btn_normal.setText(bitratesValues[1]);
+        btn_normal.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[1]);
+                Toast.makeText(HostActivity.this, "Bit rate = "+ bitratesValues[1], Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            }
+        });
+        Button btn_high = (Button) mView.findViewById(R.id.btn_highBitrate);
+        btn_high.setText(bitratesValues[2]);
+        btn_high.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[2]);
+                Toast.makeText(HostActivity.this, "Bit rate = "+ bitratesValues[2], Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            }
+        });
     }
 
-    public void queue2(View view) {
-        if (mCurrentPlaybackState.isPlaying) {
-            mPlayer.queue(mOperationCallback, "spotify:track:6Gn02ZC8juXwQ10Xk7ACXx");
-        } else {
-            mPlayer.playUri(mOperationCallback, "spotify:track:6Gn02ZC8juXwQ10Xk7ACXx", 0, 0);
-        }
+    public void showInfoRoom(){
+        final AlertDialog.Builder mBuilder = new AlertDialog.Builder(HostActivity.this);
+        View mView = getLayoutInflater().inflate(R.layout.dialog_info, null);
+        mBuilder.setView(mView);
+        final AlertDialog dialog = mBuilder.create();
+        TextView tvUsername = mView.findViewById(R.id.tv_userName);
+        TextView tvCountry = mView.findViewById(R.id.tv_country);
+        TextView tvEmail = mView.findViewById(R.id.tv_email);
+        TextView tvID = mView.findViewById(R.id.tv_userID);
+        tvUsername.setText(mUser.getDisplayName());
+        tvCountry.setText(mUser.getCountry());
+        tvEmail.setText(mUser.getEmail());
+        tvID.setText(mUser.getId());
+        dialog.show();
     }
 
-    public void queue3(View view) {
-        if (mCurrentPlaybackState.isPlaying) {
-            mPlayer.queue(mOperationCallback, "spotify:track:0VgkVdmE4gld66l8iyGjgx");
-        } else {
-            mPlayer.playUri(mOperationCallback, "spotify:track:0VgkVdmE4gld66l8iyGjgx", 0, 0);
-        }
-    }
+    public void createRoom() {
+        final String userID = "test@test.com";
 
+        final TextView status = (TextView) findViewById(R.id.tv_RoomId);
+
+        final ServerHelper serverHelper = new ServerHelper();
+        final ServerRequest.Callback callback = new ServerRequest.Callback() {
+            @Override
+            public void execute(String response) {
+                ServerRequest.Callback insideCallback = new ServerRequest.Callback() {
+                    @Override
+                    public void execute(String response) {
+                        if(response != null) {
+                            if(response.equals(ServerHelper.CONNECTION_ERROR) || response.equals(ServerHelper.RESPONSE_ERROR)){
+                                status.setText(response);
+                            }
+
+                            try {
+                                JSONObject roomInfo = new JSONObject(response.toString());
+                                int roomId = roomInfo.getInt("id");
+                                int loginCode = roomInfo.getInt("logincode");
+
+                                mRoom.setId(roomId);
+                                mRoom.setLoginCode(loginCode);
+
+                                status.setText("Login code is " + String.valueOf(loginCode));
+                            } catch (JSONException e) {
+                                Log.d("MusicDJ", response.toString());
+                                status.setText("Error parsing response");
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                };
+                serverHelper.createRoom(mUser.getEmail(), insideCallback);
+            }
+        };
+        serverHelper.registerUser(userID, callback);
+    }
 }

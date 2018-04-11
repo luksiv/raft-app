@@ -20,6 +20,7 @@ android {
 
 repositories {
     mavenCentral()
+    maven { url "https://jitpack.io" }
     flatDir {
         dirs 'libs'
     }
@@ -35,6 +36,9 @@ dependencies {
 
     // This library handles design
     implementation 'com.android.support:design:27.0.2'
+    // This library handles spotify web api
+    implementation 'com.github.kaaes:spotify-web-api-android:0.4.1'
+
     // This library handles authentication and authorization
     implementation 'com.spotify.android:auth:1.1.0'
 
