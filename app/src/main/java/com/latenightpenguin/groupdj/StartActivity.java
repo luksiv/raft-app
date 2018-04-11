@@ -19,7 +19,7 @@ public class StartActivity extends AppCompatActivity {
     // View variables
     Button btn_Host;
     Button btn_Join;
-    Button btn_Login;
+    Button btn_LogOut;
     EditText et_RoomId;
 
     @Override
@@ -58,6 +58,13 @@ public class StartActivity extends AppCompatActivity {
                 }
             }
         });
+        btn_LogOut = (Button) findViewById(R.id.btn_LogOut);
+        btn_LogOut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                clearAppData();
+            }
+        });
     }
 
     // A method to hide the keyboard
@@ -70,5 +77,14 @@ public class StartActivity extends AppCompatActivity {
             view = new View(activity);
         }
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    private void clearAppData(){
+        try {
+            Runtime runtime = Runtime.getRuntime();
+            runtime.exec("pm clear com.latenightpenguin.groupdj");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }
