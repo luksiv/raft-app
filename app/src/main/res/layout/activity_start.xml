@@ -32,4 +32,12 @@
         android:layout_marginTop="64dp"
         android:text="Host" />
 
+    <Button
+        android:id="@+id/btn_LogOut"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:text="Log Out &amp; Exit App" />
+
 </RelativeLayout>
