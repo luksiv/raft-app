@@ -251,7 +251,17 @@ public class HostActivity extends AppCompatActivity implements
         // AddSongActivity result
         if (requestCode == 333){
             if(resultCode == AddSongActivity.RESULT_OK){
-                mPlayer.queue(mOperationCallback, intent.getStringExtra("uri"));
+                String songId = intent.getStringExtra("uri");
+                mPlayer.queue(mOperationCallback, songId);
+
+                ServerHelper serverHelper = new ServerHelper();
+                ServerRequest.Callback addSongCallback = new ServerRequest.Callback() {
+                    @Override
+                    public void execute(String response) {
+                        Toast.makeText(HostActivity.this, "Song added", Toast.LENGTH_SHORT).show();
+                    }
+                };
+                serverHelper.addSong(mRoom, songId, addSongCallback);
             }
         }
     }

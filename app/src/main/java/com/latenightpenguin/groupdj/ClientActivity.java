@@ -40,6 +40,7 @@ public class ClientActivity extends AppCompatActivity {
 
     User mUser;
     RoomInfo mRoom;
+    ArrayList<String> mSongs;
 
     private OkHttpClient mOkHttpClient = new OkHttpClient();
     private Call mCall;
@@ -65,7 +66,8 @@ public class ClientActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(ClientActivity.super.getApplicationContext(), AddSongActivity.class);
                 intent.putExtra("accessToken", mAccessToken);
-                startActivity(intent);
+                //startActivity(intent);
+                startActivityForResult(intent, 333);
             }
         });
 
@@ -91,8 +93,8 @@ public class ClientActivity extends AppCompatActivity {
                 ServerRequest.Callback getSongsCallback = new ServerRequest.Callback() {
                     @Override
                     public void execute(String response) {
-                        ArrayList<String> songs = serverHelper.convertToList(response);
-                        for(String song : songs) {
+                        mSongs = serverHelper.convertToList(response);
+                        for(String song : mSongs) {
                             Log.d("MusicDJ", song);
                         }
                     }
@@ -108,7 +110,11 @@ public class ClientActivity extends AppCompatActivity {
                 ServerRequest.Callback playNextCallback = new ServerRequest.Callback() {
                     @Override
                     public void execute(String response) {
-                        String song = serverHelper.getSongId(response);
+                        String song = "";
+                        if(response == null || response.equals("")){
+                            Toast.makeText(ClientActivity.this, "Nebėra dainų eilėje", Toast.LENGTH_SHORT);
+                        }
+                        song = serverHelper.getSongId(response);
                         Log.d("MusicDJ", song);
                     }
                 };
@@ -134,6 +140,22 @@ public class ClientActivity extends AppCompatActivity {
             if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                 mAccessToken = response.getAccessToken();
                 getUserInfo();
+            }
+        }
+
+        // AddSongActivity result
+        if (requestCode == 333){
+            if(resultCode == AddSongActivity.RESULT_OK){
+                String songId = intent.getStringExtra("uri");
+
+                ServerHelper serverHelper = new ServerHelper();
+                ServerRequest.Callback addSongCallback = new ServerRequest.Callback() {
+                    @Override
+                    public void execute(String response) {
+                        Toast.makeText(ClientActivity.this, "Song added", Toast.LENGTH_SHORT).show();
+                    }
+                };
+                serverHelper.addSong(mRoom, songId, addSongCallback);
             }
         }
     }
