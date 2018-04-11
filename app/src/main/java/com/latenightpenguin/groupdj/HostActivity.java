@@ -15,6 +15,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,6 +24,7 @@ import android.widget.Toast;
 import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
 import com.latenightpenguin.groupdj.NetworkServices.ServerRequest;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
+import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrappedSpotifyCallback;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -42,8 +45,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
+import kaaes.spotify.webapi.android.SpotifyError;
+import kaaes.spotify.webapi.android.models.ArtistSimple;
+import kaaes.spotify.webapi.android.models.Track;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -58,27 +66,17 @@ public class HostActivity extends AppCompatActivity implements
         SpotifyPlayer.NotificationCallback, ConnectionStateCallback {
 
     // CONSTANTS
-
-    private static final String TAG = HostActivity.class.getSimpleName();
-
+    private static final String TAG = "HostActivity";
     private static final String CLIENT_ID = "1b02f619aa8142db8cd6d3d9bc3d505e";
-
     private static final String REDIRECT_URI = "lnpapp://callback";
-
     private static final int AUTH_CODE = 1337;
 
     // FIELDS
-
     SpotifyData wrap;
-
     private String mAccessToken;
-
     private PlaybackState mCurrentPlaybackState;
-
     private BroadcastReceiver mNetworkStateReceiver;
-
     private Metadata mMetadata;
-
     private final Player.OperationCallback mOperationCallback = new Player.OperationCallback() {
         @Override
         public void onSuccess() {
@@ -90,40 +88,44 @@ public class HostActivity extends AppCompatActivity implements
             Log.d("Callback", "ERROR:" + error);
         }
     };
-
     private Player mPlayer;
-
     private User mUser;
     private RoomInfo mRoom;
-
     private Call mCall;
-
     private OkHttpClient mOkHttpClient = new OkHttpClient();
-
     private Handler mHandler = new Handler();
-    // UI ELEMENTS
+    private ArrayList<String> mSongs;
+    private PlaylistArrayAdapter mPlaylistAdapter;
+    private SpotifyData mSpotifyData;
 
+    // UI ELEMENTS
     private Button btnAdd;
     private ImageButton btnPause;
     private ImageButton btnNext;
     private SeekBar sbTrack;
     private Button btnSettings;
     private Button btnInfo;
+    private Button btnToggleViews;
+    private Button btnRefreshPlaylist;
+    private ListView lwPlaylist;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_host);
+
         mRoom = new RoomInfo();
 
-        // AUTHENTIFICATION
-        AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
-                AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
-        builder.setScopes(new String[]{"user-read-private", "user-read-email", "streaming"});
-        AuthenticationRequest request = builder.build();
-        AuthenticationClient.openLoginActivity(this, AUTH_CODE, request);
+        // ERROR HANDLER
+        Thread.setDefaultUncaughtExceptionHandler(new ErrorHandler());
+        ErrorHandler.setContext(HostActivity.this);
 
+        authentication();
+        setUpElements();
+    }
+
+    private void setUpElements(){
         btnAdd = findViewById(R.id.btn_AddSong);
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -155,6 +157,13 @@ public class HostActivity extends AppCompatActivity implements
                 }
             }
         });
+        btnToggleViews = findViewById(R.id.btn_toggleView);
+        btnToggleViews.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                changeViews(btnToggleViews);
+            }
+        });
         btnSettings = findViewById(R.id.btn_roomSettings);
         btnSettings.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -167,6 +176,35 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 showInfoRoom();
+            }
+        });
+
+        btnRefreshPlaylist = findViewById(R.id.btn_refreshPlaylist);
+        btnRefreshPlaylist.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+//                final ServerHelper serverHelper = new ServerHelper();
+//                ServerRequest.Callback getSongsCallback = new ServerRequest.Callback() {
+//                    @Override
+//                    public void execute(String response) {
+//                        mSongs = serverHelper.convertToList(response);
+//                        for (String song : mSongs) {
+//                            Log.d(TAG, song);
+//                        }
+//                    }
+//                };
+//                serverHelper.getSongs(mRoom, getSongsCallback);
+                mSpotifyData.getTrack("1cbTLb5mdv3E0Lcv0su6v7", new WrappedSpotifyCallback<Track>(){
+                    @Override
+                    public void success(Track track, retrofit.client.Response response) {
+                        Log.d(TAG, "success: " + track.name);
+                    }
+
+                    @Override
+                    public void failure(SpotifyError spotifyError) {
+                        Log.e(TAG, "failure: "+ spotifyError.getMessage() );
+                    }
+                });
             }
         });
 
@@ -199,6 +237,27 @@ public class HostActivity extends AppCompatActivity implements
                 }
             }
         });
+
+        ArrayList<SongItem> testList = new ArrayList<>();
+        testList.add(new SongItem("TestName1", "TestArtist", "TestAlbum", "TestUri"));
+        testList.add(new SongItem("TestName2", "TestArtist", "TestAlbum", "TestUri"));
+        testList.add(new SongItem("TestName3", "TestArtist", "TestAlbum", "TestUri"));
+        testList.add(new SongItem("TestName4", "TestArtist", "TestAlbum", "TestUri"));
+        testList.add(new SongItem("TestName5", "TestArtist", "TestAlbum", "TestUri"));
+        lwPlaylist = findViewById(R.id.lw_playlist);
+        mPlaylistAdapter = new PlaylistArrayAdapter(this, testList);
+        lwPlaylist.setAdapter(mPlaylistAdapter);
+
+
+
+
+    }
+    private void authentication(){
+        AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
+                AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
+        builder.setScopes(new String[]{"user-read-private", "user-read-email", "streaming"});
+        AuthenticationRequest request = builder.build();
+        AuthenticationClient.openLoginActivity(this, AUTH_CODE, request);
     }
 
     @Override
@@ -254,7 +313,7 @@ public class HostActivity extends AppCompatActivity implements
             AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
             if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                 mAccessToken = response.getAccessToken();
-                wrap = new SpotifyData(mAccessToken);
+                mSpotifyData = new SpotifyData(mAccessToken);
                 Config playerConfig = new Config(this, mAccessToken, CLIENT_ID);
                 Spotify.getPlayer(playerConfig, this, new SpotifyPlayer.InitializationObserver() {
                     @Override
@@ -335,7 +394,7 @@ public class HostActivity extends AppCompatActivity implements
         mCurrentPlaybackState = mPlayer.getPlaybackState();
         mMetadata = mPlayer.getMetadata();
 
-        mPlayer.playUri(mOperationCallback, "spotify:track:10ViidwjGLCfVtGPfdcszR", 0, 0);
+        mPlayer.playUri(mOperationCallback, "spotify:track:1cbTLb5mdv3E0Lcv0su6v7", 0, 0);
     }
 
     @Override
@@ -449,6 +508,22 @@ public class HostActivity extends AppCompatActivity implements
         updateTextView(R.id.tv_trackTime,
                 Utilities.formatSeconds(mPlayer.getPlaybackState().positionMs));
         mHandler.postDelayed(run, 1000);
+    }
+
+    private void changeViews(Button button){
+        LinearLayout player = findViewById(R.id.root_player);
+        LinearLayout playlist = findViewById(R.id.root_playlist);
+
+        if(player.getVisibility() == View.VISIBLE){
+            player.setVisibility(View.INVISIBLE);
+            playlist.setVisibility(View.VISIBLE);
+            button.setText("Show player");
+        } else {
+            player.setVisibility(View.VISIBLE);
+            playlist.setVisibility(View.INVISIBLE);
+            button.setText("Show playlist");
+        }
+
     }
 
     // DESTRUCTION

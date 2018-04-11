@@ -4,59 +4,20 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
-import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
+import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrappedSpotifyCallback;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import kaaes.spotify.webapi.android.models.Track;
+import kaaes.spotify.webapi.android.models.TracksPager;
 import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-
-class SongItem {
-
-    String mSongName;
-    String mArtists;
-    String mAlbum;
-    String mUri;
-
-    public SongItem(String songName, String artists, String album, String uri) {
-        mSongName = songName;
-        mArtists = artists;
-        mAlbum = album;
-        mUri = uri;
-    }
-
-    public String getmSongName() {
-        return mSongName;
-    }
-
-    public String getmArtists() {
-        return mArtists;
-    }
-
-    public String getmAlbum() {
-        return mAlbum;
-    }
-
-    public String getmUri() {
-        return mUri;
-    }
-}
 
 public class AddSongActivity extends AppCompatActivity {
 
@@ -67,7 +28,6 @@ public class AddSongActivity extends AppCompatActivity {
     Timer timer;
 
     EditText et_input;
-    ImageView ib_testButton;
     ListView lw_searchResults;
 
     ResultArrayAdapter adapter;
@@ -106,91 +66,36 @@ public class AddSongActivity extends AppCompatActivity {
 
             }
         });
-        ib_testButton = findViewById(R.id.ib_searchTestButton);
         lw_searchResults = findViewById(R.id.lw_searchResults);
 
         list = new ArrayList<>();
         adapter = new ResultArrayAdapter(this, list);
         lw_searchResults.setAdapter(adapter);
-
-        ib_testButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (et_input.getText().toString().length() > 0) {
-                    getTracks();
-                }
-            }
-        });
     }
 
-    //TODO: Remove this method when wrapper is working correctly
     public void getTracks() {
-
-        final Request request = new Request.Builder()
-                .url("https://api.spotify.com/v1/search?q=" + et_input.getText().toString() + "&type=track&limit=15")
-                .addHeader("Authorization", "Bearer " + mAccessToken)
-                .build();
+        SpotifyData spotifyData = new SpotifyData(mAccessToken);
 
 
-        cancelCall();
-        mCall = mOkHttpClient.newCall(request);
-
-        mCall.enqueue(new Callback() {
+        spotifyData.searchTracks(et_input.getText().toString(), new WrappedSpotifyCallback<TracksPager>() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                Toast.makeText(AddSongActivity.this, "Failed to fetch data: " + e, Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                try {
-                    final ArrayList<SongItem> results = new ArrayList<>();
-                    JSONObject jsonObject = new JSONObject(response.body().string()).getJSONObject("tracks");
-                    int total = jsonObject.getInt("total");
-                    int limit = jsonObject.getInt("limit");
-                    JSONArray jsonArray = jsonObject.getJSONArray("items");
-                    if (total == 0) {
-                        //TODO: implement null state
-                    }
-                    JSONObject obj;
-                    if (total >= limit) {
-                        for (int i = 0; i < limit; i++) {
-                            obj = jsonArray.getJSONObject(i);
-                            String song = obj.getString("name");
-                            String artist = obj.getJSONArray("artists").getJSONObject(0).getString("name");
-                            String album = obj.getJSONObject("album").getString("name");
-                            String uri = obj.getString("uri");
-                            results.add(new SongItem(song, artist, album, uri));
-                            String ret = String.format("Album: '%s', Artist '%s', Song '%s'", album, artist, song);
-                            Log.e("AddSongActivity", ret);
-                        }
-                    } else {
-                        for (int i = 0; i < total; i++) {
-                            obj = jsonArray.getJSONObject(i);
-                            String song = obj.getString("name");
-                            String artist = obj.getJSONArray("artists").getJSONObject(0).getString("name");
-                            String album = obj.getJSONObject("album").getString("name");
-                            String uri = obj.getString("uri");
-                            results.add(new SongItem(song, artist, album, uri));
-                            String ret = String.format("Album: '%s', Artist '%s', Song '%s'", album, artist, song);
-                            Log.e("AddSongActivity", ret);
-                        }
-                    }
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            adapter.clear();
-                            adapter.addAll(results);
-                        }
-                    });
-
-
-                } catch (Exception e) {
-                    Log.e("AddSongActivity", "no gucci");
-                    Log.e("AddSongActivity", e.getMessage());
+            public void success(TracksPager tracksPager, retrofit.client.Response response) {
+                final ArrayList<SongItem> results = new ArrayList<>();
+                for (Track track : tracksPager.tracks.items) {
+                    String song = track.name;
+                    String artist = Utilities.convertArtistListToString(track.artists);
+                    String album = track.album.name;
+                    String uri = track.uri;
+                    results.add(new SongItem(song, artist, album, uri));
                 }
 
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        adapter.clear();
+                        adapter.addAll(results);
+                    }
+                });
             }
         });
     }

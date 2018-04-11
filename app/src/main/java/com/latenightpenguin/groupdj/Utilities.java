@@ -6,6 +6,10 @@ package com.latenightpenguin.groupdj;
 
 import android.util.Log;
 
+import java.util.List;
+
+import kaaes.spotify.webapi.android.models.ArtistSimple;
+
 /**
  * This class serves as a place to put ulitity functions
  */
@@ -46,5 +50,17 @@ public class Utilities {
 
         // return percentage
         return percentage.intValue();
+    }
+
+    public static String convertArtistListToString(List<ArtistSimple> list) {
+        String ret = "";
+
+        for (ArtistSimple artist : list) {
+            ret += artist.name + ", ";
+        }
+
+        ret = ret.substring(0, ret.length() - 2);
+
+        return ret;
     }
 }

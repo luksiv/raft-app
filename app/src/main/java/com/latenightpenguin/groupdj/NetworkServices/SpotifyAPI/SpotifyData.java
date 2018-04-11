@@ -13,7 +13,7 @@ import kaaes.spotify.webapi.android.models.UserPrivate;
 import retrofit.RetrofitError;
 
 public class SpotifyData {
-    final static String TAG = SpotifyData.class.getSimpleName();
+    private static final String TAG = "SpotifyData";
 
     SpotifyApi api;
     SpotifyService services;

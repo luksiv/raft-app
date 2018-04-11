@@ -20,8 +20,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="12" />
 
-        <ImageButton
-            android:id="@+id/ib_searchTestButton"
+        <ImageView
+            android:background="@android:color/holo_blue_dark"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"

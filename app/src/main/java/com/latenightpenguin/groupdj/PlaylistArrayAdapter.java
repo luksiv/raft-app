@@ -9,14 +9,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
-public class ResultArrayAdapter extends ArrayAdapter<SongItem> {
+public class PlaylistArrayAdapter extends ArrayAdapter<SongItem> {
 
-    public ResultArrayAdapter(Context context, ArrayList<SongItem> list) {
+    public PlaylistArrayAdapter(Context context, ArrayList<SongItem> list){
         super(context, 0, list);
     }
 
@@ -25,28 +26,20 @@ public class ResultArrayAdapter extends ArrayAdapter<SongItem> {
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         final SongItem item = getItem(position);
 
-        if (convertView == null) {
+        if(convertView == null){
             convertView = LayoutInflater.from(getContext())
-                    .inflate(R.layout.item_result_song, parent, false);
+                    .inflate(R.layout.item_playlist_song, parent, false);
         }
 
+        TextView pos = convertView.findViewById(R.id.item_position);
         TextView song = convertView.findViewById(R.id.item_songName);
         TextView artists = convertView.findViewById(R.id.item_artist);
         TextView album = convertView.findViewById(R.id.item_album);
 
+        pos.setText(String.valueOf(position + 1) + ".");
         song.setText(item.getmSongName());
         artists.setText(item.getmArtists());
         album.setText(item.getmAlbum());
-
-        convertView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final Intent data = new Intent();
-                data.putExtra("uri", item.getmUri());
-                ((AddSongActivity) getContext()).setResult(Activity.RESULT_OK, data);
-                ((AddSongActivity) getContext()).finish();
-            }
-        });
 
         return convertView;
     }
