@@ -7,7 +7,6 @@ import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -90,7 +89,7 @@ public class ErrorHandler implements java.lang.Thread.UncaughtExceptionHandler{
         StringWriter stackTrace = new StringWriter();
         exception.printStackTrace(new PrintWriter(stackTrace));
         StringBuilder errorReport = new StringBuilder();
-        errorReport.append("************ CAUSE OF ERROR ************\n\n");
+        errorReport.append("CAUSE OF ERROR\n\n");
         errorReport.append(stackTrace.toString());
 
 

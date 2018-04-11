@@ -8,20 +8,16 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Error;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
-
 import java.io.IOException;
-
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -43,7 +39,6 @@ public class ClientActivity extends AppCompatActivity {
     private OkHttpClient mOkHttpClient = new OkHttpClient();
     private Call mCall;
 
-    // Declaring view elements
     ImageButton btnAdd;
     int mRoomId;
 
@@ -69,17 +64,8 @@ public class ClientActivity extends AppCompatActivity {
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-             //   Intent intent = new Intent(ClientActivity.super.getApplicationContext(), AddSongActivity.class);
-             //   startActivity(intent);
-                try {
-                    throw new Exception("Messege of some sort");
-                }
-                catch (Exception ex)
-                {
-                //    ErrorHandler.handle(ex);
-                //    ErrorHandler.handleWithToast(ex, R.string.default_error);
-                    ErrorHandler.handleWithSnackbar(ex, v);
-                }
+                Intent intent = new Intent(ClientActivity.super.getApplicationContext(), AddSongActivity.class);
+                startActivity(intent);
             }
         });
 
@@ -88,8 +74,6 @@ public class ClientActivity extends AppCompatActivity {
         builder.setScopes(new String[]{"user-read-email"});
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
-
-
     }
 
     @Override
