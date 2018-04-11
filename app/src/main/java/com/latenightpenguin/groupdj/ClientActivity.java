@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
+import com.latenightpenguin.groupdj.NetworkServices.ServerRequest;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrappedSpotifyCallback;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
@@ -140,13 +141,14 @@ public class ClientActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 SpotifyData data = new SpotifyData(mAccessToken);
-                /*
+
                 data.getUser(new WrappedSpotifyCallback<UserPrivate>() {
                     @Override
                     public void success(UserPrivate userPrivate, retrofit.client.Response response) {
                         testOutput.setText(userPrivate.email + "\n" + userPrivate.id);
                     }
                 });
+                /*
                 data.getTrack("09BxJMIz6CkunwqTPgpEWV",new WrappedSpotifyCallback<Track>() {
                     @Override
                     public void success(Track track, retrofit.client.Response response) {

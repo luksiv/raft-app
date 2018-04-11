@@ -19,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
+import com.latenightpenguin.groupdj.NetworkServices.ServerRequest;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
