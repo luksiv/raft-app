@@ -110,10 +110,7 @@ public class HostActivity extends AppCompatActivity implements
     private Button btnToggleViews;
     private Button btnRefreshPlaylist;
     private ListView lwPlaylist;
-    //endregion
-
-    //TODO: Remove count variable
-    int count = 0;
+    //endregiongit
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
