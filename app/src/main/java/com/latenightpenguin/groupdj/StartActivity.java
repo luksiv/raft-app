@@ -23,6 +23,8 @@ public class StartActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Thread.setDefaultUncaughtExceptionHandler(new ErrorHandler());
+        ErrorHandler.setContext(StartActivity.this);
         setContentView(R.layout.activity_start);
 
         // Assigning a button to btn_Host and setting an OnClickListener for it

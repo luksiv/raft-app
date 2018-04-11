@@ -1,13 +1,17 @@
 package com.latenightpenguin.groupdj;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-public class ErrorHandler {
+public class ErrorHandler implements java.lang.Thread.UncaughtExceptionHandler{
     static String _tag;
     static Context _context;
 
@@ -27,16 +31,34 @@ public class ErrorHandler {
         Toast.makeText(_context, formatErrorMsg(ex, false), Toast.LENGTH_SHORT).show();
     }
 
-    static void handleWithToast(Exception ex, String messege)
+    static void handleWithToast(Exception ex, String message)
     {
         handle(ex);
-        Toast.makeText(_context, messege, Toast.LENGTH_SHORT).show();
+        Toast.makeText(_context, message, Toast.LENGTH_SHORT).show();
     }
 
     static void handleWithToast(Exception ex, int id)
     {
         handle(ex);
         Toast.makeText(_context, _context.getResources().getString(id), Toast.LENGTH_SHORT).show();
+    }
+
+    static void handleWithSnackbar(Exception ex, View view)
+    {
+        handle(ex);
+        Snackbar.make(view, formatErrorMsg(ex, false), Snackbar.LENGTH_LONG).show();
+    }
+
+    static void handleWithSnackbar(Exception ex, View view, String message)
+    {
+        handle(ex);
+        Snackbar.make(view, message, Snackbar.LENGTH_LONG).show();
+    }
+
+    static void handleWithSnackbar(Exception ex, View view, int id)
+    {
+        handle(ex);
+        Snackbar.make(view, _context.getResources().getString(id), Snackbar.LENGTH_LONG).show();
     }
 
     static String formatErrorMsg(Exception ex, boolean printStackTrace)
@@ -61,5 +83,22 @@ public class ErrorHandler {
 
 
         return msg.toString();
+    }
+
+    @Override
+    public void uncaughtException(Thread t, Throwable exception) {
+        StringWriter stackTrace = new StringWriter();
+        exception.printStackTrace(new PrintWriter(stackTrace));
+        StringBuilder errorReport = new StringBuilder();
+        errorReport.append("************ CAUSE OF ERROR ************\n\n");
+        errorReport.append(stackTrace.toString());
+
+
+        Intent intent = new Intent(_context, CrashActivity.class);
+        intent.putExtra("error", errorReport.toString());
+        _context.startActivity(intent);
+
+        android.os.Process.killProcess(android.os.Process.myPid());
+        System.exit(10);
     }
 }

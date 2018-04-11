@@ -50,6 +50,7 @@ public class ClientActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Thread.setDefaultUncaughtExceptionHandler(new ErrorHandler());
         setContentView(R.layout.activity_client);
         ErrorHandler.setContext(ClientActivity.this);
         try {
@@ -76,7 +77,8 @@ public class ClientActivity extends AppCompatActivity {
                 catch (Exception ex)
                 {
                 //    ErrorHandler.handle(ex);
-                    ErrorHandler.handleWithToast(ex, R.string.default_error);
+                //    ErrorHandler.handleWithToast(ex, R.string.default_error);
+                    ErrorHandler.handleWithSnackbar(ex, v);
                 }
             }
         });
