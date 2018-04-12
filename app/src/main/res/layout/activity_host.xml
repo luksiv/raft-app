@@ -48,7 +48,7 @@
     <include layout="@layout/layout_player"/>
 
     <!-- playlist -->
-    <include layout="@layout/layout_playlist"/>
+    <include layout="@layout/layout_playlist_host"/>
 
     <TextView
         android:id="@+id/tv_RoomId"

@@ -45,10 +45,10 @@
     </LinearLayout>
 
     <!-- player -->
-    <include layout="@layout/layout_player"/>
+    <include layout="@layout/layout_player_client"/>
 
     <!-- playlist -->
-    <include layout="@layout/layout_playlist"/>
+    <include layout="@layout/layout_playlist_host"/>
 
     <TextView
         android:id="@+id/tv_RoomId"

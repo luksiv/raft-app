@@ -136,30 +136,29 @@ public class ClientActivity extends AppCompatActivity {
                 };
                 serverHelper.getSongs(mRoom, getSongsCallback);
 
+                mSpotifyData.getTracks(mSongs, new WrappedSpotifyCallback<Tracks>() {
+                    @Override
+                    public void success(Tracks tracks, retrofit.client.Response response) {
 
-//                mSpotifyData.getTracks(mSongs, new WrappedSpotifyCallback<Tracks>() {
-//                    @Override
-//                    public void success(Tracks tracks, retrofit.client.Response response) {
-//
-//                        final ArrayList<SongItem> results = new ArrayList<>();
-//
-//                        for (Track track : tracks.tracks) {
-//                            String song = track.name;
-//                            String artist = Utilities.convertArtistListToString(track.artists);
-//                            String album = track.album.name;
-//                            String uri = track.uri;
-//                            results.add(new SongItem(song, artist, album, uri));
-//                        }
-//
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                mPlaylistAdapter.clear();
-//                                mPlaylistAdapter.addAll(results);
-//                            }
-//                        });
-//                    }
-//                });
+                        final ArrayList<SongItem> results = new ArrayList<>();
+
+                        for (Track track : tracks.tracks) {
+                            String song = track.name;
+                            String artist = Utilities.convertArtistListToString(track.artists);
+                            String album = track.album.name;
+                            String uri = track.uri;
+                            results.add(new SongItem(song, artist, album, uri));
+                        }
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mPlaylistAdapter.clear();
+                                mPlaylistAdapter.addAll(results);
+                            }
+                        });
+                    }
+                });
 
 
             }

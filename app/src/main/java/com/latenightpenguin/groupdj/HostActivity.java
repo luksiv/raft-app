@@ -53,6 +53,7 @@ import kaaes.spotify.webapi.android.SpotifyError;
 import kaaes.spotify.webapi.android.models.ArtistSimple;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
+import kaaes.spotify.webapi.android.models.UserPrivate;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -453,41 +454,14 @@ public class HostActivity extends AppCompatActivity implements
 
     public void getUserInfo() {
 
-        final Request request = new Request.Builder()
-                .url("https://api.spotify.com/v1/me")
-                .addHeader("Authorization", "Bearer " + mAccessToken)
-                .build();
-
-        cancelCall();
-        mCall = mOkHttpClient.newCall(request);
-
-        mCall.enqueue(new Callback() {
+        mSpotifyData.getUser(new WrappedSpotifyCallback<UserPrivate>(){
             @Override
-            public void onFailure(Call call, IOException e) {
-                Toast.makeText(HostActivity.this, "Failed to fetch data: " + e, Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                try {
-                    final JSONObject jsonObject = new JSONObject(response.body().string());
-                    mUser = new User(jsonObject.getString("id"),
-                            jsonObject.getString("display_name"),
-                            jsonObject.getString("email"),
-                            jsonObject.getString("country"));
-
-                    createRoom();
-                } catch (JSONException e) {
-                    Toast.makeText(HostActivity.this, "Failed to parse data: " + e, Toast.LENGTH_SHORT).show();
-                }
+            public void success(UserPrivate userPrivate, retrofit.client.Response response) {
+                mUser = new User(userPrivate.id, userPrivate.display_name,
+                        userPrivate.email, userPrivate.country);
+                createRoom();
             }
         });
-    }
-
-    private void cancelCall() {
-        if (mCall != null) {
-            mCall.cancel();
-        }
     }
 
     private void updateTextView(final int id, final String text) {
