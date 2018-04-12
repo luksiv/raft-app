@@ -6,12 +6,22 @@ public class SongItem {
     String mArtists;
     String mAlbum;
     String mUri;
+    int mPosition;
 
     public SongItem(String songName, String artists, String album, String uri) {
         mSongName = songName;
         mArtists = artists;
         mAlbum = album;
         mUri = uri;
+        mPosition = -1;
+    }
+
+    public SongItem(String songName, String artists, String album, String uri, int position) {
+        mSongName = songName;
+        mArtists = artists;
+        mAlbum = album;
+        mUri = uri;
+        mPosition = position;
     }
 
     public String getmSongName() {
@@ -29,4 +39,10 @@ public class SongItem {
     public String getmUri() {
         return mUri;
     }
+
+    public int getmPosition() {
+        return mPosition;
+    }
+
+
 }

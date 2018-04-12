@@ -123,44 +123,7 @@ public class ClientActivity extends AppCompatActivity {
         btnRefreshPlaylist.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                final ServerHelper serverHelper = new ServerHelper();
-                ServerRequest.Callback getSongsCallback = new ServerRequest.Callback() {
-                    @Override
-                    public void execute(String response) {
-                        mSongs = serverHelper.convertToList(response);
-                        for (String song : mSongs) {
-                            Log.d(TAG, song);
-                        }
-                    }
-                };
-                serverHelper.getSongs(mRoom, getSongsCallback);
-
-                mSpotifyData.getTracks(mSongs, new WrappedSpotifyCallback<Tracks>() {
-                    @Override
-                    public void success(Tracks tracks, retrofit.client.Response response) {
-
-                        final ArrayList<SongItem> results = new ArrayList<>();
-
-                        for (Track track : tracks.tracks) {
-                            String song = track.name;
-                            String artist = Utilities.convertArtistListToString(track.artists);
-                            String album = track.album.name;
-                            String uri = track.uri;
-                            results.add(new SongItem(song, artist, album, uri));
-                        }
-
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                mPlaylistAdapter.clear();
-                                mPlaylistAdapter.addAll(results);
-                            }
-                        });
-                    }
-                });
-
-
+                updatePlaylist();
             }
         });
 
@@ -241,6 +204,47 @@ public class ClientActivity extends AppCompatActivity {
         tvEmail.setText(mUser.getEmail());
         tvID.setText(mUser.getId());
         dialog.show();
+    }
+
+    private void updatePlaylist(){
+        final ServerHelper serverHelper = new ServerHelper();
+        ServerRequest.Callback getSongsCallback = new ServerRequest.Callback() {
+            @Override
+            public void execute(String response) {
+                mSongs = serverHelper.convertToList(response);
+                for (String song : mSongs) {
+                    Log.d(TAG, song);
+                }
+                updatePlaylistView();
+            }
+        };
+        serverHelper.getSongs(mRoom, getSongsCallback);
+    }
+
+    private void updatePlaylistView() {
+        mSpotifyData.getTracks(mSongs, new WrappedSpotifyCallback<Tracks>() {
+            @Override
+            public void success(Tracks tracks, retrofit.client.Response response) {
+
+                final ArrayList<SongItem> results = new ArrayList<>();
+
+                for (Track track : tracks.tracks) {
+                    String song = track.name;
+                    String artist = Utilities.convertArtistListToString(track.artists);
+                    String album = track.album.name;
+                    String uri = track.uri;
+                    results.add(new SongItem(song, artist, album, uri));
+                }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mPlaylistAdapter.clear();
+                        mPlaylistAdapter.addAll(results);
+                    }
+                });
+            }
+        });
     }
 
     private void changeViews(Button button) {

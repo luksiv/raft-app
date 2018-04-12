@@ -99,6 +99,8 @@ public class HostActivity extends AppCompatActivity implements
     private ArrayList<String> mSongs;
     private PlaylistArrayAdapter mPlaylistAdapter;
     private SpotifyData mSpotifyData;
+
+    private Boolean requestUsed = false;
     //endregion
 
     //region UI elements
@@ -187,11 +189,7 @@ public class HostActivity extends AppCompatActivity implements
         btnRefreshPlaylist.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 updatePlaylist();
-                updatePlaylistView();
-
-
             }
         });
 
@@ -231,8 +229,6 @@ public class HostActivity extends AppCompatActivity implements
 
 
     }
-
-
 
     private void authentication() {
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
@@ -322,8 +318,6 @@ public class HostActivity extends AppCompatActivity implements
         if (requestCode == 333) {
             if (resultCode == AddSongActivity.RESULT_OK) {
                 String songId = intent.getStringExtra("uri");
-                mPlayer.queue(mOperationCallback, songId);
-
                 ServerHelper serverHelper = new ServerHelper();
                 ServerRequest.Callback addSongCallback = new ServerRequest.Callback() {
                     @Override
@@ -342,8 +336,8 @@ public class HostActivity extends AppCompatActivity implements
         Log.d(TAG, "Playback event received: " + playerEvent.name());
         mCurrentPlaybackState = mPlayer.getPlaybackState();
         mMetadata = mPlayer.getMetadata();
-        Log.d(TAG, "Playback State: " + mCurrentPlaybackState.toString());
-        Log.d(TAG, "Metadata: " + mMetadata.toString());
+        //Log.d(TAG, "Playback State: " + mCurrentPlaybackState.toString());
+        //Log.d(TAG, "Metadata: " + mMetadata.toString());
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyPlay) {
             btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_media_pause));
             seekUpdation();
@@ -352,6 +346,9 @@ public class HostActivity extends AppCompatActivity implements
             btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_media_play));
         }
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged) {
+
+        }
+        if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackDelivered) {
 
         }
         updateView();
@@ -412,7 +409,7 @@ public class HostActivity extends AppCompatActivity implements
 
     //region Random methods
 
-    private void updatePlaylist(){
+    private void updatePlaylist() {
         final ServerHelper serverHelper = new ServerHelper();
         ServerRequest.Callback getSongsCallback = new ServerRequest.Callback() {
             @Override
@@ -421,6 +418,7 @@ public class HostActivity extends AppCompatActivity implements
                 for (String song : mSongs) {
                     Log.d(TAG, song);
                 }
+                updatePlaylistView();
             }
         };
         serverHelper.getSongs(mRoom, getSongsCallback);
@@ -454,7 +452,7 @@ public class HostActivity extends AppCompatActivity implements
 
     public void getUserInfo() {
 
-        mSpotifyData.getUser(new WrappedSpotifyCallback<UserPrivate>(){
+        mSpotifyData.getUser(new WrappedSpotifyCallback<UserPrivate>() {
             @Override
             public void success(UserPrivate userPrivate, retrofit.client.Response response) {
                 mUser = new User(userPrivate.id, userPrivate.display_name,
@@ -500,12 +498,40 @@ public class HostActivity extends AppCompatActivity implements
     };
 
     public void seekUpdation() {
-        sbTrack.setProgress(Utilities.getProgressPercentage(
+        int procentageDone = Utilities.getProgressPercentage(
                 mPlayer.getPlaybackState().positionMs,
-                mPlayer.getMetadata().currentTrack.durationMs));
+                mPlayer.getMetadata().currentTrack.durationMs);
+        sbTrack.setProgress(procentageDone);
         updateTextView(R.id.tv_trackTime,
                 Utilities.formatSeconds(mPlayer.getPlaybackState().positionMs));
-        mHandler.postDelayed(run, 1000);
+        if (procentageDone >= 97 && !requestUsed) queueNext();
+        mHandler.postDelayed(run, 750);
+
+    }
+
+    private void queueNext() {
+        if (mPlayer.getMetadata().nextTrack == null) {
+            final ServerHelper serverHelper = new ServerHelper();
+            final ServerRequest.Callback callback = new ServerRequest.Callback() {
+                @Override
+                public void execute(String response) {
+                    try {
+                        Toast.makeText(HostActivity.this, "Next song queued", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, response.toString());
+                        JSONObject nextTrack = new JSONObject(response);
+                        mPlayer.queue(mOperationCallback, nextTrack.getString("id"));
+                        requestUsed = false;
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
+            };
+            requestUsed = true;
+            serverHelper.playNextSong(mRoom, callback);
+        }
+
     }
 
     private void changeViews(Button button) {
