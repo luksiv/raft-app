@@ -46,7 +46,7 @@ dependencies {
     implementation 'com.spotify.sdk:spotify-player-24-noconnect-2.20b@aar'
 
     // This library handles HTTP communications
-    implementation 'com.squareup.okhttp3:okhttp:3.4.1'
+    implementation 'com.squareup.okhttp3:okhttp:3.6.0'
 
     // This library handles images from the internet
     implementation 'com.squareup.picasso:picasso:2.5.2'
