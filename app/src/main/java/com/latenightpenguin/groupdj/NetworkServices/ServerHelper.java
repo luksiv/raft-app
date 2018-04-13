@@ -190,8 +190,8 @@ public class ServerHelper {
     }
 
     public void getSongs(final RoomInfo room, ServerRequest.Callback callback) {
-        Log.d("MusicDJ", "api/rooms/" + room.getId() + "/songs");
-        ServerRequest request = new ServerRequest(METHOD_GET, "api/rooms/" + room.getId() + "/songs", null, callback, null);
+        Log.d("MusicDJ", "api/songs/" + room.getId());
+        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId(), null, callback, null);
         new ConnectionManager().execute(request);
     }
 
@@ -249,8 +249,8 @@ public class ServerHelper {
     }
 
     public void playNextSong(final RoomInfo room, ServerRequest.Callback callback) {
-        Log.d("MusicDJ", "api/rooms/" + room.getId() + "/next");
-        ServerRequest request = new ServerRequest(METHOD_PUT, "api/rooms/" + room.getId() + "/next", "", callback, null);
+        Log.d("MusicDJ", "api/songs/" + room.getId() + "/next");
+        ServerRequest request = new ServerRequest(METHOD_PUT, "api/songs/" + room.getId() + "/next", "", callback, null);
         new ConnectionManager().execute(request);
     }
 
@@ -296,7 +296,7 @@ public class ServerHelper {
     }
 
     public void addSong(RoomInfo room, final String song, ServerRequest.Callback callback) {
-        ServerRequest request = new ServerRequest(METHOD_PUT, "api/rooms/" + room.getId() + "/" + song, "", callback, null);
+        ServerRequest request = new ServerRequest(METHOD_PUT, "api/songs/" + room.getId() + "/" + song, "", callback, null);
         new ConnectionManager().execute(request);
     }
 
