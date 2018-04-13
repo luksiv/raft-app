@@ -607,7 +607,7 @@ public class HostActivity extends AppCompatActivity implements
     }
 
     public void createRoom() {
-        final String userID = "test@test.com";
+        //final String userID = "test@test.com";
 
         final TextView status = (TextView) findViewById(R.id.tv_RoomId);
 
@@ -643,7 +643,7 @@ public class HostActivity extends AppCompatActivity implements
                 serverHelper.createRoom(mUser.getEmail(), insideCallback);
             }
         };
-        serverHelper.registerUser(userID, callback);
+        serverHelper.registerUser(mUser.getEmail(), callback);
     }
 
     //endregion
