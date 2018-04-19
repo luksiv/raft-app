@@ -2,18 +2,26 @@ package com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI;
 
 import android.util.Log;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyError;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Pager;
+import kaaes.spotify.webapi.android.models.Recommendations;
 import kaaes.spotify.webapi.android.models.SavedTrack;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
 import kaaes.spotify.webapi.android.models.TracksPager;
 import kaaes.spotify.webapi.android.models.UserPrivate;
 import retrofit.RetrofitError;
+import retrofit.http.QueryMap;
 
 public class SpotifyData {
     private static final String TAG = "SpotifyData";
@@ -33,7 +41,7 @@ public class SpotifyData {
 
     public void searchTracks(String query) {
         try {
-            services.searchTracks(query, new WrappedSpotifyCallback<TracksPager>());
+            searchTracks(query, new WrappedSpotifyCallback<TracksPager>());
         } catch (RetrofitError er) {
             SpotifyError spotifyError = SpotifyError.fromRetrofitError(er);
             Log.v(TAG, spotifyError.getMessage());
@@ -53,7 +61,7 @@ public class SpotifyData {
         }
     }
 
-    static public ArrayList<WrappedTrack> ConvertTracks(TracksPager pager) {
+    static public ArrayList<WrappedTrack> ConvertTracksFromPager(TracksPager pager) {
         ArrayList<WrappedTrack> wrappedTracks = new ArrayList<>();
 
         for (Track track : pager.tracks.items) {
@@ -65,7 +73,7 @@ public class SpotifyData {
 
     public void getTrack(String id) {
         try {
-            services.getTrack(id, new WrappedSpotifyCallback<Track>());
+            getTrack(id, new WrappedSpotifyCallback<Track>());
         } catch (RetrofitError er) {
             SpotifyError spotifyError = SpotifyError.fromRetrofitError(er);
             Log.v(TAG, spotifyError.getMessage());
@@ -87,7 +95,7 @@ public class SpotifyData {
 
     public void getTracks(String ids) {
         try {
-            services.getTracks(ids, new WrappedSpotifyCallback<Tracks>());
+            getTracks(ids, new WrappedSpotifyCallback<Tracks>());
         } catch (RetrofitError er) {
             SpotifyError spotifyError = SpotifyError.fromRetrofitError(er);
             Log.v(TAG, spotifyError.getMessage());
@@ -110,7 +118,7 @@ public class SpotifyData {
     public void getTracks(ArrayList<String> ids, WrappedSpotifyCallback<Tracks> cb) {
         try {
             String formatedIds = convertArrayToString(ids);
-            services.getTracks(formatedIds, cb);
+           getTracks(formatedIds, cb);
         } catch (RetrofitError er) {
             SpotifyError spotifyError = SpotifyError.fromRetrofitError(er);
             Log.v(TAG, spotifyError.getMessage());
@@ -119,12 +127,6 @@ public class SpotifyData {
         }
     }
 
-    /**
-     * Converts from ArrayList<String> with entries like "spotify:track:xxxxxxxx" to string
-     * like xxxxxxxxxx,xxxxxxxxxx,xxxxxxxx
-     * @param array
-     * @return
-     */
     public String convertArrayToString(ArrayList<String> array) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < array.size() - 1; i++) {
@@ -139,7 +141,7 @@ public class SpotifyData {
 
     public void getUser() {
         try {
-            services.getMe(new WrappedSpotifyCallback<UserPrivate>());
+            getUser(new WrappedSpotifyCallback<UserPrivate>());
         } catch (RetrofitError er) {
             SpotifyError spotifyError = SpotifyError.fromRetrofitError(er);
             Log.v(TAG, spotifyError.getMessage());
@@ -159,10 +161,9 @@ public class SpotifyData {
         }
     }
 
-
     public void getUserTracks() {
         try {
-            services.getMySavedTracks();
+            getUserTracks(new WrappedSpotifyCallback<Pager<SavedTrack>>());
         } catch (RetrofitError er) {
             SpotifyError spotifyError = SpotifyError.fromRetrofitError(er);
             Log.v(TAG, spotifyError.getMessage());
@@ -192,7 +193,56 @@ public class SpotifyData {
         return tracks;
     }
 
-    static public WrappedTrack WrapTracks(Track track) {
+    public void getRecomendationList(String ids)
+    {
+        try {
+                getRecomendationList(ids, new WrappedSpotifyCallback<Recommendations>());
+        } catch (RetrofitError er) {
+            SpotifyError spotifyError = SpotifyError.fromRetrofitError(er);
+            Log.v(TAG, spotifyError.getMessage());
+        } catch (Exception ex) {
+            Log.v(TAG, ex.getMessage());
+        }
+    }
+
+    public void getRecomendationList(String ids, WrappedSpotifyCallback<Recommendations> cb)
+    {
+        try {
+            getRecomendationList(ids, 5, cb);
+        } catch (RetrofitError er) {
+            SpotifyError spotifyError = SpotifyError.fromRetrofitError(er);
+            Log.v(TAG, spotifyError.getMessage());
+        } catch (Exception ex) {
+            Log.v(TAG, ex.getMessage());
+        }
+    }
+
+    public void getRecomendationList(String ids, int limit , WrappedSpotifyCallback<Recommendations> cb)
+    {
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("limit", limit);
+        map.put("seed_tracks", ids);
+        try {
+            services.getRecommendations(map, cb);
+        } catch (RetrofitError er) {
+            SpotifyError spotifyError = SpotifyError.fromRetrofitError(er);
+            Log.v(TAG, spotifyError.getMessage());
+        } catch (Exception ex) {
+            Log.v(TAG, ex.getMessage());
+        }
+    }
+
+    static public ArrayList<WrappedTrack> ConvertRecomendedTracks(Recommendations recommendations) {
+        ArrayList<WrappedTrack> tracks = new ArrayList<>();
+
+        for (Track track : recommendations.tracks) {
+            tracks.add(new WrappedTrack(track));
+        }
+
+        return tracks;
+    }
+
+    static public WrappedTrack WrapTrack(Track track) {
         return new WrappedTrack(track);
     }
 }
