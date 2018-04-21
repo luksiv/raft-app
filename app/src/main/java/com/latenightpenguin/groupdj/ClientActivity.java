@@ -322,6 +322,7 @@ public class ClientActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(ClientActivity.this, "Someone added a song", Toast.LENGTH_SHORT).show();
+                        updatePlaylist();
                     }
                 });
             }

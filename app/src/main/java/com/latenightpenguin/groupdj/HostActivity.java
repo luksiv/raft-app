@@ -665,6 +665,7 @@ public class HostActivity extends AppCompatActivity implements
                     @Override
                     public void run() {
                         Toast.makeText(HostActivity.this, "Someone added a song", Toast.LENGTH_SHORT).show();
+                        updatePlaylist();
                     }
                 });
             }
