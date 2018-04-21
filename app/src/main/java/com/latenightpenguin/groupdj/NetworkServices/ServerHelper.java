@@ -171,6 +171,7 @@ public class ServerHelper {
         Request request = new Request.Builder().url(SERVER_WEBSOCKET_URL).build();
         ServerListener serverListener = new ServerListener();
         serverListener.setMessageHandler(messageHandler);
+        serverListener.setErrorHandler(errorHandler);
         websocket = client.newWebSocket(request, serverListener);
     }
 
@@ -229,6 +230,13 @@ public class ServerHelper {
                 }
                 break;
             }
+        }
+    };
+
+    private ServerListener.MessageHandler errorHandler = new ServerListener.MessageHandler() {
+        @Override
+        public void handle(String message) {
+            connectWebSocket();
         }
     };
 }

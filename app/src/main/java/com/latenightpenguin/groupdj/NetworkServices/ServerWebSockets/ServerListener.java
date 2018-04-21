@@ -16,6 +16,7 @@ import retrofit.http.QueryMap;
 public class ServerListener extends WebSocketListener {
     private static final int NORMAL_CLOSURE_STATUS = 1000;
     private MessageHandler messageHandler;
+    private MessageHandler errorHandler;
 
     @Override
     public void onOpen(WebSocket webSocket, Response response) {
@@ -57,11 +58,16 @@ public class ServerListener extends WebSocketListener {
     @Override
     public void onFailure(WebSocket webSocket, Throwable t, Response response) {
         Log.d("WebSocket", "Error connecting to server " + response);
+        errorHandler.handle(t.getMessage());
         //throw new Exception("Can't connect to server");
     }
 
     public void setMessageHandler(MessageHandler messageHandler) {
         this.messageHandler = messageHandler;
+    }
+
+    public void setErrorHandler(MessageHandler errorHandler) {
+        this.errorHandler = errorHandler;;
     }
 
     public interface MessageHandler {

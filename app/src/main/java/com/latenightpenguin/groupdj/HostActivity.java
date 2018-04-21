@@ -336,9 +336,11 @@ public class HostActivity extends AppCompatActivity implements
                     @Override
                     public void execute(String response) {
                         Toast.makeText(HostActivity.this, "Song added", Toast.LENGTH_SHORT).show();
+                        updatePlaylist();
                     }
                 };
                 mServerHelper.addSong(mRoom, songId, addSongCallback);
+
             }
         }
     }
@@ -697,6 +699,7 @@ public class HostActivity extends AppCompatActivity implements
                     @Override
                     public void run() {
                         Toast.makeText(HostActivity.this, "Next Song is played", Toast.LENGTH_SHORT).show();
+                        updatePlaylist();
                     }
                 });
             }

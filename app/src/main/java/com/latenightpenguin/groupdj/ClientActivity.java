@@ -170,6 +170,7 @@ public class ClientActivity extends AppCompatActivity {
                     @Override
                     public void execute(String response) {
                         Toast.makeText(ClientActivity.this, "Song added", Toast.LENGTH_SHORT).show();
+                        updatePlaylist();
                     }
                 };
                 mServerHelper.addSong(mRoom, songId, addSongCallback);
@@ -310,6 +311,7 @@ public class ClientActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(ClientActivity.this, "Next Song is played", Toast.LENGTH_SHORT).show();
+                        updatePlaylist();
 
                         ServerRequest.Callback currentSongCallback = new ServerRequest.Callback() {
                             @Override
