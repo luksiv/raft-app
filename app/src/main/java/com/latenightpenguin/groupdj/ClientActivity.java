@@ -65,6 +65,7 @@ public class ClientActivity extends AppCompatActivity {
     private Call mCall;
     private PlaylistArrayAdapter mPlaylistAdapter;
     private SpotifyData mSpotifyData;
+    private ServerHelper mServerHelper;
     //endregion
 
     //region UI elements
@@ -82,6 +83,9 @@ public class ClientActivity extends AppCompatActivity {
         setContentView(R.layout.activity_client);
         ErrorHandler.setContext(ClientActivity.this);
 
+        mServerHelper = new ServerHelper();
+        setUpWebSocketCallbacks();
+        mServerHelper.connectWebSocket();
         mRoom = new RoomInfo();
         mRoom.setLoginCode(getIntent().getIntExtra("roomId", -1));
 
@@ -162,14 +166,13 @@ public class ClientActivity extends AppCompatActivity {
             if (resultCode == AddSongActivity.RESULT_OK) {
                 String songId = intent.getStringExtra("uri");
 
-                ServerHelper serverHelper = new ServerHelper();
                 ServerRequest.Callback addSongCallback = new ServerRequest.Callback() {
                     @Override
                     public void execute(String response) {
                         Toast.makeText(ClientActivity.this, "Song added", Toast.LENGTH_SHORT).show();
                     }
                 };
-                serverHelper.addSong(mRoom, songId, addSongCallback);
+                mServerHelper.addSong(mRoom, songId, addSongCallback);
             }
         }
     }
@@ -207,18 +210,17 @@ public class ClientActivity extends AppCompatActivity {
     }
 
     private void updatePlaylist(){
-        final ServerHelper serverHelper = new ServerHelper();
         ServerRequest.Callback getSongsCallback = new ServerRequest.Callback() {
             @Override
             public void execute(String response) {
-                mSongs = serverHelper.convertToList(response);
+                mSongs = mServerHelper.convertToList(response);
                 for (String song : mSongs) {
                     Log.d(TAG, song);
                 }
                 updatePlaylistView();
             }
         };
-        serverHelper.getSongs(mRoom, getSongsCallback);
+        mServerHelper.getSongs(mRoom, getSongsCallback);
     }
 
     private void updatePlaylistView() {
@@ -265,7 +267,6 @@ public class ClientActivity extends AppCompatActivity {
 
     private void connectToRoom() {
         final TextView status = findViewById(R.id.tv_RoomId);
-        final ServerHelper serverHelper = new ServerHelper();
         ServerRequest.Callback callback = new ServerRequest.Callback() {
 
             @Override
@@ -285,6 +286,7 @@ public class ClientActivity extends AppCompatActivity {
 
                                 mRoom.setId(roomId);
                                 mRoom.setLoginCode(loginCode);
+                                mServerHelper.setRoomUpdates(roomId);
 
                                 status.setText("Login code is " + String.valueOf(mRoom.getLoginCode()));
                             } catch (JSONException e) {
@@ -294,9 +296,64 @@ public class ClientActivity extends AppCompatActivity {
                         }
                     }
                 };
-                serverHelper.connectToRoom(mRoom.getLoginCode(), mUser.getEmail(), insideCallback);
+                mServerHelper.connectToRoom(mRoom.getLoginCode(), mUser.getEmail(), insideCallback);
             }
         };
-        serverHelper.connectUser(mUser.getEmail(), callback);
+        mServerHelper.connectUser(mUser.getEmail(), callback);
+    }
+
+    private void setUpWebSocketCallbacks() {
+        ServerRequest.Callback playingNext = new ServerRequest.Callback() {
+            @Override
+            public void execute(String response) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ClientActivity.this, "Next Song is played", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        };
+
+        ServerRequest.Callback songAdded = new ServerRequest.Callback() {
+            @Override
+            public void execute(String response) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ClientActivity.this, "Someone added a song", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        };
+
+        ServerRequest.Callback paused = new ServerRequest.Callback() {
+            @Override
+            public void execute(String response) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ClientActivity.this, "Song paused", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        };
+
+        ServerRequest.Callback playTime = new ServerRequest.Callback() {
+            @Override
+            public void execute(final String response) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ClientActivity.this, "play time: " + response, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        };
+
+        mServerHelper.setPlayingNextCallback(playingNext);
+        mServerHelper.setSongAddedCallback(songAdded);
+        mServerHelper.setSongPausedCallback(paused);
+        mServerHelper.setSongPlayTimeCallback(playTime);
     }
 }

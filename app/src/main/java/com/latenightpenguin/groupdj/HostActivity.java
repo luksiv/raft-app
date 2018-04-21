@@ -99,6 +99,7 @@ public class HostActivity extends AppCompatActivity implements
     private ArrayList<String> mSongs;
     private PlaylistArrayAdapter mPlaylistAdapter;
     private SpotifyData mSpotifyData;
+    private ServerHelper mServerHelper;
 
     private Boolean requestUsed = false;
     //endregion
@@ -120,6 +121,9 @@ public class HostActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_host);
 
+        mServerHelper = new ServerHelper();
+        setUpWebSocketCallbacks();
+        mServerHelper.connectWebSocket();
         mRoom = new RoomInfo();
 
         // ERROR HANDLER
@@ -318,14 +322,13 @@ public class HostActivity extends AppCompatActivity implements
         if (requestCode == 333) {
             if (resultCode == AddSongActivity.RESULT_OK) {
                 String songId = intent.getStringExtra("uri");
-                ServerHelper serverHelper = new ServerHelper();
                 ServerRequest.Callback addSongCallback = new ServerRequest.Callback() {
                     @Override
                     public void execute(String response) {
                         Toast.makeText(HostActivity.this, "Song added", Toast.LENGTH_SHORT).show();
                     }
                 };
-                serverHelper.addSong(mRoom, songId, addSongCallback);
+                mServerHelper.addSong(mRoom, songId, addSongCallback);
             }
         }
     }
@@ -410,18 +413,17 @@ public class HostActivity extends AppCompatActivity implements
     //region Random methods
 
     private void updatePlaylist() {
-        final ServerHelper serverHelper = new ServerHelper();
         ServerRequest.Callback getSongsCallback = new ServerRequest.Callback() {
             @Override
             public void execute(String response) {
-                mSongs = serverHelper.convertToList(response);
+                mSongs = mServerHelper.convertToList(response);
                 for (String song : mSongs) {
                     Log.d(TAG, song);
                 }
                 updatePlaylistView();
             }
         };
-        serverHelper.getSongs(mRoom, getSongsCallback);
+        mServerHelper.getSongs(mRoom, getSongsCallback);
     }
 
     private void updatePlaylistView() {
@@ -511,7 +513,6 @@ public class HostActivity extends AppCompatActivity implements
 
     private void queueNext() {
         if (mPlayer.getMetadata().nextTrack == null) {
-            final ServerHelper serverHelper = new ServerHelper();
             final ServerRequest.Callback callback = new ServerRequest.Callback() {
                 @Override
                 public void execute(String response) {
@@ -529,7 +530,7 @@ public class HostActivity extends AppCompatActivity implements
 
             };
             requestUsed = true;
-            serverHelper.playNextSong(mRoom, callback);
+            mServerHelper.playNextSong(mRoom, callback);
         }
 
     }
@@ -607,11 +608,8 @@ public class HostActivity extends AppCompatActivity implements
     }
 
     public void createRoom() {
-        //final String userID = "test@test.com";
-
         final TextView status = (TextView) findViewById(R.id.tv_RoomId);
 
-        final ServerHelper serverHelper = new ServerHelper();
         final ServerRequest.Callback callback = new ServerRequest.Callback() {
             @Override
             public void execute(String response) {
@@ -630,6 +628,7 @@ public class HostActivity extends AppCompatActivity implements
 
                                 mRoom.setId(roomId);
                                 mRoom.setLoginCode(loginCode);
+                                mServerHelper.setRoomUpdates(roomId);
 
                                 status.setText("Login code is " + String.valueOf(loginCode));
                             } catch (JSONException e) {
@@ -640,10 +639,65 @@ public class HostActivity extends AppCompatActivity implements
                         }
                     }
                 };
-                serverHelper.createRoom(mUser.getEmail(), insideCallback);
+                mServerHelper.createRoom(mUser.getEmail(), insideCallback);
             }
         };
-        serverHelper.registerUser(mUser.getEmail(), callback);
+        mServerHelper.registerUser(mUser.getEmail(), callback);
+    }
+
+    private void setUpWebSocketCallbacks() {
+        ServerRequest.Callback playingNext = new ServerRequest.Callback() {
+            @Override
+            public void execute(String response) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(HostActivity.this, "Next Song is played", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        };
+
+        ServerRequest.Callback songAdded = new ServerRequest.Callback() {
+            @Override
+            public void execute(String response) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(HostActivity.this, "Someone added a song", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        };
+
+        ServerRequest.Callback paused = new ServerRequest.Callback() {
+            @Override
+            public void execute(String response) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(HostActivity.this, "Song paused", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        };
+
+        ServerRequest.Callback playTime = new ServerRequest.Callback() {
+            @Override
+            public void execute(final String response) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(HostActivity.this, "play time: " + response, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        };
+
+        mServerHelper.setPlayingNextCallback(playingNext);
+        mServerHelper.setSongAddedCallback(songAdded);
+        mServerHelper.setSongPausedCallback(paused);
+        mServerHelper.setSongPlayTimeCallback(playTime);
     }
 
     //endregion
