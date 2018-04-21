@@ -21,10 +21,12 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.JsonIOException;
 import com.latenightpenguin.groupdj.NetworkServices.ServerHelper;
 import com.latenightpenguin.groupdj.NetworkServices.ServerRequest;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrappedSpotifyCallback;
+import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrappedTrack;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -45,14 +47,19 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.AbstractQueue;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
 
 import kaaes.spotify.webapi.android.SpotifyError;
 import kaaes.spotify.webapi.android.models.ArtistSimple;
+import kaaes.spotify.webapi.android.models.Recommendations;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
+import kaaes.spotify.webapi.android.models.TracksPager;
 import kaaes.spotify.webapi.android.models.UserPrivate;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -132,6 +139,9 @@ public class HostActivity extends AppCompatActivity implements
 
         authentication();
         setUpElements();
+
+        TracksRepository.setUp();
+
     }
 
     //region Methods that onCreate uses
@@ -506,7 +516,20 @@ public class HostActivity extends AppCompatActivity implements
         sbTrack.setProgress(procentageDone);
         updateTextView(R.id.tv_trackTime,
                 Utilities.formatSeconds(mPlayer.getPlaybackState().positionMs));
-        if (procentageDone >= 97 && !requestUsed) queueNext();
+
+
+        if (procentageDone >= 90 && !requestUsed) {
+            String currentUri = mPlayer.getMetadata().currentTrack.uri;
+            if (TracksRepository.isNOTLastAdded(currentUri)) {
+                TracksRepository.addToLastPlayed(currentUri);
+                generatePlaylist();
+
+            }
+        }
+        if (procentageDone >= 97 && !requestUsed)
+        {
+            queueNext();
+        }
         mHandler.postDelayed(run, 750);
 
     }
@@ -519,21 +542,42 @@ public class HostActivity extends AppCompatActivity implements
                     try {
                         Toast.makeText(HostActivity.this, "Next song queued", Toast.LENGTH_SHORT).show();
                         Log.d(TAG, response.toString());
-                        JSONObject nextTrack = new JSONObject(response);
-                        mPlayer.queue(mOperationCallback, nextTrack.getString("id"));
+                        String uri = "spotify:track:4uLU6hMCjMI75M1A2tKUQC";
+                        if(response.toString().isEmpty() && !TracksRepository.generatedTracks.isEmpty()){
+                            uri = TracksRepository.getFromGeneratedTracks();
+                            Log.d("Important", "Generated");
+                        }
+                        else {
+                            JSONObject nextTrack = new JSONObject(response);
+                            uri = nextTrack.getString("id");
+                            Log.d("Important", "Server");
+                        }
+                        mPlayer.queue(mOperationCallback, uri);
                         requestUsed = false;
-                    } catch (JSONException e) {
+                    }catch (JSONException e) {
                         e.printStackTrace();
                     }
-
                 }
-
             };
             requestUsed = true;
             mServerHelper.playNextSong(mRoom, callback);
         }
 
     }
+
+    private void generatePlaylist()
+    {
+        mSpotifyData.getRecomendationList(mSpotifyData.convertArrayToString(TracksRepository.toArray()), new WrappedSpotifyCallback<Recommendations>(){
+            @Override
+            public void success(Recommendations recommendations, retrofit.client.Response response) {
+                super.success(recommendations, response);
+                Toast.makeText(HostActivity.this, "Generated track", Toast.LENGTH_SHORT).show();
+                TracksRepository.addToGeneratedTracks(SpotifyData.ConvertRecomendedTracks(recommendations).get(0).getUri());
+            }
+        });
+    }
+
+
 
     private void changeViews(Button button) {
         LinearLayout player = findViewById(R.id.root_player);
