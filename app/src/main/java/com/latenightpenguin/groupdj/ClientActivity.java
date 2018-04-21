@@ -310,6 +310,16 @@ public class ClientActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(ClientActivity.this, "Next Song is played", Toast.LENGTH_SHORT).show();
+
+                        ServerRequest.Callback currentSongCallback = new ServerRequest.Callback() {
+                            @Override
+                            public void execute(String response) {
+                                String songId = mServerHelper.getSongId(response);
+                                Log.d("MusicDJ", songId);
+                            }
+                        };
+
+                        mServerHelper.getCurrentSong(mRoom, currentSongCallback);
                     }
                 });
             }

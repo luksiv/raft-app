@@ -3,6 +3,7 @@ package com.latenightpenguin.groupdj.NetworkServices;
 import android.os.AsyncTask;
 import android.telecom.Call;
 import android.util.Log;
+import android.widget.MediaController;
 import android.widget.TextView;
 
 import com.latenightpenguin.groupdj.NetworkServices.ServerWebSockets.ServerListener;
@@ -148,6 +149,21 @@ public class ServerHelper {
 
     public void addSong(RoomInfo room, final String song, ServerRequest.Callback callback) {
         ServerRequest request = new ServerRequest(METHOD_PUT, "api/songs/" + room.getId() + "/" + song, "", callback, null);
+        new ConnectionManager().execute(request);
+    }
+
+    public void getCurrentSong(RoomInfo room, ServerRequest.Callback callback) {
+        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId() + "/current", "", callback, null);
+        new ConnectionManager().execute(request);
+    }
+
+    public void getLastPlayedSongs(RoomInfo room, int count, ServerRequest.Callback callback) {
+        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId() + "/last/" + count, "", callback, null);
+        new ConnectionManager().execute(request);
+    }
+
+    public void getLeftSongCount(RoomInfo room, ServerRequest.Callback callback) {
+        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId() + "/left", "", callback, null);
         new ConnectionManager().execute(request);
     }
 
