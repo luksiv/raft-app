@@ -135,6 +135,29 @@ public class ClientActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 updatePlaylist();
+                ServerRequest.Callback callback = new ServerRequest.Callback() {
+                    @Override
+                    public void execute(String response) {
+                        Log.d("CSong", response);
+                        String song = mServerHelper.getSongId(response);
+                        Log.d("CSong", song);
+                    }
+                };
+                mServerHelper.getCurrentSong(mRoom, callback);
+                ServerRequest.Callback callback1 = new ServerRequest.Callback() {
+                    @Override
+                    public void execute(String response) {
+                        Log.d("CLast", response);
+                    }
+                };
+                mServerHelper.getLastPlayedSongs(mRoom, 5, callback1);
+                ServerRequest.Callback callback2 = new ServerRequest.Callback() {
+                    @Override
+                    public void execute(String response) {
+                        Log.d("CLeft", response);
+                    }
+                };
+                mServerHelper.getLeftSongCount(mRoom, callback2);
             }
         });
 

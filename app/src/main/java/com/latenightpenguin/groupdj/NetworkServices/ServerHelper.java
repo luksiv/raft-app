@@ -31,8 +31,10 @@ import okhttp3.Request;
 import okhttp3.WebSocket;
 
 public class ServerHelper {
-    public static final String SERVER_URL = "https://group-dj-app.herokuapp.com/";
-    private static final String SERVER_WEBSOCKET_URL = "ws://group-dj-app.herokuapp.com/realtime";
+    //public static final String SERVER_URL = "https://group-dj-app.herokuapp.com/";
+    //private static final String SERVER_WEBSOCKET_URL = "ws://group-dj-app.herokuapp.com/realtime";
+    public static final String SERVER_URL = "http://192.168.0.39:61135/";
+    private static final String SERVER_WEBSOCKET_URL = "ws://192.168.0.39:61135/realtime";
     private static final String METHOD_GET = "GET";
     private static final String METHOD_POST = "POST";
     private static final String METHOD_PUT = "PUT";
@@ -157,17 +159,17 @@ public class ServerHelper {
     }
 
     public void getCurrentSong(RoomInfo room, ServerRequest.Callback callback) {
-        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId() + "/current", "", callback, null);
+        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId() + "/current", null, callback, null);
         new ConnectionManager().execute(request);
     }
 
     public void getLastPlayedSongs(RoomInfo room, int count, ServerRequest.Callback callback) {
-        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId() + "/last/" + count, "", callback, null);
+        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId() + "/last/" + count, null, callback, null);
         new ConnectionManager().execute(request);
     }
 
     public void getLeftSongCount(RoomInfo room, ServerRequest.Callback callback) {
-        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId() + "/left", "", callback, null);
+        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId() + "/left", null, callback, null);
         new ConnectionManager().execute(request);
     }
 
