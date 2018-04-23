@@ -53,12 +53,13 @@ public class ServerListener extends WebSocketListener {
     @Override
     public void onClosing(WebSocket webSocket, int code, String reason) {
         webSocket.close(NORMAL_CLOSURE_STATUS, null);
+        errorHandler.handle("closing");
     }
 
     @Override
     public void onFailure(WebSocket webSocket, Throwable t, Response response) {
         Log.d("WebSocket", "Error connecting to server " + response);
-        errorHandler.handle(t.getMessage());
+        errorHandler.handle("failed");
         //throw new Exception("Can't connect to server");
     }
 

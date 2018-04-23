@@ -130,7 +130,6 @@ public class HostActivity extends AppCompatActivity implements
 
         mServerHelper = new ServerHelper();
         setUpWebSocketCallbacks();
-        mServerHelper.connectWebSocket();
         mRoom = new RoomInfo();
 
         // ERROR HANDLER
@@ -240,8 +239,6 @@ public class HostActivity extends AppCompatActivity implements
         lwPlaylist = findViewById(R.id.lw_playlist);
         mPlaylistAdapter = new PlaylistArrayAdapter(this, new ArrayList<SongItem>());
         lwPlaylist.setAdapter(mPlaylistAdapter);
-
-
     }
 
     private void authentication() {
@@ -277,6 +274,11 @@ public class HostActivity extends AppCompatActivity implements
         if (mPlayer != null) {
             mPlayer.addNotificationCallback(HostActivity.this);
             mPlayer.addConnectionStateCallback(HostActivity.this);
+        }
+
+        if(mServerHelper != null && mServerHelper.getStatus() == ServerHelper.WebSocketStatus.DISCONNECTED) {
+            mServerHelper.connectWebSocket();
+            mServerHelper.setRoomUpdates(mRoom.getId());
         }
     }
 

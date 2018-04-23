@@ -85,14 +85,21 @@ public class ClientActivity extends AppCompatActivity {
 
         mServerHelper = new ServerHelper();
         setUpWebSocketCallbacks();
-        mServerHelper.connectWebSocket();
         mRoom = new RoomInfo();
         mRoom.setLoginCode(getIntent().getIntExtra("roomId", -1));
 
         authentication();
         setUpElements();
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
 
+        if(mServerHelper != null && mServerHelper.getStatus() == ServerHelper.WebSocketStatus.DISCONNECTED) {
+            mServerHelper.connectWebSocket();
+            mServerHelper.setRoomUpdates(mRoom.getId());
+        }
     }
 
     //region Methods that onCreate uses

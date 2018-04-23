@@ -42,6 +42,8 @@ public class ServerHelper {
 
     private OkHttpClient client;
     private WebSocket websocket;
+    private WebSocketStatus status;
+    private int roomId;
 
     // websocket callbacks
     private ServerRequest.Callback playingNextCallback;
@@ -51,6 +53,8 @@ public class ServerHelper {
 
     public ServerHelper() {
         client = new OkHttpClient();
+        roomId = -1;
+        status = WebSocketStatus.DISCONNECTED;
     }
 
     /**
@@ -173,18 +177,35 @@ public class ServerHelper {
         serverListener.setMessageHandler(messageHandler);
         serverListener.setErrorHandler(errorHandler);
         websocket = client.newWebSocket(request, serverListener);
+        status = WebSocketStatus.CONNECTED;
+        if(roomId != -1){
+            setRoomUpdates(roomId);
+        }
     }
 
     public void setRoomUpdates(int id) {
-        websocket.send("room;" + id);
+        roomId = id;
+        if(status == WebSocketStatus.CONNECTED) {
+            websocket.send("room;" + id);
+        }
     }
 
     public void announcePlayTime(int min, int s) {
-        websocket.send("play;" + min + ";" + s);
+        if(status == WebSocketStatus.CONNECTED) {
+            websocket.send("play;" + min + ";" + s);
+        }
     }
 
     public void announcePause(int min, int s) {
-        websocket.send("pause;" + min + ";" + s);
+        if(status == WebSocketStatus.CONNECTED) {
+            websocket.send("pause;" + min + ";" + s);
+        }
+    }
+
+    public void closeWebSocket(){
+        if(status == WebSocketStatus.CONNECTED) {
+            websocket.close(0, "");
+        }
     }
 
     public void setPlayingNextCallback(ServerRequest.Callback playingNextCallback) {
@@ -236,7 +257,18 @@ public class ServerHelper {
     private ServerListener.MessageHandler errorHandler = new ServerListener.MessageHandler() {
         @Override
         public void handle(String message) {
-            connectWebSocket();
+            status = WebSocketStatus.DISCONNECTED;
+            if(message.equals("failed")) {
+                connectWebSocket();
+            }
         }
+    };
+
+    public WebSocketStatus getStatus() {
+        return status;
+    }
+
+    public enum WebSocketStatus {
+        CONNECTED, DISCONNECTED;
     };
 }
