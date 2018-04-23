@@ -31,23 +31,6 @@ public class ServerListener extends WebSocketListener {
         if(messageHandler != null) {
             messageHandler.handle(text);
         }
-
-        /* (text) {
-            case "song added":
-                songAddedCallback.execute("");
-                break;
-            case "next song":
-                playingNextCallback.execute("");
-                break;
-            default:
-                String[] firstPart = text.split(":");
-                if(firstPart[0].equals("paused")) {
-                    songPausedCallback.execute(firstPart[1] + ":" + firstPart[2]);
-                } else {
-                    songPlayTimeCallback.execute(text);
-                }
-                break;
-        }*/
     }
 
     @Override

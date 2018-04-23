@@ -190,15 +190,15 @@ public class ServerHelper {
         }
     }
 
-    public void announcePlayTime(int min, int s) {
+    public void announcePlayTime(int milliseconds) {
         if(status == WebSocketStatus.CONNECTED) {
-            websocket.send("play;" + min + ";" + s);
+            websocket.send("play;" + milliseconds);
         }
     }
 
-    public void announcePause(int min, int s) {
+    public void announcePause(int milliseconds) {
         if(status == WebSocketStatus.CONNECTED) {
-            websocket.send("pause;" + min + ";" + s);
+            websocket.send("pause;" + milliseconds);
         }
     }
 
@@ -239,10 +239,10 @@ public class ServerHelper {
                     }
                 break;
                 default:
-                String[] firstPart = message.split(":");
-                if(firstPart[0].equals("paused")) {
+                String[] strings = message.split(";");
+                if(strings[0].equals("paused")) {
                     if(songPausedCallback != null) {
-                        songPausedCallback.execute(firstPart[1] + ":" + firstPart[2]);
+                        songPausedCallback.execute(strings[1]);
                     }
                 } else {
                     if(songPlayTimeCallback != null) {
