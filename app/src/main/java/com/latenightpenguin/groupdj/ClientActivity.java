@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SeekBar;
@@ -23,6 +24,7 @@ import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Error;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -36,6 +38,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import kaaes.spotify.webapi.android.SpotifyError;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
 import kaaes.spotify.webapi.android.models.TracksPager;
@@ -240,6 +243,40 @@ public class ClientActivity extends AppCompatActivity {
         dialog.show();
     }
 
+    private void updateTextView(final int id, final String text) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ((TextView) findViewById(id)).setText(text);
+            }
+        });
+    }
+
+    private void updatePlayerView(final Track track) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String song = track.name;
+                    String artist = Utilities.convertArtistListToString(track.artists);
+                    String album = track.album.name;
+                    String albumArtUrl = track.album.images.get(1).url;
+                    long duration_ms = track.duration_ms;
+
+                    updateTextView(R.id.tv_artist, artist);
+                    updateTextView(R.id.tv_songName, song);
+                    updateTextView(R.id.tv_trackLenght,
+                            Utilities.formatSeconds(duration_ms));
+                    Picasso.with(ClientActivity.this).
+                            load(albumArtUrl)
+                            .into((ImageView) findViewById(R.id.iv_albumArt));
+                } catch (Exception e) {
+                    Log.e(TAG, e.getMessage());
+                }
+            }
+        });
+    }
+
     private void updatePlaylist(){
         ServerRequest.Callback getSongsCallback = new ServerRequest.Callback() {
             @Override
@@ -346,8 +383,19 @@ public class ClientActivity extends AppCompatActivity {
                         ServerRequest.Callback currentSongCallback = new ServerRequest.Callback() {
                             @Override
                             public void execute(String response) {
-                                String songId = mServerHelper.getSongId(response);
-                                Log.d("MusicDJ", songId);
+                                final String songId = mServerHelper.getSongId(response);
+                                Log.d(TAG, songId);
+                                mSpotifyData.getTrack(songId.split(":")[2], new WrappedSpotifyCallback<Track>(){
+                                    @Override
+                                    public void success(Track track, retrofit.client.Response response) {
+                                        updatePlayerView(track);
+                                    }
+
+                                    @Override
+                                    public void failure(SpotifyError spotifyError) {
+                                        Log.d(TAG, "next track name: failed");
+                                    }
+                                });
                             }
                         };
 
