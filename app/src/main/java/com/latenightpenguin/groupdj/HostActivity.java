@@ -762,6 +762,7 @@ public class HostActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         Spotify.destroyPlayer(this);
+        mServerHelper.closeWebSocket();
         super.onDestroy();
     }
     //endregion

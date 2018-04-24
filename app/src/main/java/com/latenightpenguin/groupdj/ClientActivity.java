@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -77,6 +78,7 @@ public class ClientActivity extends AppCompatActivity {
     private Button btnToggleViews;
     private Button btnRefreshPlaylist;
     private ListView lwPlaylist;
+    private SeekBar sbProgress;
     //endregion
 
     @Override
@@ -164,6 +166,14 @@ public class ClientActivity extends AppCompatActivity {
             }
         });
 
+        sbProgress = findViewById(R.id.sb_seekTrack);
+        sbProgress.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                return true;
+            }
+        });
+
         lwPlaylist = findViewById(R.id.lw_playlist);
         mPlaylistAdapter = new PlaylistArrayAdapter(this, new ArrayList<SongItem>());
         lwPlaylist.setAdapter(mPlaylistAdapter);
@@ -213,6 +223,7 @@ public class ClientActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        mServerHelper.closeWebSocket();
         super.onDestroy();
     }
 
@@ -356,6 +367,8 @@ public class ClientActivity extends AppCompatActivity {
                                 mRoom.setLoginCode(loginCode);
                                 mServerHelper.setRoomUpdates(roomId);
 
+                                getCurrentSong();
+
                                 status.setText("Login code is " + String.valueOf(mRoom.getLoginCode()));
                             } catch (JSONException e) {
                                 status.setText("Not connected");
@@ -368,6 +381,33 @@ public class ClientActivity extends AppCompatActivity {
             }
         };
         mServerHelper.connectUser(mUser.getEmail(), callback);
+    }
+
+    private void getCurrentSong(){
+        try {
+            ServerRequest.Callback currentSongCallback = new ServerRequest.Callback() {
+                @Override
+                public void execute(String response) {
+                    final String songId = mServerHelper.getSongId(response);
+                    Log.d(TAG, songId);
+                    mSpotifyData.getTrack(songId.split(":")[2], new WrappedSpotifyCallback<Track>() {
+                        @Override
+                        public void success(Track track, retrofit.client.Response response) {
+                            updatePlayerView(track);
+                        }
+
+                        @Override
+                        public void failure(SpotifyError spotifyError) {
+                            Log.d(TAG, "next track name: failed");
+                        }
+                    });
+                }
+            };
+
+            mServerHelper.getCurrentSong(mRoom, currentSongCallback);
+        } catch (Exception e){
+            Log.d(TAG, "getCurrentSong: " + e.getMessage());
+        }
     }
 
     private void setUpWebSocketCallbacks() {
