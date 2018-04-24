@@ -206,7 +206,7 @@ public class ServerHelper {
 
     public void closeWebSocket(){
         if(status == WebSocketStatus.CONNECTED) {
-            websocket.close(0, "");
+            websocket.close(1000, "");
         }
     }
 
