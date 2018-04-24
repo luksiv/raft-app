@@ -192,13 +192,13 @@ public class ServerHelper {
         }
     }
 
-    public void announcePlayTime(int milliseconds) {
+    public void announcePlayTime(long milliseconds) {
         if(status == WebSocketStatus.CONNECTED) {
             websocket.send("play;" + milliseconds);
         }
     }
 
-    public void announcePause(int milliseconds) {
+    public void announcePause(long milliseconds) {
         if(status == WebSocketStatus.CONNECTED) {
             websocket.send("pause;" + milliseconds);
         }

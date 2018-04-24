@@ -2,6 +2,7 @@ package com.latenightpenguin.groupdj;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -70,6 +71,10 @@ public class ClientActivity extends AppCompatActivity {
     private PlaylistArrayAdapter mPlaylistAdapter;
     private SpotifyData mSpotifyData;
     private ServerHelper mServerHelper;
+    private Handler mHandler = new Handler();
+    private long positionMs;
+    private long durationMs;
+    private boolean isPlaying = false;
     //endregion
 
     //region UI elements
@@ -79,6 +84,7 @@ public class ClientActivity extends AppCompatActivity {
     private Button btnRefreshPlaylist;
     private ListView lwPlaylist;
     private SeekBar sbProgress;
+
     //endregion
 
     @Override
@@ -101,7 +107,7 @@ public class ClientActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if(mServerHelper != null && mServerHelper.getStatus() == ServerHelper.WebSocketStatus.DISCONNECTED) {
+        if (mServerHelper != null && mServerHelper.getStatus() == ServerHelper.WebSocketStatus.DISCONNECTED) {
             mServerHelper.connectWebSocket();
             mServerHelper.setRoomUpdates(mRoom.getId());
         }
@@ -180,6 +186,7 @@ public class ClientActivity extends AppCompatActivity {
 
 
     }
+
     private void authentication() {
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID, AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
         builder.setScopes(new String[]{"user-read-email"});
@@ -228,7 +235,7 @@ public class ClientActivity extends AppCompatActivity {
     }
 
     private void getUserInfo() {
-        mSpotifyData.getUser(new WrappedSpotifyCallback<UserPrivate>(){
+        mSpotifyData.getUser(new WrappedSpotifyCallback<UserPrivate>() {
             @Override
             public void success(UserPrivate userPrivate, retrofit.client.Response response) {
                 mUser = new User(userPrivate.id, userPrivate.display_name,
@@ -272,12 +279,12 @@ public class ClientActivity extends AppCompatActivity {
                     String artist = Utilities.convertArtistListToString(track.artists);
                     String album = track.album.name;
                     String albumArtUrl = track.album.images.get(1).url;
-                    long duration_ms = track.duration_ms;
+                    durationMs = track.duration_ms;
 
                     updateTextView(R.id.tv_artist, artist);
                     updateTextView(R.id.tv_songName, song);
                     updateTextView(R.id.tv_trackLenght,
-                            Utilities.formatSeconds(duration_ms));
+                            Utilities.formatSeconds(durationMs));
                     Picasso.with(ClientActivity.this).
                             load(albumArtUrl)
                             .into((ImageView) findViewById(R.id.iv_albumArt));
@@ -288,7 +295,7 @@ public class ClientActivity extends AppCompatActivity {
         });
     }
 
-    private void updatePlaylist(){
+    private void updatePlaylist() {
         ServerRequest.Callback getSongsCallback = new ServerRequest.Callback() {
             @Override
             public void execute(String response) {
@@ -326,6 +333,29 @@ public class ClientActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    Runnable run = new Runnable() {
+        @Override
+        public void run() {
+            seekUpdation();
+        }
+    };
+
+    public void seekUpdation() {
+        int procentageDone = Utilities.getProgressPercentage(
+                positionMs,
+                durationMs);
+        sbProgress.setProgress(procentageDone);
+        updateTextView(R.id.tv_trackTime,
+                Utilities.formatSeconds(positionMs));
+
+        if (isPlaying) {
+            positionMs += 1000;
+        }
+
+        mHandler.postDelayed(run, 1000);
+
     }
 
     private void changeViews(Button button) {
@@ -383,29 +413,31 @@ public class ClientActivity extends AppCompatActivity {
         mServerHelper.connectUser(mUser.getEmail(), callback);
     }
 
-    private void getCurrentSong(){
+    private void getCurrentSong() {
         try {
             ServerRequest.Callback currentSongCallback = new ServerRequest.Callback() {
                 @Override
                 public void execute(String response) {
-                    final String songId = mServerHelper.getSongId(response);
-                    Log.d(TAG, songId);
-                    mSpotifyData.getTrack(songId.split(":")[2], new WrappedSpotifyCallback<Track>() {
-                        @Override
-                        public void success(Track track, retrofit.client.Response response) {
-                            updatePlayerView(track);
-                        }
+                    if (response.length() > 0) {
+                        final String songId = mServerHelper.getSongId(response);
+                        Log.d(TAG, songId);
+                        mSpotifyData.getTrack(songId.split(":")[2], new WrappedSpotifyCallback<Track>() {
+                            @Override
+                            public void success(Track track, retrofit.client.Response response) {
+                                updatePlayerView(track);
+                                seekUpdation();
+                            }
 
-                        @Override
-                        public void failure(SpotifyError spotifyError) {
-                            Log.d(TAG, "next track name: failed");
-                        }
-                    });
+                            @Override
+                            public void failure(SpotifyError spotifyError) {
+                                Log.d(TAG, "next track name: failed");
+                            }
+                        });
+                    }
                 }
             };
-
             mServerHelper.getCurrentSong(mRoom, currentSongCallback);
-        } catch (Exception e){
+        } catch (Exception e) {
             Log.d(TAG, "getCurrentSong: " + e.getMessage());
         }
     }
@@ -425,10 +457,11 @@ public class ClientActivity extends AppCompatActivity {
                             public void execute(String response) {
                                 final String songId = mServerHelper.getSongId(response);
                                 Log.d(TAG, songId);
-                                mSpotifyData.getTrack(songId.split(":")[2], new WrappedSpotifyCallback<Track>(){
+                                mSpotifyData.getTrack(songId.split(":")[2], new WrappedSpotifyCallback<Track>() {
                                     @Override
                                     public void success(Track track, retrofit.client.Response response) {
                                         updatePlayerView(track);
+                                        seekUpdation();
                                     }
 
                                     @Override
@@ -458,13 +491,27 @@ public class ClientActivity extends AppCompatActivity {
             }
         };
 
-        ServerRequest.Callback paused = new ServerRequest.Callback() {
+        final ServerRequest.Callback paused = new ServerRequest.Callback() {
             @Override
-            public void execute(String response) {
+            public void execute(final String response) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(ClientActivity.this, "Song paused", Toast.LENGTH_SHORT).show();
+                        if (!response.contains("room")) {
+                            isPlaying = false;
+                            try {
+                                long positionMs = Long.parseLong(response.trim().split(":")[1]);
+                                Log.d(TAG, response.trim());
+                                Log.d(TAG, String.valueOf(positionMs));
+                            } catch (Exception e) {
+                                Log.e(TAG, e.getMessage());
+                            }
+                        }
+                        Toast.makeText(ClientActivity.this, "Song paused response: " +
+                                response, Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "Song paused response");
+                        Log.d(TAG, response);
+                        Log.d(TAG, response.trim());
                     }
                 });
             }
@@ -476,7 +523,35 @@ public class ClientActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(ClientActivity.this, "play time: " + response, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ClientActivity.this, "play time response: " +
+                                response.trim(), Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "play time response");
+                        Log.d(TAG, response);
+                        if (!response.contains("room")) {
+                            if (response.contains("paused")) {
+                                Log.e(TAG, "PAUSED");
+                                isPlaying = false;
+                                try {
+                                    long positionMs = Long.parseLong(response.trim().split(":")[1]);
+                                    Log.d(TAG, response.trim());
+                                    Log.d(TAG, String.valueOf(positionMs));
+                                } catch (Exception e) {
+                                    Log.e(TAG, e.getMessage());
+                                }
+                            } else {
+                                isPlaying = true;
+                                try {
+                                    long positionMs = Long.parseLong(response.trim().split(":")[1]);
+                                    Log.d(TAG, response.trim());
+                                    Log.d(TAG, String.valueOf(positionMs));
+                                    Log.d(TAG, "run: success");
+                                } catch (Exception e) {
+                                    Log.e(TAG, e.getMessage());
+                                }
+                            }
+
+                        }
+
                     }
                 });
             }
