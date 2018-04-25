@@ -75,6 +75,7 @@ public class ClientActivity extends AppCompatActivity {
     private long positionMs;
     private long durationMs;
     private boolean isPlaying = false;
+    private boolean isSeekbarUpdaterRunning = false;
     //endregion
 
     //region UI elements
@@ -425,7 +426,10 @@ public class ClientActivity extends AppCompatActivity {
                             @Override
                             public void success(Track track, retrofit.client.Response response) {
                                 updatePlayerView(track);
-                                seekUpdation();
+                                if (!isSeekbarUpdaterRunning) {
+                                    isSeekbarUpdaterRunning = true;
+                                    seekUpdation();
+                                }
                             }
 
                             @Override
@@ -461,7 +465,10 @@ public class ClientActivity extends AppCompatActivity {
                                     @Override
                                     public void success(Track track, retrofit.client.Response response) {
                                         updatePlayerView(track);
-                                        seekUpdation();
+                                        if (!isSeekbarUpdaterRunning) {
+                                            isSeekbarUpdaterRunning = true;
+                                            seekUpdation();
+                                        }
                                     }
 
                                     @Override
@@ -530,24 +537,28 @@ public class ClientActivity extends AppCompatActivity {
                         if (!response.contains("room")) {
                             if (response.contains("paused")) {
                                 Log.e(TAG, "PAUSED");
-                                isPlaying = false;
                                 try {
-                                    long positionMs = Long.parseLong(response.trim().split(":")[1]);
+                                    positionMs = Long.parseLong(response.trim().split(":")[1]);
                                     Log.d(TAG, response.trim());
                                     Log.d(TAG, String.valueOf(positionMs));
                                 } catch (Exception e) {
                                     Log.e(TAG, e.getMessage());
                                 }
-                            } else {
-                                isPlaying = true;
+                                isPlaying = false;
+                            }
+                            else {
+                                Log.e(TAG, "PLAY");
                                 try {
-                                    long positionMs = Long.parseLong(response.trim().split(":")[1]);
+                                    // TODO: When issue with play time extra char is fixed, fix this.
+                                    String str = response.trim().split(":")[1];
+                                    positionMs = Long.parseLong(str.substring(0, str.length()-1));
                                     Log.d(TAG, response.trim());
                                     Log.d(TAG, String.valueOf(positionMs));
                                     Log.d(TAG, "run: success");
                                 } catch (Exception e) {
                                     Log.e(TAG, e.getMessage());
                                 }
+                                isPlaying = true;
                             }
 
                         }

@@ -259,7 +259,7 @@ public class ServerHelper {
         public void handle(String message) {
             status = WebSocketStatus.DISCONNECTED;
             if(message.equals("failed")) {
-                connectWebSocket();
+//                connectWebSocket();
             }
         }
     };
@@ -269,6 +269,6 @@ public class ServerHelper {
     }
 
     public enum WebSocketStatus {
-        CONNECTED, DISCONNECTED;
-    };
+        CONNECTED, DISCONNECTED
+    }
 }

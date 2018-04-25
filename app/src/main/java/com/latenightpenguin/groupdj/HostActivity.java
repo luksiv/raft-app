@@ -529,10 +529,10 @@ public class HostActivity extends AppCompatActivity implements
 
             }
         }
-        if (procentageDone >= 97 && !requestUsed) {
+        if (procentageDone >= 99 && !requestUsed) {
             queueNext();
         }
-        mHandler.postDelayed(run, 750);
+        mHandler.postDelayed(run, 1000);
 
     }
 
@@ -553,7 +553,7 @@ public class HostActivity extends AppCompatActivity implements
                         }
 
                         JSONObject nextTrack = new JSONObject(response);
-                        uri = nextTrack.getString("id");
+                        uri = nextTrack.getString("song");
                         Log.d("Important", "Server");
 
                         if (firstRun) {
