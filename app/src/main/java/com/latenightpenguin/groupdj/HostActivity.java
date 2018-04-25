@@ -349,10 +349,12 @@ public class HostActivity extends AppCompatActivity implements
         //Log.d(TAG, "Playback State: " + mCurrentPlaybackState.toString());
         //Log.d(TAG, "Metadata: " + mMetadata.toString());
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyPlay) {
+            mServerHelper.announcePlayTime(mCurrentPlaybackState.positionMs);
             btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_media_pause));
             seekUpdation();
         }
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyPause) {
+            mServerHelper.announcePause(mCurrentPlaybackState.positionMs);
             btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_media_play));
         }
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged) {
@@ -425,6 +427,17 @@ public class HostActivity extends AppCompatActivity implements
     //endregion
 
     //region Random methods
+
+    private void putSongToPlaylist(String songId) {
+        ServerRequest.Callback addSongCallback = new ServerRequest.Callback() {
+            @Override
+            public void execute(String response) {
+                Toast.makeText(HostActivity.this, "Song added", Toast.LENGTH_SHORT).show();
+                updatePlaylist();
+            }
+        };
+        mServerHelper.addSong(mRoom, songId, addSongCallback);
+    }
 
     private void updatePlaylist() {
         ServerRequest.Callback getSongsCallback = new ServerRequest.Callback() {
@@ -532,10 +545,10 @@ public class HostActivity extends AppCompatActivity implements
 
             }
         }
-        if (procentageDone >= 97 && !requestUsed) {
+        if (procentageDone >= 99 && !requestUsed) {
             queueNext();
         }
-        mHandler.postDelayed(run, 750);
+        mHandler.postDelayed(run, 1000);
 
     }
 
@@ -545,17 +558,20 @@ public class HostActivity extends AppCompatActivity implements
                 @Override
                 public void execute(String response) {
                     try {
-                        Toast.makeText(HostActivity.this, "Next song queued", Toast.LENGTH_SHORT).show();
+                       // Toast.makeText(HostActivity.this, "Next song queued", Toast.LENGTH_SHORT).show();
+                        ErrorHandler.handleMessegeWithToast("Next song queued");
                        // Log.d(TAG, response.toString());
                         ErrorHandler.handleMessege(response.toString());
-                        String uri = "spotify:track:4uLU6hMCjMI75M1A2tKUQC";
+                        String uri;
                         if (response.toString().isEmpty() && !TracksRepository.generatedTracks.isEmpty()) {
-                            uri = TracksRepository.getFromGeneratedTracks();
-                        } else {
-                            JSONObject nextTrack = new JSONObject(response);
-                            uri = nextTrack.getString("id");
+                            String generatedTrackUri = TracksRepository.getFromGeneratedTracks();
+                            putSongToPlaylist(generatedTrackUri.split(":")[2]);
                         }
-                        if(firstRun) {
+
+                        JSONObject nextTrack = new JSONObject(response);
+                        uri = nextTrack.getString("song");
+
+                        if (firstRun) {
                             mPlayer.playUri(mOperationCallback, uri, 0, 0);
                             firstRun = false;
                         } else {
@@ -720,7 +736,7 @@ public class HostActivity extends AppCompatActivity implements
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if(firstRun){
+                        if (firstRun) {
                             queueNext();
                         }
                         //Toast.makeText(HostActivity.this, "Someone added a song", Toast.LENGTH_SHORT).show();
