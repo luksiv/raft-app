@@ -36,7 +36,11 @@ public class AddSongActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Thread.setDefaultUncaughtExceptionHandler(new ErrorHandler());
+        ErrorHandler.setContext(AddSongActivity.this);
+        ErrorHandler.setView(findViewById(R.id.root_addsongactivity));
         setContentView(R.layout.activity_add_song);
+
 
         mAccessToken = getIntent().getStringExtra("accessToken");
 

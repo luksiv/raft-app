@@ -13,51 +13,93 @@ import java.io.StringWriter;
 public class ErrorHandler implements java.lang.Thread.UncaughtExceptionHandler{
     static String _tag;
     static Context _context;
+    static View _view;
 
     static void setContext(Context context){
         _context = context;
         _tag = context.getClass().getSimpleName() + " ERROR";
     }
 
-    static void handle(Exception ex)
+    static void setView(View view){
+        _view = view;
+    }
+
+    static void handleExeption(Exception ex)
     {
         Log.v(_tag, formatErrorMsg(ex, true));
     }
 
-    static void handleWithToast(Exception ex)
+    static void handleMessege(String message)
     {
-        handle(ex);
+        Log.v(_tag, " " + message);
+    }
+
+    static void handleExeptionWithToast(Exception ex)
+    {
+        handleExeption(ex);
         Toast.makeText(_context, formatErrorMsg(ex, false), Toast.LENGTH_SHORT).show();
     }
 
-    static void handleWithToast(Exception ex, String message)
-    {
-        handle(ex);
+    static void handleMessegeWithToast(String message) {
+        handleMessege(message);
         Toast.makeText(_context, message, Toast.LENGTH_SHORT).show();
     }
 
-    static void handleWithToast(Exception ex, int id)
+    static void handleExeptionWithToast(Exception ex, String message)
     {
-        handle(ex);
+        handleExeption(ex);
+        Toast.makeText(_context, message, Toast.LENGTH_SHORT).show();
+    }
+
+    static void handleExeptionWithToast(Exception ex, int id)
+    {
+        handleExeption(ex);
         Toast.makeText(_context, _context.getResources().getString(id), Toast.LENGTH_SHORT).show();
     }
 
-    static void handleWithSnackbar(Exception ex, View view)
+    static void handleExeptionWithSnackbar(Exception ex)
     {
-        handle(ex);
-        Snackbar.make(view, formatErrorMsg(ex, false), Snackbar.LENGTH_LONG).show();
+        handleExeption(ex);
+        try{
+        Snackbar.make(_view, formatErrorMsg(ex, false), Snackbar.LENGTH_LONG).show();
+        }catch (Exception e){
+            handleExeption(e);
+        }
     }
 
-    static void handleWithSnackbar(Exception ex, View view, String message)
+    static void handleExeptionWithSnackbar(Exception ex, String message)
     {
-        handle(ex);
-        Snackbar.make(view, message, Snackbar.LENGTH_LONG).show();
+        handleExeption(ex);
+        try{
+            Snackbar.make(_view, message, Snackbar.LENGTH_LONG).show();
+        }catch (Exception e)
+        {
+        handleExeption(e);
+        }
+
     }
 
-    static void handleWithSnackbar(Exception ex, View view, int id)
+    static void handleExeptionWithSnackbar(Exception ex, int id)
     {
-        handle(ex);
-        Snackbar.make(view, _context.getResources().getString(id), Snackbar.LENGTH_LONG).show();
+        handleExeption(ex);
+        try{
+            Snackbar.make(_view, _context.getResources().getString(id), Snackbar.LENGTH_LONG).show();
+        }catch (Exception e)
+        {
+            handleExeption(e);
+        }
+    }
+
+    static void handleMessegeWithSnackbar(String message)
+    {
+        handleMessege(message);
+        try{
+            Snackbar.make(_view, message, Snackbar.LENGTH_LONG).show();
+        }catch (Exception e)
+        {
+            handleExeption(e);
+        }
+
     }
 
     static String formatErrorMsg(Exception ex, boolean printStackTrace)

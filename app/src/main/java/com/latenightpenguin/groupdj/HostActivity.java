@@ -119,6 +119,7 @@ public class HostActivity extends AppCompatActivity implements
         // ERROR HANDLER
         Thread.setDefaultUncaughtExceptionHandler(new ErrorHandler());
         ErrorHandler.setContext(HostActivity.this);
+        ErrorHandler.setView(findViewById(R.id.root_hostactivity));
 
         authentication();
         setUpElements();
@@ -250,7 +251,8 @@ public class HostActivity extends AppCompatActivity implements
             public void onReceive(Context context, Intent intent) {
                 if (mPlayer != null) {
                     Connectivity connectivity = getNetworkConnectivity(getBaseContext());
-                    Log.i(TAG, "Network state changed: " + connectivity.toString());
+                   // Log.i(TAG, "Network state changed: " + connectivity.toString());
+                    ErrorHandler.handleMessege("Network state changed: " + connectivity.toString());
                     mPlayer.setConnectivityStatus(mOperationCallback, connectivity);
                 }
             }
@@ -310,8 +312,9 @@ public class HostActivity extends AppCompatActivity implements
 
                     @Override
                     public void onError(Throwable throwable) {
-                        Toast.makeText(HostActivity.super.getApplicationContext(), "Could not initialize player", Toast.LENGTH_LONG).show();
-                        Log.e(TAG, "Could not initialize player: " + throwable.getMessage());
+                    //    Toast.makeText(HostActivity.super.getApplicationContext(), "Could not initialize player", Toast.LENGTH_LONG).show();
+                    //    Log.e(TAG, "Could not initialize player: " + throwable.getMessage());
+                        ErrorHandler.handleExeptionWithSnackbar(new Exception(throwable), "Could not initialize player");
                     }
                 });
                 getUserInfo();
@@ -325,7 +328,8 @@ public class HostActivity extends AppCompatActivity implements
                 ServerRequest.Callback addSongCallback = new ServerRequest.Callback() {
                     @Override
                     public void execute(String response) {
-                        Toast.makeText(HostActivity.this, "Song added", Toast.LENGTH_SHORT).show();
+                     //   Toast.makeText(HostActivity.this, "Song added", Toast.LENGTH_SHORT).show();
+                        ErrorHandler.handleMessegeWithToast("Song added");
                         updatePlaylist();
                     }
                 };
@@ -338,7 +342,8 @@ public class HostActivity extends AppCompatActivity implements
     //region Playback events
     @Override
     public void onPlaybackEvent(PlayerEvent playerEvent) {
-        Log.d(TAG, "Playback event received: " + playerEvent.name());
+        //Log.d(TAG, "Playback event received: " + playerEvent.name());
+        ErrorHandler.handleMessege("Playback event received: " + playerEvent.name());
         mCurrentPlaybackState = mPlayer.getPlaybackState();
         mMetadata = mPlayer.getMetadata();
         //Log.d(TAG, "Playback State: " + mCurrentPlaybackState.toString());
@@ -362,7 +367,8 @@ public class HostActivity extends AppCompatActivity implements
 
     @Override
     public void onPlaybackError(Error error) {
-        Log.d(TAG, "Playback error received: " + error.name());
+        //Log.d(TAG, "Playback error received: " + error.name());
+        ErrorHandler.handleMessege(error.name());
         switch (error) {
             // Handle error type as necessary
             default:
@@ -374,39 +380,47 @@ public class HostActivity extends AppCompatActivity implements
     //region Callback methods
     @Override
     public void onLoggedIn() {
-        Log.d(TAG, "User logged in");
-        Toast.makeText(this, "User logged in", Toast.LENGTH_LONG).show();
-
+        //Log.d(TAG, "User logged in");
+        //Toast.makeText(this, "User logged in", Toast.LENGTH_LONG).show();
+        ErrorHandler.handleMessegeWithToast("User logged in");
         mCurrentPlaybackState = mPlayer.getPlaybackState();
         mMetadata = mPlayer.getMetadata();
     }
 
     @Override
     public void onLoggedOut() {
-        Toast.makeText(this, "User logged out", Toast.LENGTH_LONG).show();
-        Log.d(TAG, "User logged out");
+       // Toast.makeText(this, "User logged out", Toast.LENGTH_LONG).show();
+        //Log.d(TAG, "User logged out");
+        ErrorHandler.handleMessegeWithToast("User logged out");
         finish();
     }
 
     @Override
     public void onLoginFailed(Error error) {
         if (Objects.equals(error.toString(), "kSpErrorNeedsPremium")) {
-            Toast.makeText(this, "Premium account needed to be a host", Toast.LENGTH_LONG).show();
+            //Toast.makeText(this, "Premium account needed to be a host", Toast.LENGTH_LONG).show();
+            ErrorHandler.handleMessegeWithToast("Premium account needed to be a host");
             //finish();
         }
-        Log.d(TAG, "Login failed : " + error.toString());
+        //Log.d(TAG, "Login failed : " + error.toString());
+
+        ErrorHandler.handleMessegeWithToast("Login failed");
+        ErrorHandler.handleMessege(error.toString());
+
     }
 
     @Override
     public void onTemporaryError() {
-        Log.d(TAG, "Temporary error occurred");
-        Toast.makeText(this, "Temporary error occurred", Toast.LENGTH_LONG).show();
+        //Log.d(TAG, "Temporary error occurred");
+        //Toast.makeText(this, "Temporary error occurred", Toast.LENGTH_LONG).show();
+        ErrorHandler.handleMessegeWithToast("Temporary error occurred");
     }
 
     @Override
     public void onConnectionMessage(String message) {
-        Log.d(TAG, "Received connection message: " + message);
-        Toast.makeText(this, "Received connection message: " + message, Toast.LENGTH_LONG).show();
+        //Log.d(TAG, "Received connection message: " + message);
+        //Toast.makeText(this, "Received connection message: " + message, Toast.LENGTH_LONG).show();
+        ErrorHandler.handleMessegeWithToast("Received connection message: " + message);
     }
     //endregion
 
@@ -419,6 +433,7 @@ public class HostActivity extends AppCompatActivity implements
                 mSongs = mServerHelper.convertToList(response);
                 for (String song : mSongs) {
                     Log.d(TAG, song);
+                    ErrorHandler.handleMessege(song);
                 }
                 updatePlaylistView();
             }
@@ -486,7 +501,8 @@ public class HostActivity extends AppCompatActivity implements
                             load(mMetadata.currentTrack.albumCoverWebUrl)
                             .into((ImageView) findViewById(R.id.iv_albumArt));
                 } catch (NullPointerException e) {
-                    Log.e(TAG, "Metadata is null: " + mMetadata);
+                    //Log.e(TAG, "Metadata is null: " + mMetadata);
+                    ErrorHandler.handleExeption(e);
                 }
             }
         });
@@ -530,15 +546,14 @@ public class HostActivity extends AppCompatActivity implements
                 public void execute(String response) {
                     try {
                         Toast.makeText(HostActivity.this, "Next song queued", Toast.LENGTH_SHORT).show();
-                        Log.d(TAG, response.toString());
+                       // Log.d(TAG, response.toString());
+                        ErrorHandler.handleMessege(response.toString());
                         String uri = "spotify:track:4uLU6hMCjMI75M1A2tKUQC";
                         if (response.toString().isEmpty() && !TracksRepository.generatedTracks.isEmpty()) {
                             uri = TracksRepository.getFromGeneratedTracks();
-                            Log.d("Important", "Generated");
                         } else {
                             JSONObject nextTrack = new JSONObject(response);
                             uri = nextTrack.getString("id");
-                            Log.d("Important", "Server");
                         }
                         if(firstRun) {
                             mPlayer.playUri(mOperationCallback, uri, 0, 0);
@@ -548,7 +563,8 @@ public class HostActivity extends AppCompatActivity implements
                         }
                         requestUsed = false;
                     } catch (JSONException e) {
-                        e.printStackTrace();
+                       // e.printStackTrace();
+                        ErrorHandler.handleExeption(e);
                     }
                 }
             };
@@ -563,7 +579,7 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void success(Recommendations recommendations, retrofit.client.Response response) {
                 super.success(recommendations, response);
-                Toast.makeText(HostActivity.this, "Generated track", Toast.LENGTH_SHORT).show();
+               // Toast.makeText(HostActivity.this, "Generated track", Toast.LENGTH_SHORT).show();
                 TracksRepository.addToGeneratedTracks(SpotifyData.ConvertRecomendedTracks(recommendations).get(0).getUri());
             }
         });
@@ -600,7 +616,8 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[0]);
-                Toast.makeText(HostActivity.this, "Bit rate = " + bitratesValues[0], Toast.LENGTH_SHORT).show();
+               // Toast.makeText(HostActivity.this, "Bit rate = " + bitratesValues[0], Toast.LENGTH_SHORT).show();
+                ErrorHandler.handleMessegeWithToast("Bit rate = " + bitratesValues[0]);
                 dialog.dismiss();
             }
         });
@@ -610,7 +627,8 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[1]);
-                Toast.makeText(HostActivity.this, "Bit rate = " + bitratesValues[1], Toast.LENGTH_SHORT).show();
+                //Toast.makeText(HostActivity.this, "Bit rate = " + bitratesValues[1], Toast.LENGTH_SHORT).show();
+                ErrorHandler.handleMessegeWithToast("Bit rate = " + bitratesValues[1]);
                 dialog.dismiss();
             }
         });
@@ -620,7 +638,8 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[2]);
-                Toast.makeText(HostActivity.this, "Bit rate = " + bitratesValues[2], Toast.LENGTH_SHORT).show();
+                //Toast.makeText(HostActivity.this, "Bit rate = " + bitratesValues[2], Toast.LENGTH_SHORT).show();
+                ErrorHandler.handleMessegeWithToast("Bit rate = " + bitratesValues[2]);
                 dialog.dismiss();
             }
         });
@@ -669,7 +688,7 @@ public class HostActivity extends AppCompatActivity implements
                             } catch (JSONException e) {
                                 Log.d("MusicDJ", response.toString());
                                 status.setText("Error parsing response");
-                                e.printStackTrace();
+                                ErrorHandler.handleExeption(e);
                             }
                         }
                     }
@@ -687,7 +706,8 @@ public class HostActivity extends AppCompatActivity implements
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(HostActivity.this, "Next Song is played", Toast.LENGTH_SHORT).show();
+                      //  Toast.makeText(HostActivity.this, "Next Song is played", Toast.LENGTH_SHORT).show();
+                        ErrorHandler.handleMessegeWithToast("Next Song is played");
                         updatePlaylist();
                     }
                 });
@@ -703,7 +723,8 @@ public class HostActivity extends AppCompatActivity implements
                         if(firstRun){
                             queueNext();
                         }
-                        Toast.makeText(HostActivity.this, "Someone added a song", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(HostActivity.this, "Someone added a song", Toast.LENGTH_SHORT).show();
+                        ErrorHandler.handleMessegeWithToast("Someone added a song");
                         updatePlaylist();
                     }
                 });
@@ -716,7 +737,8 @@ public class HostActivity extends AppCompatActivity implements
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(HostActivity.this, "Song paused", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(HostActivity.this, "Song paused", Toast.LENGTH_SHORT).show();
+                        ErrorHandler.handleMessegeWithToast("Song paused");
                     }
                 });
             }
@@ -728,7 +750,8 @@ public class HostActivity extends AppCompatActivity implements
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(HostActivity.this, "play time: " + response, Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(HostActivity.this, "play time: " + response, Toast.LENGTH_SHORT).show();
+                        ErrorHandler.handleMessegeWithToast("play time: " + response);
                     }
                 });
             }

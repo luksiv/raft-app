@@ -85,8 +85,10 @@ public class ClientActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Thread.setDefaultUncaughtExceptionHandler(new ErrorHandler());
-        setContentView(R.layout.activity_client);
         ErrorHandler.setContext(ClientActivity.this);
+        ErrorHandler.setView(findViewById(R.id.root_clientactivity));
+        setContentView(R.layout.activity_client);
+
 
         mServerHelper = new ServerHelper();
         setUpWebSocketCallbacks();
@@ -200,7 +202,8 @@ public class ClientActivity extends AppCompatActivity {
                 getUserInfo();
             }
             if (response.getType() == AuthenticationResponse.Type.ERROR) {
-                Log.e("Authentification", response.getError());
+            //    Log.e("Authentification", response.getError());
+                ErrorHandler.handleMessegeWithSnackbar(response.getError());
             }
         }
 
@@ -212,7 +215,8 @@ public class ClientActivity extends AppCompatActivity {
                 ServerRequest.Callback addSongCallback = new ServerRequest.Callback() {
                     @Override
                     public void execute(String response) {
-                        Toast.makeText(ClientActivity.this, "Song added", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(ClientActivity.this, "Song added", Toast.LENGTH_SHORT).show();
+                        ErrorHandler.handleMessegeWithToast("Song added");
                         updatePlaylist();
                     }
                 };
@@ -282,7 +286,8 @@ public class ClientActivity extends AppCompatActivity {
                             load(albumArtUrl)
                             .into((ImageView) findViewById(R.id.iv_albumArt));
                 } catch (Exception e) {
-                    Log.e(TAG, e.getMessage());
+                    //Log.e(TAG, e.getMessage());
+                    ErrorHandler.handleExeption(e);
                 }
             }
         });
@@ -294,7 +299,8 @@ public class ClientActivity extends AppCompatActivity {
             public void execute(String response) {
                 mSongs = mServerHelper.convertToList(response);
                 for (String song : mSongs) {
-                    Log.d(TAG, song);
+                    //Log.d(TAG, song);
+                    ErrorHandler.handleMessege(song);
                 }
                 updatePlaylistView();
             }
@@ -372,7 +378,8 @@ public class ClientActivity extends AppCompatActivity {
                                 status.setText("Login code is " + String.valueOf(mRoom.getLoginCode()));
                             } catch (JSONException e) {
                                 status.setText("Not connected");
-                                e.printStackTrace();
+                                ErrorHandler.handleExeptionWithSnackbar(e, "Not connected");
+                                //e.printStackTrace();
                             }
                         }
                     }
@@ -398,7 +405,8 @@ public class ClientActivity extends AppCompatActivity {
 
                         @Override
                         public void failure(SpotifyError spotifyError) {
-                            Log.d(TAG, "next track name: failed");
+                           // Log.d(TAG, "next track name: failed");
+                            ErrorHandler.handleExeptionWithToast(spotifyError, "Failure");
                         }
                     });
                 }
@@ -406,7 +414,8 @@ public class ClientActivity extends AppCompatActivity {
 
             mServerHelper.getCurrentSong(mRoom, currentSongCallback);
         } catch (Exception e){
-            Log.d(TAG, "getCurrentSong: " + e.getMessage());
+            ErrorHandler.handleExeption(e);
+            //Log.d(TAG, "getCurrentSong: " + e.getMessage());
         }
     }
 
@@ -433,7 +442,8 @@ public class ClientActivity extends AppCompatActivity {
 
                                     @Override
                                     public void failure(SpotifyError spotifyError) {
-                                        Log.d(TAG, "next track name: failed");
+                                       // Log.d(TAG, "next track name: failed");
+                                        ErrorHandler.handleExeptionWithToast(spotifyError, "Failure");
                                     }
                                 });
                             }
