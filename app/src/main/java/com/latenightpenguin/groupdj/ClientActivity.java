@@ -439,32 +439,20 @@ public class ClientActivity extends AppCompatActivity {
                                 }
                             }
 
-<<<<<<< HEAD
                         @Override
                         public void failure(SpotifyError spotifyError) {
                            // Log.d(TAG, "next track name: failed");
                             ErrorHandler.handleExeptionWithToast(spotifyError, "Failure");
                         }
                     });
-=======
-                            @Override
-                            public void failure(SpotifyError spotifyError) {
-                                Log.d(TAG, "next track name: failed");
-                            }
-                        });
+
                     }
->>>>>>> 3af5a5f635e4eccba73bcd86ce91a25cc5051e93
                 }
             };
             mServerHelper.getCurrentSong(mRoom, currentSongCallback);
-<<<<<<< HEAD
         } catch (Exception e){
             ErrorHandler.handleExeption(e);
             //Log.d(TAG, "getCurrentSong: " + e.getMessage());
-=======
-        } catch (Exception e) {
-            Log.d(TAG, "getCurrentSong: " + e.getMessage());
->>>>>>> 3af5a5f635e4eccba73bcd86ce91a25cc5051e93
         }
     }
 
