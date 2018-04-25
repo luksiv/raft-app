@@ -33,8 +33,6 @@ import okhttp3.WebSocket;
 public class ServerHelper {
     public static final String SERVER_URL = "https://group-dj-app.herokuapp.com/";
     private static final String SERVER_WEBSOCKET_URL = "ws://group-dj-app.herokuapp.com/realtime";
-//    public static final String SERVER_URL = "http://192.168.0.39:61135/";
-//    private static final String SERVER_WEBSOCKET_URL = "ws://192.168.0.39:61135/realtime";
     private static final String METHOD_GET = "GET";
     private static final String METHOD_POST = "POST";
     private static final String METHOD_PUT = "PUT";
@@ -118,7 +116,7 @@ public class ServerHelper {
 
                 for(int i = 0; i < array.length(); i++) {
                     JSONObject song = array.getJSONObject(i);
-                    songs.add(song.getString("id"));
+                    songs.add(song.getString("song"));
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -144,7 +142,7 @@ public class ServerHelper {
             try {
                 JSONObject songObject = new JSONObject(response);
 
-                songId = songObject.getString("id");
+                songId = songObject.getString("song");
             } catch (JSONException e) {
                 e.printStackTrace();
             }
