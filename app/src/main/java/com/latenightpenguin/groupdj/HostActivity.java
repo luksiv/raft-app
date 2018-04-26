@@ -97,6 +97,7 @@ public class HostActivity extends AppCompatActivity implements
 
     private Boolean requestUsed = false;
     private Boolean firstRun = true;
+    private Boolean voted = false;
     //endregion
 
     //region UI elements
@@ -124,7 +125,7 @@ public class HostActivity extends AppCompatActivity implements
         authentication();
         setUpElements();
 
-        mServerHelper = new ServerHelper();
+        mServerHelper = new ServerHelper(getResources().getString(R.string.url));
         setUpWebSocketCallbacks();
         mRoom = new RoomInfo();
 
@@ -159,9 +160,19 @@ public class HostActivity extends AppCompatActivity implements
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mCurrentPlaybackState != null
+                /*if (mCurrentPlaybackState != null
                         && mMetadata != null && mMetadata.nextTrack != null) {
                     mPlayer.skipToNext(mOperationCallback);
+                }*/
+                if(!voted) {
+                    ServerRequest.Callback callback = new ServerRequest.Callback() {
+                        @Override
+                        public void execute(String response) {
+                            Toast.makeText(HostActivity.this, "You voted", Toast.LENGTH_SHORT).show();
+                        }
+                    };
+                    mServerHelper.voteSkipSong(mRoom, callback);
+                    voted = true;
                 }
             }
         });
@@ -330,6 +341,9 @@ public class HostActivity extends AppCompatActivity implements
                     public void execute(String response) {
                      //   Toast.makeText(HostActivity.this, "Song added", Toast.LENGTH_SHORT).show();
                         ErrorHandler.handleMessegeWithToast("Song added");
+                        if (firstRun) {
+                            queueNext();
+                        }
                         updatePlaylist();
                     }
                 };
@@ -557,6 +571,7 @@ public class HostActivity extends AppCompatActivity implements
             final ServerRequest.Callback callback = new ServerRequest.Callback() {
                 @Override
                 public void execute(String response) {
+                    voted = false;
                     try {
                        // Toast.makeText(HostActivity.this, "Next song queued", Toast.LENGTH_SHORT).show();
                         ErrorHandler.handleMessegeWithToast("Next song queued");
@@ -773,10 +788,39 @@ public class HostActivity extends AppCompatActivity implements
             }
         };
 
+        ServerRequest.Callback connectedRoom = new ServerRequest.Callback() {
+            @Override
+            public void execute(final String response) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //Toast.makeText(HostActivity.this, "play time: " + response, Toast.LENGTH_SHORT).show();
+                        ErrorHandler.handleMessegeWithToast(response);
+                    }
+                });
+            }
+        };
+
+        ServerRequest.Callback skipCallback = new ServerRequest.Callback() {
+            @Override
+            public void execute(final String response) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //Toast.makeText(HostActivity.this, "play time: " + response, Toast.LENGTH_SHORT).show();
+                        ErrorHandler.handleMessegeWithToast("song skipped");
+                        queueNext();
+                    }
+                });
+            }
+        };
+
         mServerHelper.setPlayingNextCallback(playingNext);
         mServerHelper.setSongAddedCallback(songAdded);
         mServerHelper.setSongPausedCallback(paused);
         mServerHelper.setSongPlayTimeCallback(playTime);
+        mServerHelper.setConnectedToRoomCallback(connectedRoom);
+        mServerHelper.setSongSkippedCallback(skipCallback);
     }
 
     //endregion

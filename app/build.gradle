@@ -16,6 +16,21 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    flavorDimensions "server"
+    productFlavors {
+        stagging {
+            resValue "string", "url", "group-dj-app.herokuapp.com/"
+            dimension "server"
+        }
+        localhost {
+            resValue "string", "url", "192.168.0.39:61135/"
+            dimension "server"
+        }
+        production {
+            resValue "string", "url", "group-dj-app-prod.herokuapp.com/"
+            dimension "server"
+        }
+    }
 }
 
 repositories {
@@ -27,27 +42,22 @@ repositories {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:27.0.2'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
-
     // This library handles design
     implementation 'com.android.support:design:27.0.2'
     // This library handles spotify web api
     implementation 'com.github.kaaes:spotify-web-api-android:0.4.1'
-
     // This library handles authentication and authorization
     implementation 'com.spotify.android:auth:1.1.0'
-
     // This library handles music playback
     implementation 'com.spotify.sdk:spotify-player-24-noconnect-2.20b@aar'
-
     // This library handles HTTP communications
     implementation 'com.squareup.okhttp3:okhttp:3.6.0'
-
     // This library handles images from the internet
     implementation 'com.squareup.picasso:picasso:2.5.2'
 }

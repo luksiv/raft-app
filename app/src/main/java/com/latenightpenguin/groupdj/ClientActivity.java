@@ -1,6 +1,7 @@
 package com.latenightpenguin.groupdj;
 
 import android.content.Intent;
+import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
@@ -76,10 +77,12 @@ public class ClientActivity extends AppCompatActivity {
     private long durationMs;
     private boolean isPlaying = false;
     private boolean isSeekbarUpdaterRunning = false;
+    private Boolean voted = false;
     //endregion
 
     //region UI elements
     private Button btnAdd;
+    private ImageButton btnNext;
     private Button btnInfo;
     private Button btnToggleViews;
     private Button btnRefreshPlaylist;
@@ -97,7 +100,7 @@ public class ClientActivity extends AppCompatActivity {
         setContentView(R.layout.activity_client);
 
 
-        mServerHelper = new ServerHelper();
+        mServerHelper = new ServerHelper(getResources().getString(R.string.url));
         setUpWebSocketCallbacks();
         mRoom = new RoomInfo();
         mRoom.setLoginCode(getIntent().getIntExtra("roomId", -1));
@@ -126,6 +129,23 @@ public class ClientActivity extends AppCompatActivity {
                         AddSongActivity.class);
                 intent.putExtra("accessToken", mAccessToken);
                 startActivityForResult(intent, 333);
+            }
+        });
+
+        btnNext = findViewById(R.id.btn_next);
+        btnNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!voted) {
+                    ServerRequest.Callback callback = new ServerRequest.Callback() {
+                        @Override
+                        public void execute(String response) {
+                            Toast.makeText(ClientActivity.this, "You voted", Toast.LENGTH_SHORT).show();
+                        }
+                    };
+                    mServerHelper.voteSkipSong(mRoom, callback);
+                    voted = true;
+                }
             }
         });
 
@@ -579,9 +599,24 @@ public class ClientActivity extends AppCompatActivity {
             }
         };
 
+        ServerRequest.Callback skipCallback = new ServerRequest.Callback() {
+            @Override
+            public void execute(final String response) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //Toast.makeText(HostActivity.this, "play time: " + response, Toast.LENGTH_SHORT).show();
+                        ErrorHandler.handleMessegeWithToast("song skipped");
+
+                    }
+                });
+            }
+        };
+
         mServerHelper.setPlayingNextCallback(playingNext);
         mServerHelper.setSongAddedCallback(songAdded);
         mServerHelper.setSongPausedCallback(paused);
         mServerHelper.setSongPlayTimeCallback(playTime);
+        mServerHelper.setSongSkippedCallback(skipCallback);
     }
 }
