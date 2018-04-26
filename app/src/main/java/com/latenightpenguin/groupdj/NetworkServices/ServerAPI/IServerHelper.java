@@ -6,6 +6,7 @@ public interface IServerHelper {
     void registerUser(String user, ICallback callback);
     void createRoom(String user, ICallback callback);
     void connectToRoom(String user, int loginCode, ICallback callback);
+    void disconnectFromRoom(String user, ICallback callback);
     void addSong(RoomInfo room, String song, ICallback callback);
     void getCurrentSong(RoomInfo room, ICallback callback);
     void getSongs(RoomInfo room, ICallback callback);

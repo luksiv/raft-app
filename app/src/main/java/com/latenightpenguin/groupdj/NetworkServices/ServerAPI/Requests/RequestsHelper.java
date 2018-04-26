@@ -51,6 +51,19 @@ public class RequestsHelper {
         activeRequests++;
     }
 
+    public void disconnectFromRoom(String user, final ICallback callback) {
+        ICallback cb = new ICallback() {
+            @Override
+            public void execute(String response) {
+                activeRequests--;
+                callback.execute(response);
+            }
+        };
+        ServerRequest request = new ServerRequest(METHOD_PUT, "api/rooms", "\"" + user + "\"", cb, null);
+        new ConnectionManager().execute(request);
+        activeRequests++;
+    }
+
     public void addSong(RoomInfo room, String song, final ICallback callback) {
         ICallback cb = new ICallback() {
             @Override
