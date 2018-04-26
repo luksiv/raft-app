@@ -3,16 +3,18 @@ package com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests;
 import android.telecom.Call;
 import android.view.View;
 
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ICallback;
+
 import java.io.InputStream;
 
 public class ServerRequest {
     private String path;
     private String body;
     private String method;
-    private Callback callback;
+    private ICallback callback;
     private String[] arguments;
 
-    public ServerRequest(String method, String path, String body, Callback callback, String... arguments) {
+    public ServerRequest(String method, String path, String body, ICallback callback, String... arguments) {
         this.method = method;
         this.path = path;
         this.body = body;
@@ -44,11 +46,11 @@ public class ServerRequest {
         this.method = method;
     }
 
-    public Callback getCallback() {
+    public ICallback getCallback() {
         return callback;
     }
 
-    public void setCallback(Callback callback) {
+    public void setCallback(ICallback callback) {
         this.callback = callback;
     }
 
@@ -73,9 +75,5 @@ public class ServerRequest {
 
     public void setArguments(String[] arguments) {
         this.arguments = arguments;
-    }
-
-    public interface Callback {
-        void execute(String response);
     }
 }

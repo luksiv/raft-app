@@ -17,13 +17,13 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.WebSocket;
 
-public class ServerHelper {
+public class ServerHelper implements IServerHelper{
     public static String SERVER_URL;
     private static String SERVER_WEBSOCKET_URL;
-    private static final String METHOD_GET = "GET";
-    private static final String METHOD_POST = "POST";
-    private static final String METHOD_PUT = "PUT";
-    private static final String METHOD_DELETE = "DELETE";
+    public static final String METHOD_GET = "GET";
+    public static final String METHOD_POST = "POST";
+    public static final String METHOD_PUT = "PUT";
+    public static final String METHOD_DELETE = "DELETE";
     public static final String CONNECTION_ERROR = "There was error connecting to the server";
     public static final String RESPONSE_ERROR = "There was error getting response";
 
@@ -34,12 +34,12 @@ public class ServerHelper {
     private int activeRequests;
 
     // websocket callbacks
-    private ServerRequest.Callback playingNextCallback;
-    private ServerRequest.Callback songAddedCallback;
-    private ServerRequest.Callback songPausedCallback;
-    private ServerRequest.Callback songPlayTimeCallback;
-    private ServerRequest.Callback songSkipedCallback;
-    private ServerRequest.Callback connectedToRoomCallback;
+    private ICallback playingNextCallback;
+    private ICallback songAddedCallback;
+    private ICallback songPausedCallback;
+    private ICallback songPlayTimeCallback;
+    private ICallback songSkipedCallback;
+    private ICallback connectedToRoomCallback;
 
     public ServerHelper(String url) {
         SERVER_URL = "http://" + url;
@@ -50,237 +50,8 @@ public class ServerHelper {
         activeRequests = 0;
     }
 
-    public boolean areAllRequestsFinished() {
-        return activeRequests == 0;
-    }
-
-    //region Converters
-    public String getSongId(String response) {
-        String songId = "";
-
-        if (response != null && !response.equals("")) {
-            if (response.equals(CONNECTION_ERROR) || response.equals(RESPONSE_ERROR)) {
-            }
-
-            try {
-                JSONObject songObject = new JSONObject(response);
-
-                songId = songObject.getString("song");
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return songId;
-    }
-
-    public ArrayList<String> convertToList(String response) {
-        ArrayList<String> songs = new ArrayList<>();
-
-        if (response != null && !response.equals("")) {
-            if (response.equals(CONNECTION_ERROR) || response.equals(RESPONSE_ERROR)) {
-            }
-
-            try {
-                JSONArray array = new JSONArray(response);
-
-                for (int i = 0; i < array.length(); i++) {
-                    JSONObject song = array.getJSONObject(i);
-                    songs.add(song.getString("song"));
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return songs;
-    }
-    //endregion
-
-    //region Requests
-
-    /**
-     * Creates new room and connects to it.
-     *
-     * @param id       user id.
-     * @param callback callback to execute.
-     */
-    public void createRoom(final String id, final ServerRequest.Callback callback) {
-        ServerRequest.Callback cb = new ServerRequest.Callback() {
-            @Override
-            public void execute(String response) {
-                activeRequests--;
-                callback.execute(response);
-            }
-        };
-        ServerRequest request = new ServerRequest(METHOD_POST, "api/rooms", "\"" + id + "\"", cb, null);
-        new ConnectionManager().execute(request);
-        activeRequests++;
-    }
-
-    /**
-     * Registers user and executes callback
-     *
-     * @param id       user id
-     * @param callback callback to execute
-     */
-    public void registerUser(final String id, final ServerRequest.Callback callback) {
-        ServerRequest.Callback cb = new ServerRequest.Callback() {
-            @Override
-            public void execute(String response) {
-                activeRequests--;
-                callback.execute(response);
-            }
-        };
-        ServerRequest request = new ServerRequest(METHOD_POST, "api/users", "\"" + id + "\"", cb, null);
-        new ConnectionManager().execute(request);
-        activeRequests++;
-    }
-
-    /**
-     * Connects user to room.
-     *
-     * @param id       user id.
-     * @param callback callback to execute.
-     */
-    public void connectUser(final String id, final ServerRequest.Callback callback) {
-        ServerRequest.Callback cb = new ServerRequest.Callback() {
-            @Override
-            public void execute(String response) {
-                activeRequests--;
-                callback.execute(response);
-            }
-        };
-        ServerRequest request = new ServerRequest(METHOD_POST, "api/users", "\"" + id + "\"", cb, null);
-        new ConnectionManager().execute(request);
-        activeRequests++;
-    }
-
-    public void connectToRoom(int roomLoginCode, String id, final ServerRequest.Callback callback) {
-        String body = "{ \"email\": \"" + id + "\", \"logincode\": " + roomLoginCode + " }";
-        Log.d("MusicDJ", body);
-
-        ServerRequest.Callback cb = new ServerRequest.Callback() {
-            @Override
-            public void execute(String response) {
-                activeRequests--;
-                callback.execute(response);
-            }
-        };
-
-        ServerRequest request = new ServerRequest(METHOD_PUT, "api/users", body, cb, null);
-        new ConnectionManager().execute(request);
-        activeRequests++;
-    }
-
-    public void getSongs(final RoomInfo room, final ServerRequest.Callback callback) {
-        Log.d("MusicDJ", "api/songs/" + room.getId());
-        ServerRequest.Callback cb = new ServerRequest.Callback() {
-            @Override
-            public void execute(String response) {
-                activeRequests--;
-                callback.execute(response);
-            }
-        };
-        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId(), null, cb, null);
-        new ConnectionManager().execute(request);
-        activeRequests++;
-    }
-
-    public void playNextSong(final RoomInfo room, final ServerRequest.Callback callback) {
-        Log.d("MusicDJ", "api/songs/" + room.getId() + "/next");
-        ServerRequest.Callback cb = new ServerRequest.Callback() {
-            @Override
-            public void execute(String response) {
-                activeRequests--;
-                callback.execute(response);
-            }
-        };
-        ServerRequest request = new ServerRequest(METHOD_PUT, "api/songs/" + room.getId() + "/next", "", cb, null);
-        new ConnectionManager().execute(request);
-        activeRequests++;
-    }
-
-    public void addSong(RoomInfo room, final String song, final ServerRequest.Callback callback) {
-        ServerRequest.Callback cb = new ServerRequest.Callback() {
-            @Override
-            public void execute(String response) {
-                activeRequests--;
-                callback.execute(response);
-            }
-        };
-        ServerRequest request = new ServerRequest(METHOD_PUT, "api/songs/" + room.getId() + "/" + song, "", cb, null);
-        new ConnectionManager().execute(request);
-        activeRequests++;
-    }
-
-    public void getCurrentSong(RoomInfo room, final ServerRequest.Callback callback) {
-        ServerRequest.Callback cb = new ServerRequest.Callback() {
-            @Override
-            public void execute(String response) {
-                activeRequests--;
-                callback.execute(response);
-            }
-        };
-        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId() + "/current", null, cb, null);
-        new ConnectionManager().execute(request);
-        activeRequests++;
-    }
-
-    public void getLastPlayedSongs(RoomInfo room, int count, final ServerRequest.Callback callback) {
-        /*ServerRequest.Callback cb = new ServerRequest.Callback() {
-            @Override
-            public void execute(String response) {
-                activeRequests--;
-                callback.execute(response);
-            }
-        };
-        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId() + "/last/" + count, null, cb, null);
-        new ConnectionManager().execute(request);
-        activeRequests++;*/
-    }
-
-    public void getLeftSongCount(RoomInfo room, final ServerRequest.Callback callback) {
-        ServerRequest.Callback cb = new ServerRequest.Callback() {
-            @Override
-            public void execute(String response) {
-                activeRequests--;
-                callback.execute(response);
-            }
-        };
-        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId() + "/left", null, cb, null);
-        new ConnectionManager().execute(request);
-        activeRequests++;
-    }
-
-    public void voteSkipSong(RoomInfo room, final ServerRequest.Callback callback) {
-        ServerRequest.Callback cb = new ServerRequest.Callback() {
-            @Override
-            public void execute(String response) {
-                activeRequests--;
-                callback.execute(response);
-            }
-        };
-        ServerRequest request = new ServerRequest(METHOD_PUT, "api/songs/" + room.getId(), "", cb, null);
-        new ConnectionManager().execute(request);
-        activeRequests++;
-    }
-
-    public void setVoteThreshold(RoomInfo room, double threshold, final ServerRequest.Callback callback) {
-        ServerRequest.Callback cb = new ServerRequest.Callback() {
-            @Override
-            public void execute(String response) {
-                activeRequests--;
-                callback.execute(response);
-            }
-        };
-        ServerRequest request = new ServerRequest(METHOD_PUT, "api/rooms/" + room.getId(), Double.toString(threshold), cb, null);
-        new ConnectionManager().execute(request);
-        activeRequests++;
-    }
-    //endregion
-
     //region WebSockets
+    @Override
     public void connectWebSocket() {
         Request request = new Request.Builder().url(SERVER_WEBSOCKET_URL).build();
         ServerListener serverListener = new ServerListener();
@@ -293,6 +64,7 @@ public class ServerHelper {
         }
     }
 
+    @Override
     public void setRoomUpdates(int id) {
         roomId = id;
         if (status == WebSocketStatus.CONNECTED) {
@@ -300,45 +72,54 @@ public class ServerHelper {
         }
     }
 
+    @Override
     public void announcePlayTime(long milliseconds) {
         if (status == WebSocketStatus.CONNECTED) {
             websocket.send("play;" + milliseconds);
         }
     }
 
+    @Override
     public void announcePause(long milliseconds) {
         if (status == WebSocketStatus.CONNECTED) {
             websocket.send("pause;" + milliseconds);
         }
     }
 
+    @Override
     public void closeWebSocket() {
         if (status == WebSocketStatus.CONNECTED) {
             websocket.close(1000, "");
         }
     }
 
-    public void setPlayingNextCallback(ServerRequest.Callback playingNextCallback) {
+    @Override
+    public void setPlayingNextCallback(ICallback playingNextCallback) {
         this.playingNextCallback = playingNextCallback;
     }
 
-    public void setSongAddedCallback(ServerRequest.Callback songAddedCallback) {
+    @Override
+    public void setSongAddedCallback(ICallback songAddedCallback) {
         this.songAddedCallback = songAddedCallback;
     }
 
-    public void setSongPausedCallback(ServerRequest.Callback songPausedCallback) {
+    @Override
+    public void setSongPausedCallback(ICallback songPausedCallback) {
         this.songPausedCallback = songPausedCallback;
     }
 
-    public void setSongPlayTimeCallback(ServerRequest.Callback songPlayTimeCallback) {
+    @Override
+    public void setSongPlayTimeCallback(ICallback songPlayTimeCallback) {
         this.songPlayTimeCallback = songPlayTimeCallback;
     }
 
-    public void setSongSkippedCallback(ServerRequest.Callback songSkipedCallback) {
+    @Override
+    public void setSongSkippedCallback(ICallback songSkipedCallback) {
         this.songSkipedCallback = songSkipedCallback;
     }
 
-    public void setConnectedToRoomCallback(ServerRequest.Callback connectedToRoomCallback) {
+    @Override
+    public void setConnectedToRoomCallback(ICallback connectedToRoomCallback) {
         this.connectedToRoomCallback = connectedToRoomCallback;
     }
 
@@ -391,13 +172,170 @@ public class ServerHelper {
             }
         }
     };
+    //endregion
 
-    public WebSocketStatus getStatus() {
+    @Override
+    public WebSocketStatus getWebSocketStatus() {
         return status;
     }
 
-    public enum WebSocketStatus {
-        CONNECTED, DISCONNECTED
+    @Override
+    public void registerUser(String user, final ICallback callback) {
+        ICallback cb = new ICallback() {
+            @Override
+            public void execute(String response) {
+                activeRequests--;
+                callback.execute(response);
+            }
+        };
+        ServerRequest request = new ServerRequest(METHOD_POST, "api/users", "\"" + user + "\"", cb, null);
+        new ConnectionManager().execute(request);
+        activeRequests++;
     }
-    //endregion
+
+    @Override
+    public void createRoom(String user, final ICallback callback) {
+        ICallback cb = new ICallback() {
+            @Override
+            public void execute(String response) {
+                activeRequests--;
+                callback.execute(response);
+            }
+        };
+        ServerRequest request = new ServerRequest(METHOD_POST, "api/rooms", "\"" + user + "\"", cb, null);
+        new ConnectionManager().execute(request);
+        activeRequests++;
+    }
+
+    @Override
+    public void connectToRoom(String user, int loginCode, final ICallback callback) {
+        ICallback cb = new ICallback() {
+            @Override
+            public void execute(String response) {
+                activeRequests--;
+                callback.execute(response);
+            }
+        };
+        ServerRequest request = new ServerRequest(METHOD_POST, "api/rooms", "\"" + user + "\"", cb, null);
+        new ConnectionManager().execute(request);
+        activeRequests++;
+    }
+
+    @Override
+    public void addSong(RoomInfo room, String song, final ICallback callback) {
+        ICallback cb = new ICallback() {
+            @Override
+            public void execute(String response) {
+                activeRequests--;
+                callback.execute(response);
+            }
+        };
+        ServerRequest request = new ServerRequest(METHOD_PUT, "api/songs/" + room.getId() + "/" + song, "", cb, null);
+        new ConnectionManager().execute(request);
+        activeRequests++;
+    }
+
+    @Override
+    public void getCurrentSong(RoomInfo room, final ICallback callback) {
+        ICallback cb = new ICallback() {
+            @Override
+            public void execute(String response) {
+                activeRequests--;
+                callback.execute(response);
+            }
+        };
+        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId() + "/current", null, cb, null);
+        new ConnectionManager().execute(request);
+        activeRequests++;
+    }
+
+    @Override
+    public void getSongs(RoomInfo room, final ICallback callback) {
+        ICallback cb = new ICallback() {
+            @Override
+            public void execute(String response) {
+                activeRequests--;
+                callback.execute(response);
+            }
+        };
+        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId(), null, cb, null);
+        new ConnectionManager().execute(request);
+        activeRequests++;
+    }
+
+    @Override
+    public void playNextSong(RoomInfo room, final ICallback callback) {
+        ICallback cb = new ICallback() {
+            @Override
+            public void execute(String response) {
+                activeRequests--;
+                callback.execute(response);
+            }
+        };
+        ServerRequest request = new ServerRequest(METHOD_PUT, "api/songs/" + room.getId() + "/next", "", cb, null);
+        new ConnectionManager().execute(request);
+        activeRequests++;
+    }
+
+    @Override
+    public void getLastPlayedSongs(RoomInfo room, int count, final ICallback callback) {
+        ICallback cb = new ICallback() {
+            @Override
+            public void execute(String response) {
+                activeRequests--;
+                callback.execute(response);
+            }
+        };
+        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId() + "/last/" + count, null, cb, null);
+        new ConnectionManager().execute(request);
+        activeRequests++;
+    }
+
+    @Override
+    public void getLeftSongCount(RoomInfo room, final ICallback callback) {
+        ICallback cb = new ICallback() {
+            @Override
+            public void execute(String response) {
+                activeRequests--;
+                callback.execute(response);
+            }
+        };
+        ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId() + "/left", null, cb, null);
+        new ConnectionManager().execute(request);
+        activeRequests++;
+    }
+
+    @Override
+    public void voteSkipSong(RoomInfo room, final ICallback callback) {
+        ICallback cb = new ICallback() {
+            @Override
+            public void execute(String response) {
+                activeRequests--;
+                callback.execute(response);
+            }
+        };
+        ServerRequest request = new ServerRequest(METHOD_PUT, "api/songs/" + room.getId(), "", cb, null);
+        new ConnectionManager().execute(request);
+        activeRequests++;
+    }
+
+    @Override
+    public void setSkipThreshold(RoomInfo room, double threshold, final ICallback callback) {
+        ICallback cb = new ICallback() {
+            @Override
+            public void execute(String response) {
+                activeRequests--;
+                callback.execute(response);
+            }
+        };
+        ServerRequest request = new ServerRequest(METHOD_PUT, "api/rooms/" + room.getId(), Double.toString(threshold), cb, null);
+        new ConnectionManager().execute(request);
+        activeRequests++;
+    }
+
+    @Override
+    public void waitForAllRequests() {
+        while(activeRequests > 0){
+        }
+    }
 }

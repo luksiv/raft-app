@@ -17,8 +17,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ServerHelper;
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests.ServerRequest;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ICallback;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.IServerHelper;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ServerFactory;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.SongConverter;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSocketStatus;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrappedSpotifyCallback;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
@@ -57,7 +60,7 @@ public class ClientActivity extends AppCompatActivity {
     private Call mCall;
     private PlaylistArrayAdapter mPlaylistAdapter;
     private SpotifyData mSpotifyData;
-    private ServerHelper mServerHelper;
+    private IServerHelper mServerHelper;
     private Handler mHandler = new Handler();
     private long positionMs;
     private long durationMs;
@@ -86,7 +89,7 @@ public class ClientActivity extends AppCompatActivity {
         setContentView(R.layout.activity_client);
 
 
-        mServerHelper = new ServerHelper(getResources().getString(R.string.url));
+        mServerHelper = ServerFactory.make(getResources().getString(R.string.url));
         setUpWebSocketCallbacks();
         mRoom = new RoomInfo();
         mRoom.setLoginCode(getIntent().getIntExtra("roomId", -1));
@@ -99,7 +102,7 @@ public class ClientActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if (mServerHelper != null && mServerHelper.getStatus() == ServerHelper.WebSocketStatus.DISCONNECTED) {
+        if (mServerHelper != null && mServerHelper.getWebSocketStatus() == WebSocketStatus.DISCONNECTED) {
             mServerHelper.connectWebSocket();
             mServerHelper.setRoomUpdates(mRoom.getId());
         }
@@ -123,7 +126,7 @@ public class ClientActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(!voted) {
-                    ServerRequest.Callback callback = new ServerRequest.Callback() {
+                    ICallback callback = new ICallback() {
                         @Override
                         public void execute(String response) {
                             Toast.makeText(ClientActivity.this, "You voted", Toast.LENGTH_SHORT).show();
@@ -155,23 +158,23 @@ public class ClientActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 updatePlaylist();
-                ServerRequest.Callback callback = new ServerRequest.Callback() {
+                ICallback callback = new ICallback() {
                     @Override
                     public void execute(String response) {
                         Log.d("CSong", response);
-                        String song = mServerHelper.getSongId(response);
+                        String song = SongConverter.getSongId(response);
                         Log.d("CSong", song);
                     }
                 };
                 mServerHelper.getCurrentSong(mRoom, callback);
-                ServerRequest.Callback callback1 = new ServerRequest.Callback() {
+                ICallback callback1 = new ICallback() {
                     @Override
                     public void execute(String response) {
                         Log.d("CLast", response);
                     }
                 };
                 mServerHelper.getLastPlayedSongs(mRoom, 5, callback1);
-                ServerRequest.Callback callback2 = new ServerRequest.Callback() {
+                ICallback callback2 = new ICallback() {
                     @Override
                     public void execute(String response) {
                         Log.d("CLeft", response);
@@ -226,7 +229,7 @@ public class ClientActivity extends AppCompatActivity {
             if (resultCode == AddSongActivity.RESULT_OK) {
                 String songId = intent.getStringExtra("uri");
 
-                ServerRequest.Callback addSongCallback = new ServerRequest.Callback() {
+                ICallback addSongCallback = new ICallback() {
                     @Override
                     public void execute(String response) {
                         //Toast.makeText(ClientActivity.this, "Song added", Toast.LENGTH_SHORT).show();
@@ -308,10 +311,10 @@ public class ClientActivity extends AppCompatActivity {
     }
 
     private void updatePlaylist() {
-        ServerRequest.Callback getSongsCallback = new ServerRequest.Callback() {
+        ICallback getSongsCallback = new ICallback() {
             @Override
             public void execute(String response) {
-                mSongs = mServerHelper.convertToList(response);
+                mSongs = SongConverter.convertToList(response);
                 for (String song : mSongs) {
                     //Log.d(TAG, song);
                     ErrorHandler.handleMessege(song);
@@ -389,18 +392,14 @@ public class ClientActivity extends AppCompatActivity {
 
     private void connectToRoom() {
         final TextView status = findViewById(R.id.tv_RoomId);
-        ServerRequest.Callback callback = new ServerRequest.Callback() {
+        ICallback callback = new ICallback() {
 
             @Override
             public void execute(String response) {
-                ServerRequest.Callback insideCallback = new ServerRequest.Callback() {
+                ICallback insideCallback = new ICallback() {
                     @Override
                     public void execute(String response) {
                         if (response != null) {
-                            if (response.equals(ServerHelper.CONNECTION_ERROR) || response.equals(ServerHelper.RESPONSE_ERROR)) {
-                                status.setText(response);
-                            }
-
                             try {
                                 JSONObject roomInfo = new JSONObject(response.toString());
                                 int roomId = roomInfo.getInt("id");
@@ -421,19 +420,19 @@ public class ClientActivity extends AppCompatActivity {
                         }
                     }
                 };
-                mServerHelper.connectToRoom(mRoom.getLoginCode(), mUser.getEmail(), insideCallback);
+                mServerHelper.connectToRoom(mUser.getEmail(), mRoom.getLoginCode(), insideCallback);
             }
         };
-        mServerHelper.connectUser(mUser.getEmail(), callback);
+        mServerHelper.registerUser(mUser.getEmail(), callback);
     }
 
     private void getCurrentSong() {
         try {
-            ServerRequest.Callback currentSongCallback = new ServerRequest.Callback() {
+            ICallback currentSongCallback = new ICallback() {
                 @Override
                 public void execute(String response) {
                     if (response.length() > 0) {
-                        final String songId = mServerHelper.getSongId(response);
+                        final String songId = SongConverter.getSongId(response);
                         Log.d(TAG, songId);
                         mSpotifyData.getTrack(songId.split(":")[2], new WrappedSpotifyCallback<Track>() {
                             @Override
@@ -463,7 +462,7 @@ public class ClientActivity extends AppCompatActivity {
     }
 
     private void setUpWebSocketCallbacks() {
-        ServerRequest.Callback playingNext = new ServerRequest.Callback() {
+        ICallback playingNext = new ICallback() {
             @Override
             public void execute(String response) {
                 runOnUiThread(new Runnable() {
@@ -472,10 +471,10 @@ public class ClientActivity extends AppCompatActivity {
                         Toast.makeText(ClientActivity.this, "Next Song is played", Toast.LENGTH_SHORT).show();
                         updatePlaylist();
 
-                        ServerRequest.Callback currentSongCallback = new ServerRequest.Callback() {
+                        ICallback currentSongCallback = new ICallback() {
                             @Override
                             public void execute(String response) {
-                                final String songId = mServerHelper.getSongId(response);
+                                final String songId = SongConverter.getSongId(response);
                                 Log.d(TAG, songId);
                                 mSpotifyData.getTrack(songId.split(":")[2], new WrappedSpotifyCallback<Track>() {
                                     @Override
@@ -502,7 +501,7 @@ public class ClientActivity extends AppCompatActivity {
             }
         };
 
-        ServerRequest.Callback songAdded = new ServerRequest.Callback() {
+        ICallback songAdded = new ICallback() {
             @Override
             public void execute(String response) {
                 runOnUiThread(new Runnable() {
@@ -515,7 +514,7 @@ public class ClientActivity extends AppCompatActivity {
             }
         };
 
-        final ServerRequest.Callback paused = new ServerRequest.Callback() {
+        final ICallback paused = new ICallback() {
             @Override
             public void execute(final String response) {
                 runOnUiThread(new Runnable() {
@@ -541,7 +540,7 @@ public class ClientActivity extends AppCompatActivity {
             }
         };
 
-        ServerRequest.Callback playTime = new ServerRequest.Callback() {
+        ICallback playTime = new ICallback() {
             @Override
             public void execute(final String response) {
                 runOnUiThread(new Runnable() {
@@ -585,7 +584,7 @@ public class ClientActivity extends AppCompatActivity {
             }
         };
 
-        ServerRequest.Callback skipCallback = new ServerRequest.Callback() {
+        ICallback skipCallback = new ICallback() {
             @Override
             public void execute(final String response) {
                 runOnUiThread(new Runnable() {
