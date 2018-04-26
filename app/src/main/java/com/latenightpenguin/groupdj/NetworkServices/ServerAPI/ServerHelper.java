@@ -1,30 +1,17 @@
-package com.latenightpenguin.groupdj.NetworkServices;
+package com.latenightpenguin.groupdj.NetworkServices.ServerAPI;
 
-import android.os.AsyncTask;
-import android.telecom.Call;
 import android.util.Log;
-import android.widget.MediaController;
-import android.widget.TextView;
 
-import com.latenightpenguin.groupdj.NetworkServices.ServerWebSockets.ServerListener;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests.ConnectionManager;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests.ServerRequest;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets.ServerListener;
 import com.latenightpenguin.groupdj.RoomInfo;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.List;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

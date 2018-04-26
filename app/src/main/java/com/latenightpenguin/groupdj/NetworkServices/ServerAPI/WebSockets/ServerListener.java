@@ -1,17 +1,10 @@
-package com.latenightpenguin.groupdj.NetworkServices.ServerWebSockets;
+package com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets;
 
 import android.util.Log;
 
-import com.latenightpenguin.groupdj.ErrorHandler;
-import com.latenightpenguin.groupdj.NetworkServices.ServerRequest;
-
-import java.lang.annotation.Annotation;
-
-import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
-import retrofit.http.QueryMap;
 
 public class ServerListener extends WebSocketListener {
     private static final int NORMAL_CLOSURE_STATUS = 1000;

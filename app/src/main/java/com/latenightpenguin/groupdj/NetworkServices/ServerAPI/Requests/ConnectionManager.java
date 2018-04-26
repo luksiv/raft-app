@@ -1,7 +1,9 @@
-package com.latenightpenguin.groupdj.NetworkServices;
+package com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests;
 
 import android.os.AsyncTask;
 import android.util.Log;
+
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ServerHelper;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

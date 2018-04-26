@@ -1,4 +1,4 @@
-package com.latenightpenguin.groupdj.NetworkServices;
+package com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests;
 
 import android.telecom.Call;
 import android.view.View;
