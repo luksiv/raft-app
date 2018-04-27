@@ -12,7 +12,7 @@ class FakeRoom {
         this.id = id;
         this.loginCode = loginCode;
         this.users = users;
-        songIndex = 0;
+        songIndex = 1;
         voteOut = 0;
         threshHold = 0.5;
     }

@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ICallback;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.IServerHelper;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.RoomInfo;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ServerFactory;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.SongConverter;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSocketStatus;
@@ -89,7 +90,7 @@ public class ClientActivity extends AppCompatActivity {
         setContentView(R.layout.activity_client);
 
 
-        mServerHelper = ServerFactory.make(getResources().getString(R.string.url));
+        mServerHelper = ServerFactory.make(getResources().getString(R.string.url), ServerFactory.FactoryOptions.FAKE);
         setUpWebSocketCallbacks();
         mRoom = new RoomInfo();
         mRoom.setLoginCode(getIntent().getIntExtra("roomId", -1));

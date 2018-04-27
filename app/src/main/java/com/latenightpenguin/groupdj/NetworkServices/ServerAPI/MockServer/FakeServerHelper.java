@@ -124,7 +124,13 @@ public class FakeServerHelper implements IServerHelper {
                 return;
             }
 
-            FakeSong song = mSongList.get(mRoom.getSongIndex() - 1);
+            if(mSongList.size() == 0){
+                callback.execute("");
+                return;
+            }
+
+            int index = mRoom.getSongIndex() - 1 >= 0 ? mRoom.getSongIndex() - 1 : 0;
+            FakeSong song = mSongList.get(index);
             callback.execute(String.format("{\"song\":\"%s\",\"queuepos\":%d}", song.getId(), song.getPos()));
             return;
         }
@@ -144,7 +150,8 @@ public class FakeServerHelper implements IServerHelper {
             json.append("[");
 
             if(mSongList.size() > 0) {
-                for (int i = mRoom.getSongIndex() - 1; i < mSongList.size(); i++) {
+                int start = mRoom.getSongIndex() - 2 >= 0 ? mRoom.getSongIndex() - 2 : 0;
+                for (int i = start; i < mSongList.size(); i++) {
                     json.append(String.format("{\"song\":\"%s\",\"queuepos\":%d}", mSongList.get(i).getId(), mSongList.get(i).getPos()));
 
                     if (mSongList.size() > i + 1) {
@@ -173,13 +180,14 @@ public class FakeServerHelper implements IServerHelper {
                 mSongList.add(new FakeSong(song, mSongList.size() + 1));
             }
 
+            FakeSong fakeSong = mSongList.get(mRoom.getSongIndex() - 1);
             mRoom.setSongIndex(mRoom.getSongIndex() + 1);
             mRoom.setVoteOut(0);
-            FakeSong fakeSong = mSongList.get(mRoom.getSongIndex() - 1);
             callback.execute(String.format("{\"song\":\"%s\",\"queuepos\":%d}", fakeSong.getId(), fakeSong.getPos()));
             if(playingNextCallback != null && socketStatus == WebSocketStatus.CONNECTED){
                 playingNextCallback.execute("");
             }
+            Log.d(CLASS_TAG, "playing next");
             return;
         }
         callback.execute("Bad request");
@@ -193,13 +201,14 @@ public class FakeServerHelper implements IServerHelper {
                 return;
             }
 
+            FakeSong song = mSongList.get(mRoom.getSongIndex() - 1);
             mRoom.setSongIndex(mRoom.getSongIndex() + 1);
             mRoom.setVoteOut(0);
-            FakeSong song = mSongList.get(mRoom.getSongIndex() - 1);
             callback.execute(String.format("{\"song\":\"%s\",\"queuepos\":%d}", song.getId(), song.getPos()));
             if(playingNextCallback != null && socketStatus == WebSocketStatus.CONNECTED){
                 playingNextCallback.execute("");
             }
+            Log.d(CLASS_TAG, "playing next");
             return;
         }
         callback.execute("Bad request");
