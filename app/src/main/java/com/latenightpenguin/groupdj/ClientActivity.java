@@ -21,6 +21,7 @@ import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ICallback;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.IServerHelper;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.RoomInfo;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ServerFactory;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ServerHelper;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.SongConverter;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSocketStatus;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
@@ -89,8 +90,7 @@ public class ClientActivity extends AppCompatActivity {
         ErrorHandler.setView(findViewById(R.id.root_clientactivity));
         setContentView(R.layout.activity_client);
 
-
-        mServerHelper = ServerFactory.make(getResources().getString(R.string.url), ServerFactory.FactoryOptions.FAKE);
+        mServerHelper = ServerFactory.make(getResources().getString(R.string.url));
         setUpWebSocketCallbacks();
         mRoom = new RoomInfo();
         mRoom.setLoginCode(getIntent().getIntExtra("roomId", -1));
@@ -182,6 +182,15 @@ public class ClientActivity extends AppCompatActivity {
                     }
                 };
                 mServerHelper.getLeftSongCount(mRoom, callback2);
+
+                ServerFactory.AdditionalCallbacks callbacks = ServerFactory.getAdditionalCallbacks(mServerHelper);
+                if(callbacks != null) {
+                    callbacks.add();
+                    callbacks.next();
+                    callbacks.vote();
+                    callbacks.pause(132);
+                    callbacks.playtime(123);
+                }
             }
         });
 

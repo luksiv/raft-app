@@ -129,7 +129,7 @@ public class HostActivity extends AppCompatActivity implements
         authentication();
         setUpElements();
 
-        mServerHelper = ServerFactory.make(getResources().getString(R.string.url), ServerFactory.FactoryOptions.FAKE);
+        mServerHelper = ServerFactory.make(getResources().getString(R.string.url));
         setUpWebSocketCallbacks();
         mRoom = new RoomInfo();
 
@@ -207,6 +207,14 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 updatePlaylist();
+                ServerFactory.AdditionalCallbacks callbacks = ServerFactory.getAdditionalCallbacks(mServerHelper);
+                if(callbacks != null) {
+                    callbacks.add();
+                    callbacks.next();
+                    callbacks.vote();
+                    callbacks.pause(132);
+                    callbacks.playtime(123);
+                }
             }
         });
 
