@@ -1,4 +1,4 @@
-package com.latenightpenguin.groupdj;
+package com.latenightpenguin.groupdj.NetworkServices.ServerAPI;
 
 public class RoomInfo {
     private int loginCode;

@@ -1,17 +1,8 @@
 package com.latenightpenguin.groupdj.NetworkServices.ServerAPI;
 
-import android.util.Log;
-
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests.ConnectionManager;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests.ServerRequest;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets.ServerListener;
-import com.latenightpenguin.groupdj.RoomInfo;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -273,6 +264,20 @@ public class ServerHelper implements IServerHelper{
             }
         };
         ServerRequest request = new ServerRequest(METHOD_GET, "api/songs/" + room.getId(), null, cb, null);
+        new ConnectionManager().execute(request);
+        activeRequests++;
+    }
+
+    @Override
+    public void playNext(RoomInfo room, String song, final ICallback callback) {
+        ICallback cb = new ICallback() {
+            @Override
+            public void execute(String response) {
+                activeRequests--;
+                callback.execute(response);
+            }
+        };
+        ServerRequest request = new ServerRequest(METHOD_PUT, "api/songs/" + room.getId() + "/next", "", cb, null);
         new ConnectionManager().execute(request);
         activeRequests++;
     }

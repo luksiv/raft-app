@@ -1,7 +1,7 @@
 package com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests;
 
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ICallback;
-import com.latenightpenguin.groupdj.RoomInfo;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.RoomInfo;
 
 
 public class RequestsHelper {
