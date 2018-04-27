@@ -8,6 +8,7 @@ import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSocketStatus;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.RoomInfo;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class FakeServerHelper implements IServerHelper {
     private static final String CLASS_TAG = "FakeServer";
@@ -386,5 +387,67 @@ public class FakeServerHelper implements IServerHelper {
     @Override
     public void setConnectedToRoomCallback(ICallback connectedToRoomCallback) {
         this.connectedToRoomCallback = connectedToRoomCallback;
+    }
+
+    public void voteAsSomeoneElse(){
+        if(mRoom == null){
+            return;
+        }
+
+        mRoom.setVoteOut(mRoom.getVoteOut() + 1);
+
+        if(Double.compare(mRoom.getVoteOut() / 10.0, mRoom.getThreshHold()) > 0){
+            if(socketStatus == WebSocketStatus.CONNECTED && songSkippedCallback != null){
+                songSkippedCallback.execute("");
+            }
+        }
+    }
+
+    public void addAsSomeoneElse(){
+        if(mRoom == null){
+            return;
+        }
+
+        Random rand = new Random();
+        String song = songs[rand.nextInt(songs.length)];
+
+        mSongList.add(new FakeSong(song, mSongList.size() + 1));
+        if(songAddedCallback != null && socketStatus == WebSocketStatus.CONNECTED){
+            songAddedCallback.execute("");
+        }
+        return;
+    }
+
+    public void playNextAsSomeoneElse(){
+        if(mRoom == null){
+            return;
+        }
+
+        FakeSong song = mSongList.get(mRoom.getSongIndex() - 1);
+        mRoom.setSongIndex(mRoom.getSongIndex() + 1);
+        mRoom.setVoteOut(0);
+        if(playingNextCallback != null && socketStatus == WebSocketStatus.CONNECTED){
+            playingNextCallback.execute("");
+        }
+    }
+
+    public void pauseAsSomeoneElse(long milliseconds){
+        if(mRoom == null){
+            return;
+        }
+
+        if(socketStatus == WebSocketStatus.CONNECTED && songPausedCallback != null) {
+            songPausedCallback.execute(Long.toString(milliseconds));
+        }
+    }
+
+    public void playTimeAsSomeoneElse(long milliseconds){
+        if(mRoom == null){
+            return;
+        }
+
+        if(socketStatus == WebSocketStatus.CONNECTED && songPlayTimeCallback != null) {
+            songPlayTimeCallback.execute(Long.toString(milliseconds));
+        }
     }
 }
