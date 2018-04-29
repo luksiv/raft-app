@@ -55,7 +55,10 @@
             android:id="@+id/sb_seekTrack"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="10" />
+            android:layout_weight="10"
+            android:progressTint="@color/colorGreen"
+            android:progressBackgroundTint="@color/colorWhite"
+            android:thumbTint="@color/colorDarkGreen"/>
 
         <TextView
             android:id="@+id/tv_trackLenght"
@@ -78,14 +81,18 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_margin="8dp"
-            android:src="@drawable/ic_media_pause" />
+            android:background="@drawable/ic_pause_circle_white_48dp"
+            android:src="@drawable/ic_pause_circle_white_48dp" />
 
         <ImageButton
             android:id="@+id/btn_next"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_margin="8dp"
-            android:src="@drawable/ic_media_next" />
+            android:adjustViewBounds="false"
+            android:background="@drawable/ic_skip_next_circle_white_48dp"
+            android:cropToPadding="false"
+            android:src="@drawable/ic_skip_next_circle_white_48dp" />
     </LinearLayout>
 
 </LinearLayout>

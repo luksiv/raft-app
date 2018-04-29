@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".AddSongActivity"
-    android:id="@+id/root_addsongactivity">
+    android:id="@+id/root_addsongactivity"
+    android:background="@drawable/ic_gradiant_black_to_grey">
 
 
     <LinearLayout
@@ -19,14 +20,14 @@
             android:id="@+id/et_searchInput"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="12" />
+            android:layout_weight="12"
+            android:background="@drawable/ic_edit_text_background"/>
 
         <ImageView
-            android:background="@android:color/holo_blue_dark"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:src="@android:drawable/ic_menu_search" />
+            android:src="@drawable/ic_magnify_white_18dp" />
     </LinearLayout>
 
     <ListView
