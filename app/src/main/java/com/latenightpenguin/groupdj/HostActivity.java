@@ -21,12 +21,13 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ICallback;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests.IRequestCallback;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.IServerHelper;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.RoomInfo;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ServerFactory;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.SongConverter;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSocketStatus;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets.IWebSocketCallback;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrappedSpotifyCallback;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
@@ -169,10 +170,15 @@ public class HostActivity extends AppCompatActivity implements
                     mPlayer.skipToNext(mOperationCallback);
                 }*/
                 if(!voted) {
-                    ICallback callback = new ICallback() {
+                    IRequestCallback callback = new IRequestCallback() {
                         @Override
-                        public void execute(String response) {
+                        public void onSuccess(String response) {
                             Toast.makeText(HostActivity.this, "You voted", Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onError(int code, String message) {
+                            Log.w(TAG, "Error handling for voting is not implemented");
                         }
                     };
                     mServerHelper.voteSkipSong(mRoom, callback);
@@ -348,15 +354,17 @@ public class HostActivity extends AppCompatActivity implements
         if (requestCode == 333) {
             if (resultCode == AddSongActivity.RESULT_OK) {
                 String songId = intent.getStringExtra("uri");
-                ICallback addSongCallback = new ICallback() {
+                IRequestCallback addSongCallback = new IRequestCallback() {
                     @Override
-                    public void execute(String response) {
-                     //   Toast.makeText(HostActivity.this, "Song added", Toast.LENGTH_SHORT).show();
+                    public void onSuccess(String response) {
+                        //Toast.makeText(ClientActivity.this, "Song added", Toast.LENGTH_SHORT).show();
                         ErrorHandler.handleMessegeWithToast("Song added");
-                        if (firstRun) {
-                            queueNext();
-                        }
                         updatePlaylist();
+                    }
+
+                    @Override
+                    public void onError(int code, String message) {
+                        Log.w(TAG, "Error handling not used in current song");
                     }
                 };
                 mServerHelper.addSong(mRoom, songId, addSongCallback);
@@ -455,26 +463,36 @@ public class HostActivity extends AppCompatActivity implements
     //region Random methods
 
     private void putSongToPlaylist(String songId) {
-        ICallback addSongCallback = new ICallback() {
+        IRequestCallback addSongCallback = new IRequestCallback() {
             @Override
-            public void execute(String response) {
+            public void onSuccess(String response) {
                 Toast.makeText(HostActivity.this, "Song added", Toast.LENGTH_SHORT).show();
                 updatePlaylist();
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                Log.w(TAG, "Error handling in callback not implemented");
             }
         };
         mServerHelper.addSong(mRoom, songId, addSongCallback);
     }
 
     private void updatePlaylist() {
-        ICallback getSongsCallback = new ICallback() {
+        IRequestCallback getSongsCallback = new IRequestCallback() {
             @Override
-            public void execute(String response) {
+            public void onSuccess(String response) {
                 mSongs = SongConverter.convertToList(response);
                 for (String song : mSongs) {
                     Log.d(TAG, song);
                     ErrorHandler.handleMessege(song);
                 }
                 updatePlaylistView();
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                Log.w(TAG, "Error handling in callback not implemented");
             }
         };
         mServerHelper.getSongs(mRoom, getSongsCallback);
@@ -580,14 +598,14 @@ public class HostActivity extends AppCompatActivity implements
 
     private void queueNext() {
         if (mPlayer.getMetadata().nextTrack == null) {
-            final ICallback callback = new ICallback() {
+            final IRequestCallback callback = new IRequestCallback() {
                 @Override
-                public void execute(String response) {
+                public void onSuccess(String response) {
                     voted = false;
                     try {
-                       // Toast.makeText(HostActivity.this, "Next song queued", Toast.LENGTH_SHORT).show();
+                        // Toast.makeText(HostActivity.this, "Next song queued", Toast.LENGTH_SHORT).show();
                         ErrorHandler.handleMessegeWithToast("Next song queued");
-                       // Log.d(TAG, response.toString());
+                        // Log.d(TAG, response.toString());
                         ErrorHandler.handleMessege(response.toString());
                         String uri;
                         if (response.toString().isEmpty() && !TracksRepository.generatedTracks.isEmpty()) {
@@ -606,9 +624,14 @@ public class HostActivity extends AppCompatActivity implements
                         }
                         requestUsed = false;
                     } catch (JSONException e) {
-                       // e.printStackTrace();
+                        // e.printStackTrace();
                         ErrorHandler.handleExeption(e);
                     }
+                }
+
+                @Override
+                public void onError(int code, String message) {
+                    Log.w(TAG, "Error handling not implemented");
                 }
             };
             requestUsed = true;
@@ -707,12 +730,12 @@ public class HostActivity extends AppCompatActivity implements
     public void createRoom() {
         final TextView status = (TextView) findViewById(R.id.tv_RoomId);
 
-        final ICallback callback = new ICallback() {
+        final IRequestCallback callback = new IRequestCallback() {
             @Override
-            public void execute(String response) {
-                ICallback insideCallback = new ICallback() {
+            public void onSuccess(String response) {
+                IRequestCallback insideCallback = new IRequestCallback() {
                     @Override
-                    public void execute(String response) {
+                    public void onSuccess(String response) {
                         if (response != null) {
                             try {
                                 JSONObject roomInfo = new JSONObject(response.toString());
@@ -731,15 +754,25 @@ public class HostActivity extends AppCompatActivity implements
                             }
                         }
                     }
+
+                    @Override
+                    public void onError(int code, String message) {
+                        Log.w(TAG, "Error handling not implemented in callback");
+                    }
                 };
                 mServerHelper.createRoom(mUser.getEmail(), insideCallback);
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                Log.w(TAG, "Error handling not implemented in callback");
             }
         };
         mServerHelper.registerUser(mUser.getEmail(), callback);
     }
 
     private void setUpWebSocketCallbacks() {
-        ICallback playingNext = new ICallback() {
+        IWebSocketCallback playingNext = new IWebSocketCallback() {
             @Override
             public void execute(String response) {
                 runOnUiThread(new Runnable() {
@@ -753,7 +786,7 @@ public class HostActivity extends AppCompatActivity implements
             }
         };
 
-        ICallback songAdded = new ICallback() {
+        IWebSocketCallback songAdded = new IWebSocketCallback() {
             @Override
             public void execute(String response) {
                 runOnUiThread(new Runnable() {
@@ -770,7 +803,7 @@ public class HostActivity extends AppCompatActivity implements
             }
         };
 
-        ICallback paused = new ICallback() {
+        IWebSocketCallback paused = new IWebSocketCallback() {
             @Override
             public void execute(String response) {
                 runOnUiThread(new Runnable() {
@@ -783,7 +816,7 @@ public class HostActivity extends AppCompatActivity implements
             }
         };
 
-        ICallback playTime = new ICallback() {
+        IWebSocketCallback playTime = new IWebSocketCallback() {
             @Override
             public void execute(final String response) {
                 runOnUiThread(new Runnable() {
@@ -796,7 +829,7 @@ public class HostActivity extends AppCompatActivity implements
             }
         };
 
-        ICallback connectedRoom = new ICallback() {
+        IWebSocketCallback connectedRoom = new IWebSocketCallback() {
             @Override
             public void execute(final String response) {
                 runOnUiThread(new Runnable() {
@@ -809,7 +842,7 @@ public class HostActivity extends AppCompatActivity implements
             }
         };
 
-        ICallback skipCallback = new ICallback() {
+        IWebSocketCallback skipCallback = new IWebSocketCallback() {
             @Override
             public void execute(final String response) {
                 runOnUiThread(new Runnable() {

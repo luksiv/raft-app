@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 
 public class ConnectionManager extends AsyncTask<ServerRequest, Void, String> {
     ServerRequest[] requests;
+    int responseCode;
 
     @Override
     protected void onPreExecute() {
@@ -33,9 +34,9 @@ public class ConnectionManager extends AsyncTask<ServerRequest, Void, String> {
         try {
             URL url;
             if(requests[0].getArguments() != null && requests[0].getArguments().length > 0) {
-                url = new URL(ServerHelper.SERVER_URL + requests[0].getPath() + requests[0].getArgumentsFormatted());
+                url = new URL(RequestsHelper.serverUrl + requests[0].getPath() + requests[0].getArgumentsFormatted());
             } else {
-                url = new URL(ServerHelper.SERVER_URL + requests[0].getPath());
+                url = new URL(RequestsHelper.serverUrl + requests[0].getPath());
             }
 
             Log.d("MusicDJAsync", url.toString());
@@ -57,26 +58,23 @@ public class ConnectionManager extends AsyncTask<ServerRequest, Void, String> {
             connection.connect();
 
             Log.d("MusicDJ", "Response code: " + connection.getResponseCode());
-            if(connection.getResponseCode() != 200) {
-                response = new ByteArrayInputStream(ServerHelper.CONNECTION_ERROR.getBytes(StandardCharsets.UTF_8));
-            } else {
-                response = connection.getInputStream();
+            responseCode = connection.getResponseCode();
+            response = connection.getInputStream();
 
-                BufferedReader reader = new BufferedReader(new InputStreamReader(response));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(response));
 
-                String line = "";
-                try{
-                    while((line = reader.readLine()) != null){
-                        responseString.append(line).append('\n');
-                    }
+            String line = "";
+            try{
+                while((line = reader.readLine()) != null){
+                    responseString.append(line).append('\n');
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    response.close();
                 } catch (IOException e) {
                     e.printStackTrace();
-                } finally {
-                    try {
-                        response.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 }
             }
         } catch (IOException e) {
@@ -91,7 +89,12 @@ public class ConnectionManager extends AsyncTask<ServerRequest, Void, String> {
     @Override
     protected void onPostExecute(String result){
         if(requests[0].getCallback() != null) {
-            requests[0].getCallback().execute(result);
+            if(responseCode == 200) {
+                requests[0].getCallback().onSuccess(result);
+            }
+            else{
+                requests[0].getCallback().onError(responseCode, result);
+            }
         }
     }
 }

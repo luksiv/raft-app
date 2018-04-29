@@ -2,10 +2,11 @@ package com.latenightpenguin.groupdj.NetworkServices.ServerAPI.MockServer;
 
 import android.util.Log;
 
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ICallback;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests.IRequestCallback;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.IServerHelper;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSocketStatus;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.RoomInfo;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets.IWebSocketCallback;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -17,12 +18,12 @@ public class FakeServerHelper implements IServerHelper {
     private ArrayList<FakeSong> mSongList;
     WebSocketStatus socketStatus = WebSocketStatus.DISCONNECTED;
 
-    private ICallback playingNextCallback;
-    private ICallback songAddedCallback;
-    private ICallback songPausedCallback;
-    private ICallback songPlayTimeCallback;
-    private ICallback songSkippedCallback;
-    private ICallback connectedToRoomCallback;
+    private IWebSocketCallback playingNextCallback;
+    private IWebSocketCallback songAddedCallback;
+    private IWebSocketCallback songPausedCallback;
+    private IWebSocketCallback songPlayTimeCallback;
+    private IWebSocketCallback songSkippedCallback;
+    private IWebSocketCallback connectedToRoomCallback;
 
     private String[] songs = {
             "spotify:track:32zmm5WQw5B5JJ9lMc5nNt",
@@ -33,19 +34,19 @@ public class FakeServerHelper implements IServerHelper {
     };
 
     @Override
-    public void registerUser(String user, ICallback callback) {
+    public void registerUser(String user, IRequestCallback callback) {
         if (user != null && !user.equals("")){
             mUser = user;
-            callback.execute("");
+            callback.onSuccess("");
             return;
         }
-        callback.execute("Bad request");
+        callback.onError(400, "Bad request");
     }
 
     @Override
-    public void createRoom(String user, ICallback callback) {
+    public void createRoom(String user, IRequestCallback callback) {
         if(user == null || user.equals("")){
-            callback.execute("Bad request");
+            callback.onError(400,"Bad request");
             return;
         }
 
@@ -53,97 +54,97 @@ public class FakeServerHelper implements IServerHelper {
             mRoom = new FakeRoom(200, 12345, 10);
             mSongList = new ArrayList<>();
 
-            callback.execute("{\"id\":200,\"logincode\":12345}");
+            callback.onSuccess("{\"id\":200,\"logincode\":12345}");
             return;
         }
-        callback.execute("User or room does not exist");
+        callback.onError(404,"User or room does not exist");
     }
 
     @Override
-    public void connectToRoom(String user, int loginCode, ICallback callback) {
+    public void connectToRoom(String user, int loginCode, IRequestCallback callback) {
         if(user != null && !user.equals("")){
             if(mUser.equals(user) && loginCode == 12345){
                 mRoom = new FakeRoom(200, 12345, 10);
                 mSongList = new ArrayList<>();
 
-                callback.execute("{\"id\":200,\"logincode\":12345}");
+                callback.onSuccess("{\"id\":200,\"logincode\":12345}");
                 return;
             }
 
-            callback.execute("User or room does not exist");
+            callback.onError(404,"User or room does not exist");
             return;
         }
 
-        callback.execute("Bad request");
+        callback.onError(400,"Bad request");
     }
 
     @Override
-    public void disconnectFromRoom(String user, ICallback callback) {
+    public void disconnectFromRoom(String user, IRequestCallback callback) {
         if(user != null && !user.equals("")){
             if(!user.equals(mUser)){
-                callback.execute("user does not exist");
+                callback.onError(404,"user does not exist");
                 return;
             }
 
             if(mRoom == null){
-                callback.execute("user is not in room");
+                callback.onError(400,"user is not in room");
                 return;
             }
 
             mRoom = null;
             mSongList = null;
-            callback.execute("");
+            callback.onSuccess("");
 
             return;
         }
-        callback.execute("Bad request");
+        callback.onError(400,"Bad request");
     }
 
     @Override
-    public void addSong(RoomInfo room, String song, ICallback callback) {
+    public void addSong(RoomInfo room, String song, IRequestCallback callback) {
         if(room.getId() != -1 && song != null && !song.equals("")){
             if(mRoom == null){
-                callback.execute("Erroor finding room");
+                callback.onError(404,"Error finding room");
                 return;
             }
 
             mSongList.add(new FakeSong(song, mSongList.size() + 1));
-            callback.execute("");
+            callback.onSuccess("");
             if(songAddedCallback != null && socketStatus == WebSocketStatus.CONNECTED){
                 songAddedCallback.execute("");
             }
             return;
         }
-        callback.execute("Bad request");
+        callback.onError(400,"Bad request");
     }
 
     @Override
-    public void getCurrentSong(RoomInfo room, ICallback callback) {
+    public void getCurrentSong(RoomInfo room, IRequestCallback callback) {
         if(room.getId() != -1){
             if(mRoom == null){
-                callback.execute("Song could not be found");
+                callback.onError(404,"Song could not be found");
                 return;
             }
 
             if(mSongList.size() == 0){
-                callback.execute("");
+                callback.onSuccess("");
                 return;
             }
 
             int index = mRoom.getSongIndex() - 1 >= 0 ? mRoom.getSongIndex() - 1 : 0;
             FakeSong song = mSongList.get(index);
-            callback.execute(String.format("{\"song\":\"%s\",\"queuepos\":%d}", song.getId(), song.getPos()));
+            callback.onSuccess(String.format("{\"song\":\"%s\",\"queuepos\":%d}", song.getId(), song.getPos()));
             return;
         }
         Log.w(CLASS_TAG, "Room is not set");
-        callback.execute("Bad request");
+        callback.onError(400,"Bad request");
     }
 
     @Override
-    public void getSongs(RoomInfo room, ICallback callback) {
+    public void getSongs(RoomInfo room, IRequestCallback callback) {
         if(room.getId() != -1){
             if(mRoom == null){
-                callback.execute("Song list could not be found");
+                callback.onError(404, "Song list could not be found");
                 return;
             }
 
@@ -163,18 +164,18 @@ public class FakeServerHelper implements IServerHelper {
 
             json.append("]");
 
-            callback.execute(json.toString());
+            callback.onSuccess(json.toString());
             return;
         }
         Log.w(CLASS_TAG, "Room is not set");
-        callback.execute("Bad request");
+        callback.onError(400, "Bad request");
     }
 
     @Override
-    public void playNext(RoomInfo room, String song, ICallback callback) {
+    public void playNext(RoomInfo room, String song, IRequestCallback callback) {
         if(room.getId() != -1 && song != null && !song.equals("")){
             if(mRoom == null){
-                callback.execute("Error finding room");
+                callback.onError(404,"Error finding room");
                 return;
             }
             if(mRoom.getSongIndex() + 1 == mSongList.size()){
@@ -184,42 +185,42 @@ public class FakeServerHelper implements IServerHelper {
             FakeSong fakeSong = mSongList.get(mRoom.getSongIndex() - 1);
             mRoom.setSongIndex(mRoom.getSongIndex() + 1);
             mRoom.setVoteOut(0);
-            callback.execute(String.format("{\"song\":\"%s\",\"queuepos\":%d}", fakeSong.getId(), fakeSong.getPos()));
+            callback.onSuccess(String.format("{\"song\":\"%s\",\"queuepos\":%d}", fakeSong.getId(), fakeSong.getPos()));
             if(playingNextCallback != null && socketStatus == WebSocketStatus.CONNECTED){
                 playingNextCallback.execute("");
             }
             Log.d(CLASS_TAG, "playing next");
             return;
         }
-        callback.execute("Bad request");
+        callback.onError(400,"Bad request");
     }
 
     @Override
-    public void playNextSong(RoomInfo room, ICallback callback) {
+    public void playNextSong(RoomInfo room, IRequestCallback callback) {
         if(room.getId() != -1){
             if(mRoom == null || mRoom.getSongIndex() + 1 < mSongList.size()){
-                callback.execute("Error finding next song");
+                callback.onError(404, "Error finding next song");
                 return;
             }
 
             FakeSong song = mSongList.get(mRoom.getSongIndex() - 1);
             mRoom.setSongIndex(mRoom.getSongIndex() + 1);
             mRoom.setVoteOut(0);
-            callback.execute(String.format("{\"song\":\"%s\",\"queuepos\":%d}", song.getId(), song.getPos()));
+            callback.onSuccess(String.format("{\"song\":\"%s\",\"queuepos\":%d}", song.getId(), song.getPos()));
             if(playingNextCallback != null && socketStatus == WebSocketStatus.CONNECTED){
                 playingNextCallback.execute("");
             }
             Log.d(CLASS_TAG, "playing next");
             return;
         }
-        callback.execute("Bad request");
+        callback.onError(400,"Bad request");
     }
 
     @Override
-    public void getLastPlayedSongs(RoomInfo room, int count, ICallback callback) {
+    public void getLastPlayedSongs(RoomInfo room, int count, IRequestCallback callback) {
         if(room.getId() != -1 && count > 0){
             if(mRoom == null){
-                callback.execute("Song list not be found");
+                callback.onError(404,"Song list not be found");
                 return;
             }
 
@@ -239,38 +240,38 @@ public class FakeServerHelper implements IServerHelper {
 
             json.append("]");
 
-            callback.execute(json.toString());
+            callback.onSuccess(json.toString());
             return;
         }
         Log.w(CLASS_TAG, "Room is not set");
-        callback.execute("Bad request");
+        callback.onError(400,"Bad request");
     }
 
     @Override
-    public void getLeftSongCount(RoomInfo room, ICallback callback) {
+    public void getLeftSongCount(RoomInfo room, IRequestCallback callback) {
         if(room.getId() != -1){
             if(mRoom == null){
-                callback.execute("0");
+                callback.onSuccess("0");
                 return;
             }
 
             int count = mSongList.size() - mRoom.getSongIndex() + 1;
-            callback.execute(Integer.toString(count >= 0 ? count : 0));
+            callback.onSuccess(Integer.toString(count >= 0 ? count : 0));
             return;
         }
         Log.w(CLASS_TAG, "Room is not set");
-        callback.execute("Bad request");
+        callback.onError(400,"Bad request");
     }
 
     @Override
-    public void voteSkipSong(RoomInfo room, ICallback callback) {
+    public void voteSkipSong(RoomInfo room, IRequestCallback callback) {
         if(mRoom == null){
             Log.w(CLASS_TAG, "Not connected to room");
             return;
         }
         if(room.getId() != -1){
             if(room.getId() != mRoom.getId()){
-                callback.execute("room not found");
+                callback.onError(404,"room not found");
                 return;
             }
 
@@ -282,34 +283,34 @@ public class FakeServerHelper implements IServerHelper {
                 }
             }
 
-            callback.execute("");
+            callback.onSuccess("");
             return;
         }
 
         Log.w(CLASS_TAG, "Room is not set");
-        callback.execute("Bad request");
+        callback.onError(400,"Bad request");
     }
 
     @Override
-    public void setSkipThreshold(RoomInfo room, double threshold, ICallback callback) {
+    public void setSkipThreshold(RoomInfo room, double threshold, IRequestCallback callback) {
         if(mRoom == null){
             Log.w(CLASS_TAG, "Not connected to room");
             return;
         }
         if(room.getId() != -1){
             if(room.getId() != mRoom.getId()){
-                callback.execute("room does not found");
+                callback.onError(404,"room does not found");
                 return;
             }
 
             mRoom.setThreshHold(threshold);
 
-            callback.execute("");
+            callback.onSuccess("");
             return;
         }
 
         Log.w(CLASS_TAG, "Room is not set");
-        callback.execute("Bad request");
+        callback.onError(400,"Bad request");
     }
 
     @Override
@@ -360,32 +361,32 @@ public class FakeServerHelper implements IServerHelper {
     }
 
     @Override
-    public void setPlayingNextCallback(ICallback playingNextCallback) {
+    public void setPlayingNextCallback(IWebSocketCallback playingNextCallback) {
         this.playingNextCallback = playingNextCallback;
     }
 
     @Override
-    public void setSongAddedCallback(ICallback songAddedCallback) {
+    public void setSongAddedCallback(IWebSocketCallback songAddedCallback) {
         this.songAddedCallback = songAddedCallback;
     }
 
     @Override
-    public void setSongPausedCallback(ICallback songPausedCallback) {
+    public void setSongPausedCallback(IWebSocketCallback songPausedCallback) {
         this.songPausedCallback = songPausedCallback;
     }
 
     @Override
-    public void setSongPlayTimeCallback(ICallback songPlayTimeCallback) {
+    public void setSongPlayTimeCallback(IWebSocketCallback songPlayTimeCallback) {
         this.songPlayTimeCallback = songPlayTimeCallback;
     }
 
     @Override
-    public void setSongSkippedCallback(ICallback songSkippedCallback) {
+    public void setSongSkippedCallback(IWebSocketCallback songSkippedCallback) {
         this.songSkippedCallback = songSkippedCallback;
     }
 
     @Override
-    public void setConnectedToRoomCallback(ICallback connectedToRoomCallback) {
+    public void setConnectedToRoomCallback(IWebSocketCallback connectedToRoomCallback) {
         this.connectedToRoomCallback = connectedToRoomCallback;
     }
 

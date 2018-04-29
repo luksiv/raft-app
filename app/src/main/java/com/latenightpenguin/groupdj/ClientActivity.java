@@ -17,13 +17,13 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ICallback;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests.IRequestCallback;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.IServerHelper;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.RoomInfo;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ServerFactory;
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ServerHelper;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.SongConverter;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSocketStatus;
+import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets.IWebSocketCallback;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrappedSpotifyCallback;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
@@ -127,10 +127,15 @@ public class ClientActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(!voted) {
-                    ICallback callback = new ICallback() {
+                    IRequestCallback callback = new IRequestCallback() {
                         @Override
-                        public void execute(String response) {
+                        public void onSuccess(String response) {
                             Toast.makeText(ClientActivity.this, "You voted", Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onError(int code, String message) {
+                            Log.w(TAG, "Error handling for voting is not implemented");
                         }
                     };
                     mServerHelper.voteSkipSong(mRoom, callback);
@@ -159,26 +164,41 @@ public class ClientActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 updatePlaylist();
-                ICallback callback = new ICallback() {
+                IRequestCallback callback = new IRequestCallback() {
                     @Override
-                    public void execute(String response) {
+                    public void onSuccess(String response) {
                         Log.d("CSong", response);
                         String song = SongConverter.getSongId(response);
                         Log.d("CSong", song);
                     }
+
+                    @Override
+                    public void onError(int code, String response) {
+                        Log.w(TAG, "Error handling not used in refresh button");
+                    }
                 };
                 mServerHelper.getCurrentSong(mRoom, callback);
-                ICallback callback1 = new ICallback() {
+                IRequestCallback callback1 = new IRequestCallback() {
                     @Override
-                    public void execute(String response) {
+                    public void onSuccess(String response) {
                         Log.d("CLast", response);
+                    }
+
+                    @Override
+                    public void onError(int code, String message) {
+                        Log.w(TAG, "Error handling not used in current song");
                     }
                 };
                 mServerHelper.getLastPlayedSongs(mRoom, 5, callback1);
-                ICallback callback2 = new ICallback() {
+                IRequestCallback callback2 = new IRequestCallback() {
                     @Override
-                    public void execute(String response) {
+                    public void onSuccess(String response) {
                         Log.d("CLeft", response);
+                    }
+
+                    @Override
+                    public void onError(int code, String message) {
+                        Log.w(TAG, "Error handling not used in current song");
                     }
                 };
                 mServerHelper.getLeftSongCount(mRoom, callback2);
@@ -239,12 +259,17 @@ public class ClientActivity extends AppCompatActivity {
             if (resultCode == AddSongActivity.RESULT_OK) {
                 String songId = intent.getStringExtra("uri");
 
-                ICallback addSongCallback = new ICallback() {
+                IRequestCallback addSongCallback = new IRequestCallback() {
                     @Override
-                    public void execute(String response) {
+                    public void onSuccess(String response) {
                         //Toast.makeText(ClientActivity.this, "Song added", Toast.LENGTH_SHORT).show();
                         ErrorHandler.handleMessegeWithToast("Song added");
                         updatePlaylist();
+                    }
+
+                    @Override
+                    public void onError(int code, String message) {
+                        Log.w(TAG, "Error handling not used in current song");
                     }
                 };
                 mServerHelper.addSong(mRoom, songId, addSongCallback);
@@ -321,15 +346,20 @@ public class ClientActivity extends AppCompatActivity {
     }
 
     private void updatePlaylist() {
-        ICallback getSongsCallback = new ICallback() {
+        IRequestCallback getSongsCallback = new IRequestCallback() {
             @Override
-            public void execute(String response) {
+            public void onSuccess(String response) {
                 mSongs = SongConverter.convertToList(response);
                 for (String song : mSongs) {
                     //Log.d(TAG, song);
                     ErrorHandler.handleMessege(song);
                 }
                 updatePlaylistView();
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                Log.w(TAG, "Error handling not used in update playlist");
             }
         };
         mServerHelper.getSongs(mRoom, getSongsCallback);
@@ -402,13 +432,13 @@ public class ClientActivity extends AppCompatActivity {
 
     private void connectToRoom() {
         final TextView status = findViewById(R.id.tv_RoomId);
-        ICallback callback = new ICallback() {
+        IRequestCallback callback = new IRequestCallback() {
 
             @Override
-            public void execute(String response) {
-                ICallback insideCallback = new ICallback() {
+            public void onSuccess(String response) {
+                IRequestCallback insideCallback = new IRequestCallback() {
                     @Override
-                    public void execute(String response) {
+                    public void onSuccess(String response) {
                         if (response != null) {
                             try {
                                 JSONObject roomInfo = new JSONObject(response.toString());
@@ -429,8 +459,18 @@ public class ClientActivity extends AppCompatActivity {
                             }
                         }
                     }
+
+                    @Override
+                    public void onError(int code, String message) {
+                        Log.w(TAG, "Error handling not used in update playlist");
+                    }
                 };
                 mServerHelper.connectToRoom(mUser.getEmail(), mRoom.getLoginCode(), insideCallback);
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                Log.w(TAG, "Error handling not used in connect to room");
             }
         };
         mServerHelper.registerUser(mUser.getEmail(), callback);
@@ -438,9 +478,9 @@ public class ClientActivity extends AppCompatActivity {
 
     private void getCurrentSong() {
         try {
-            ICallback currentSongCallback = new ICallback() {
+            IRequestCallback currentSongCallback = new IRequestCallback() {
                 @Override
-                public void execute(String response) {
+                public void onSuccess(String response) {
                     if (response.length() > 0) {
                         final String songId = SongConverter.getSongId(response);
                         Log.d(TAG, songId);
@@ -454,14 +494,19 @@ public class ClientActivity extends AppCompatActivity {
                                 }
                             }
 
-                        @Override
-                        public void failure(SpotifyError spotifyError) {
-                           // Log.d(TAG, "next track name: failed");
-                            ErrorHandler.handleExeptionWithToast(spotifyError, "Failure");
-                        }
-                    });
+                            @Override
+                            public void failure(SpotifyError spotifyError) {
+                                // Log.d(TAG, "next track name: failed");
+                                ErrorHandler.handleExeptionWithToast(spotifyError, "Failure");
+                            }
+                        });
 
                     }
+                }
+
+                @Override
+                public void onError(int code, String message) {
+                    Log.w(TAG, "Error handling not implemented");
                 }
             };
             mServerHelper.getCurrentSong(mRoom, currentSongCallback);
@@ -472,7 +517,7 @@ public class ClientActivity extends AppCompatActivity {
     }
 
     private void setUpWebSocketCallbacks() {
-        ICallback playingNext = new ICallback() {
+        IWebSocketCallback playingNext = new IWebSocketCallback() {
             @Override
             public void execute(String response) {
                 runOnUiThread(new Runnable() {
@@ -481,9 +526,9 @@ public class ClientActivity extends AppCompatActivity {
                         Toast.makeText(ClientActivity.this, "Next Song is played", Toast.LENGTH_SHORT).show();
                         updatePlaylist();
 
-                        ICallback currentSongCallback = new ICallback() {
+                        IRequestCallback currentSongCallback = new IRequestCallback() {
                             @Override
-                            public void execute(String response) {
+                            public void onSuccess(String response) {
                                 final String songId = SongConverter.getSongId(response);
                                 Log.d(TAG, songId);
                                 mSpotifyData.getTrack(songId.split(":")[2], new WrappedSpotifyCallback<Track>() {
@@ -498,10 +543,15 @@ public class ClientActivity extends AppCompatActivity {
 
                                     @Override
                                     public void failure(SpotifyError spotifyError) {
-                                       // Log.d(TAG, "next track name: failed");
+                                        // Log.d(TAG, "next track name: failed");
                                         ErrorHandler.handleExeptionWithToast(spotifyError, "Failure");
                                     }
                                 });
+                            }
+
+                            @Override
+                            public void onError(int code, String message) {
+                                Log.w(TAG, "Error handling not implemented in callback");
                             }
                         };
 
@@ -511,7 +561,7 @@ public class ClientActivity extends AppCompatActivity {
             }
         };
 
-        ICallback songAdded = new ICallback() {
+        IWebSocketCallback songAdded = new IWebSocketCallback() {
             @Override
             public void execute(String response) {
                 runOnUiThread(new Runnable() {
@@ -524,7 +574,7 @@ public class ClientActivity extends AppCompatActivity {
             }
         };
 
-        final ICallback paused = new ICallback() {
+        final IWebSocketCallback paused = new IWebSocketCallback() {
             @Override
             public void execute(final String response) {
                 runOnUiThread(new Runnable() {
@@ -550,7 +600,7 @@ public class ClientActivity extends AppCompatActivity {
             }
         };
 
-        ICallback playTime = new ICallback() {
+        IWebSocketCallback playTime = new IWebSocketCallback() {
             @Override
             public void execute(final String response) {
                 runOnUiThread(new Runnable() {
@@ -594,7 +644,7 @@ public class ClientActivity extends AppCompatActivity {
             }
         };
 
-        ICallback skipCallback = new ICallback() {
+        IWebSocketCallback skipCallback = new IWebSocketCallback() {
             @Override
             public void execute(final String response) {
                 runOnUiThread(new Runnable() {
