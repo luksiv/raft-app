@@ -93,7 +93,6 @@ public class HostActivity extends AppCompatActivity implements
     private Player mPlayer;
     private User mUser;
     private Handler mHandler = new Handler();
-    private ArrayList<String> mSongs;
     private PlaylistArrayAdapter mPlaylistAdapter;
     private SpotifyData mSpotifyData;
     private RoomService mRoomService;
@@ -195,7 +194,7 @@ public class HostActivity extends AppCompatActivity implements
         btnRefreshPlaylist.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                updatePlaylist();
+                mRoomService.refreshSongList();
                 IServerHelper serverHelper = mRoomService.getServerHelper();
                 ServerFactory.AdditionalCallbacks callbacks = ServerFactory.getAdditionalCallbacks(serverHelper);
                 if(callbacks != null) {
@@ -338,21 +337,6 @@ public class HostActivity extends AppCompatActivity implements
             if (resultCode == AddSongActivity.RESULT_OK) {
                 String songId = intent.getStringExtra("uri");
                 mRoomService.addSong(songId);
-                /*IRequestCallback addSongCallback = new IRequestCallback() {
-                    @Override
-                    public void onSuccess(String response) {
-                        //Toast.makeText(ClientActivity.this, "Song added", Toast.LENGTH_SHORT).show();
-                        ErrorHandler.handleMessegeWithToast("Song added");
-                        updatePlaylist();
-                    }
-
-                    @Override
-                    public void onError(int code, String message) {
-                        Log.w(TAG, "Error handling not used in current song");
-                    }
-                };
-                mServerHelper.addSong(mRoom, songId, addSongCallback);*/
-
             }
         }
     }
@@ -445,45 +429,6 @@ public class HostActivity extends AppCompatActivity implements
     //endregion
 
     //region Random methods
-
-    private void putSongToPlaylist(String songId) {
-        mRoomService.addSong(songId);
-        /*IRequestCallback addSongCallback = new IRequestCallback() {
-            @Override
-            public void onSuccess(String response) {
-                Toast.makeText(HostActivity.this, "Song added", Toast.LENGTH_SHORT).show();
-                updatePlaylist();
-            }
-
-            @Override
-            public void onError(int code, String message) {
-                Log.w(TAG, "Error handling in callback not implemented");
-            }
-        };
-        mServerHelper.addSong(mRoom, songId, addSongCallback);*/
-    }
-
-    private void updatePlaylist() {
-        mRoomService.refreshSongList();
-        /*IRequestCallback getSongsCallback = new IRequestCallback() {
-            @Override
-            public void onSuccess(String response) {
-                mSongs = SongConverter.convertToList(response);
-                for (String song : mSongs) {
-                    Log.d(TAG, song);
-                    ErrorHandler.handleMessege(song);
-                }
-                updatePlaylistView();
-            }
-
-            @Override
-            public void onError(int code, String message) {
-                Log.w(TAG, "Error handling in callback not implemented");
-            }
-        };
-        mServerHelper.getSongs(mRoom, getSongsCallback);*/
-    }
-
     private void updatePlaylistView(ArrayList<String> songs) {
         mSpotifyData.getTracks(songs, new WrappedSpotifyCallback<Tracks>() {
             @Override
@@ -586,44 +531,6 @@ public class HostActivity extends AppCompatActivity implements
     private void queueNext() {
         if (mPlayer.getMetadata().nextTrack == null) {
             mRoomService.playNextSong(null);
-            /*final IRequestCallback callback = new IRequestCallback() {
-                @Override
-                public void onSuccess(String response) {
-                    voted = false;
-                    try {
-                        // Toast.makeText(HostActivity.this, "Next song queued", Toast.LENGTH_SHORT).show();
-                        ErrorHandler.handleMessegeWithToast("Next song queued");
-                        // Log.d(TAG, response.toString());
-                        ErrorHandler.handleMessege(response.toString());
-                        String uri;
-                        if (response.toString().isEmpty() && !TracksRepository.generatedTracks.isEmpty()) {
-                            String generatedTrackUri = TracksRepository.getFromGeneratedTracks();
-                            putSongToPlaylist(generatedTrackUri.split(":")[2]);
-                        }
-
-                        JSONObject nextTrack = new JSONObject(response);
-                        uri = nextTrack.getString("song");
-
-                        if (firstRun) {
-                            mPlayer.playUri(mOperationCallback, uri, 0, 0);
-                            firstRun = false;
-                        } else {
-                            mPlayer.queue(mOperationCallback, uri);
-                        }
-                        requestUsed = false;
-                    } catch (JSONException e) {
-                        // e.printStackTrace();
-                        ErrorHandler.handleExeption(e);
-                    }
-                }
-
-                @Override
-                public void onError(int code, String message) {
-                    Log.w(TAG, "Error handling not implemented");
-                }
-            };
-            requestUsed = true;
-            mServerHelper.playNextSong(mRoom, callback);*/
         }
 
     }
@@ -714,143 +621,6 @@ public class HostActivity extends AppCompatActivity implements
         tvID.setText(mUser.getId());
         dialog.show();
     }
-
-    /*public void createRoom() {
-        final TextView status = (TextView) findViewById(R.id.tv_RoomId);
-
-        final IRequestCallback callback = new IRequestCallback() {
-            @Override
-            public void onSuccess(String response) {
-                IRequestCallback insideCallback = new IRequestCallback() {
-                    @Override
-                    public void onSuccess(String response) {
-                        if (response != null) {
-                            try {
-                                JSONObject roomInfo = new JSONObject(response.toString());
-                                int roomId = roomInfo.getInt("id");
-                                int loginCode = roomInfo.getInt("logincode");
-
-                                mRoom.setId(roomId);
-                                mRoom.setLoginCode(loginCode);
-                                mServerHelper.setRoomUpdates(roomId);
-
-                                status.setText("Login code is " + String.valueOf(loginCode));
-                            } catch (JSONException e) {
-                                Log.d("MusicDJ", response.toString());
-                                status.setText("Error parsing response");
-                                ErrorHandler.handleExeption(e);
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onError(int code, String message) {
-                        Log.w(TAG, "Error handling not implemented in callback");
-                    }
-                };
-                mServerHelper.createRoom(mUser.getEmail(), insideCallback);
-            }
-
-            @Override
-            public void onError(int code, String message) {
-                Log.w(TAG, "Error handling not implemented in callback");
-            }
-        };
-        mServerHelper.registerUser(mUser.getEmail(), callback);
-    }
-
-    private void setUpWebSocketCallbacks() {
-        IWebSocketCallback playingNext = new IWebSocketCallback() {
-            @Override
-            public void execute(String response) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                      //  Toast.makeText(HostActivity.this, "Next Song is played", Toast.LENGTH_SHORT).show();
-                        ErrorHandler.handleMessegeWithToast("Next Song is played");
-                        updatePlaylist();
-                    }
-                });
-            }
-        };
-
-        IWebSocketCallback songAdded = new IWebSocketCallback() {
-            @Override
-            public void execute(String response) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (firstRun) {
-                            queueNext();
-                        }
-                        //Toast.makeText(HostActivity.this, "Someone added a song", Toast.LENGTH_SHORT).show();
-                        ErrorHandler.handleMessegeWithToast("Someone added a song");
-                        updatePlaylist();
-                    }
-                });
-            }
-        };
-
-        IWebSocketCallback paused = new IWebSocketCallback() {
-            @Override
-            public void execute(String response) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //Toast.makeText(HostActivity.this, "Song paused", Toast.LENGTH_SHORT).show();
-                        ErrorHandler.handleMessegeWithToast("Song paused");
-                    }
-                });
-            }
-        };
-
-        IWebSocketCallback playTime = new IWebSocketCallback() {
-            @Override
-            public void execute(final String response) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //Toast.makeText(HostActivity.this, "play time: " + response, Toast.LENGTH_SHORT).show();
-                        ErrorHandler.handleMessegeWithToast("play time: " + response);
-                    }
-                });
-            }
-        };
-
-        IWebSocketCallback connectedRoom = new IWebSocketCallback() {
-            @Override
-            public void execute(final String response) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //Toast.makeText(HostActivity.this, "play time: " + response, Toast.LENGTH_SHORT).show();
-                        ErrorHandler.handleMessegeWithToast(response);
-                    }
-                });
-            }
-        };
-
-        IWebSocketCallback skipCallback = new IWebSocketCallback() {
-            @Override
-            public void execute(final String response) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //Toast.makeText(HostActivity.this, "play time: " + response, Toast.LENGTH_SHORT).show();
-                        ErrorHandler.handleMessegeWithToast("song skipped");
-                        queueNext();
-                    }
-                });
-            }
-        };
-
-        mServerHelper.setPlayingNextCallback(playingNext);
-        mServerHelper.setSongAddedCallback(songAdded);
-        mServerHelper.setSongPausedCallback(paused);
-        mServerHelper.setSongPlayTimeCallback(playTime);
-        mServerHelper.setConnectedToRoomCallback(connectedRoom);
-        mServerHelper.setSongSkippedCallback(skipCallback);
-    }*/
 
     private void setUpRoomChangeHandler(){
         mRoomService.subscribe(new RoomService.OnChangeSubscriber() {
