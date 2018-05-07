@@ -227,37 +227,23 @@ public class RequestsHelper {
     }
 
     private Callback GetCallback(final IRequestCallback callback){
-        final Handler handler = new Handler(Looper.getMainLooper());
         Callback cb = new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 activeRequests--;
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        callback.onError(-1, "Error connecting to internet");
-                    }
-                });
+                Log.d("ServerAPI", e.getMessage());
+                callback.onError(-1, "Error connecting to internet");
             }
 
             @Override
             public void onResponse(Call call, final Response response) throws IOException {
                 activeRequests--;
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.d("ServerAPI", response.toString());
-                        try {
-                            if (response.code() == 200) {
-                                callback.onSuccess(response.body().string());
-                            } else {
-                                callback.onError(response.code(), response.body().string());
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
+                Log.d("ServerAPI", response.toString());
+                if (response.code() == 200) {
+                    callback.onSuccess(response.body().string());
+                } else {
+                    callback.onError(response.code(), response.body().string());
+                }
             }
         };
 
