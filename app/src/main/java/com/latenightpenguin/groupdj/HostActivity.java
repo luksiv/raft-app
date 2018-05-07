@@ -30,6 +30,7 @@ import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSocketStatus;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets.IWebSocketCallback;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrappedSpotifyCallback;
+import com.latenightpenguin.groupdj.Services.RoomService;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -91,18 +92,14 @@ public class HostActivity extends AppCompatActivity implements
     };
     private Player mPlayer;
     private User mUser;
-    private RoomInfo mRoom;
-    private Call mCall;
-    private OkHttpClient mOkHttpClient = new OkHttpClient();
     private Handler mHandler = new Handler();
     private ArrayList<String> mSongs;
     private PlaylistArrayAdapter mPlaylistAdapter;
     private SpotifyData mSpotifyData;
-    private IServerHelper mServerHelper;
+    private RoomService mRoomService;
 
     private Boolean requestUsed = false;
     private Boolean firstRun = true;
-    private Boolean voted = false;
     //endregion
 
     //region UI elements
@@ -130,9 +127,9 @@ public class HostActivity extends AppCompatActivity implements
         authentication();
         setUpElements();
 
-        mServerHelper = ServerFactory.make(getResources().getString(R.string.url));
-        setUpWebSocketCallbacks();
-        mRoom = new RoomInfo();
+        IServerHelper serverHelper = ServerFactory.make(getResources().getString(R.string.url));
+        mRoomService = new RoomService(this, serverHelper);
+        setUpRoomChangeHandler();
 
         TracksRepository.setUp();
 
@@ -169,21 +166,7 @@ public class HostActivity extends AppCompatActivity implements
                         && mMetadata != null && mMetadata.nextTrack != null) {
                     mPlayer.skipToNext(mOperationCallback);
                 }*/
-                if(!voted) {
-                    IRequestCallback callback = new IRequestCallback() {
-                        @Override
-                        public void onSuccess(String response) {
-                            Toast.makeText(HostActivity.this, "You voted", Toast.LENGTH_SHORT).show();
-                        }
-
-                        @Override
-                        public void onError(int code, String message) {
-                            Log.w(TAG, "Error handling for voting is not implemented");
-                        }
-                    };
-                    mServerHelper.voteSkipSong(mRoom, callback);
-                    voted = true;
-                }
+                mRoomService.voteSkipSong();
             }
         });
         btnToggleViews = findViewById(R.id.btn_toggleView);
@@ -213,7 +196,8 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 updatePlaylist();
-                ServerFactory.AdditionalCallbacks callbacks = ServerFactory.getAdditionalCallbacks(mServerHelper);
+                IServerHelper serverHelper = mRoomService.getServerHelper();
+                ServerFactory.AdditionalCallbacks callbacks = ServerFactory.getAdditionalCallbacks(serverHelper);
                 if(callbacks != null) {
                     callbacks.add();
                     callbacks.next();
@@ -295,9 +279,8 @@ public class HostActivity extends AppCompatActivity implements
             mPlayer.addConnectionStateCallback(HostActivity.this);
         }
 
-        if (mServerHelper != null && mServerHelper.getWebSocketStatus() == WebSocketStatus.DISCONNECTED) {
-            mServerHelper.connectWebSocket();
-            mServerHelper.setRoomUpdates(mRoom.getId());
+        if (mRoomService != null) {
+            mRoomService.ensureWebSocketIsConnected();
         }
     }
 
@@ -354,7 +337,8 @@ public class HostActivity extends AppCompatActivity implements
         if (requestCode == 333) {
             if (resultCode == AddSongActivity.RESULT_OK) {
                 String songId = intent.getStringExtra("uri");
-                IRequestCallback addSongCallback = new IRequestCallback() {
+                mRoomService.addSong(songId);
+                /*IRequestCallback addSongCallback = new IRequestCallback() {
                     @Override
                     public void onSuccess(String response) {
                         //Toast.makeText(ClientActivity.this, "Song added", Toast.LENGTH_SHORT).show();
@@ -367,7 +351,7 @@ public class HostActivity extends AppCompatActivity implements
                         Log.w(TAG, "Error handling not used in current song");
                     }
                 };
-                mServerHelper.addSong(mRoom, songId, addSongCallback);
+                mServerHelper.addSong(mRoom, songId, addSongCallback);*/
 
             }
         }
@@ -383,12 +367,12 @@ public class HostActivity extends AppCompatActivity implements
         //Log.d(TAG, "Playback State: " + mCurrentPlaybackState.toString());
         //Log.d(TAG, "Metadata: " + mMetadata.toString());
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyPlay) {
-            mServerHelper.announcePlayTime(mCurrentPlaybackState.positionMs);
+            mRoomService.announcePlayTime(mCurrentPlaybackState.positionMs);
             btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_media_pause));
             seekUpdation();
         }
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyPause) {
-            mServerHelper.announcePause(mCurrentPlaybackState.positionMs);
+            mRoomService.announcePause(mCurrentPlaybackState.positionMs);
             btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_media_play));
         }
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged) {
@@ -463,7 +447,8 @@ public class HostActivity extends AppCompatActivity implements
     //region Random methods
 
     private void putSongToPlaylist(String songId) {
-        IRequestCallback addSongCallback = new IRequestCallback() {
+        mRoomService.addSong(songId);
+        /*IRequestCallback addSongCallback = new IRequestCallback() {
             @Override
             public void onSuccess(String response) {
                 Toast.makeText(HostActivity.this, "Song added", Toast.LENGTH_SHORT).show();
@@ -475,11 +460,12 @@ public class HostActivity extends AppCompatActivity implements
                 Log.w(TAG, "Error handling in callback not implemented");
             }
         };
-        mServerHelper.addSong(mRoom, songId, addSongCallback);
+        mServerHelper.addSong(mRoom, songId, addSongCallback);*/
     }
 
     private void updatePlaylist() {
-        IRequestCallback getSongsCallback = new IRequestCallback() {
+        mRoomService.refreshSongList();
+        /*IRequestCallback getSongsCallback = new IRequestCallback() {
             @Override
             public void onSuccess(String response) {
                 mSongs = SongConverter.convertToList(response);
@@ -495,11 +481,11 @@ public class HostActivity extends AppCompatActivity implements
                 Log.w(TAG, "Error handling in callback not implemented");
             }
         };
-        mServerHelper.getSongs(mRoom, getSongsCallback);
+        mServerHelper.getSongs(mRoom, getSongsCallback);*/
     }
 
-    private void updatePlaylistView() {
-        mSpotifyData.getTracks(mSongs, new WrappedSpotifyCallback<Tracks>() {
+    private void updatePlaylistView(ArrayList<String> songs) {
+        mSpotifyData.getTracks(songs, new WrappedSpotifyCallback<Tracks>() {
             @Override
             public void success(Tracks tracks, retrofit.client.Response response) {
 
@@ -531,7 +517,8 @@ public class HostActivity extends AppCompatActivity implements
             public void success(UserPrivate userPrivate, retrofit.client.Response response) {
                 mUser = new User(userPrivate.id, userPrivate.display_name,
                         userPrivate.email, userPrivate.country);
-                createRoom();
+
+                mRoomService.createRoom(mUser.getEmail());
             }
         });
     }
@@ -598,7 +585,8 @@ public class HostActivity extends AppCompatActivity implements
 
     private void queueNext() {
         if (mPlayer.getMetadata().nextTrack == null) {
-            final IRequestCallback callback = new IRequestCallback() {
+            mRoomService.playNextSong(null);
+            /*final IRequestCallback callback = new IRequestCallback() {
                 @Override
                 public void onSuccess(String response) {
                     voted = false;
@@ -635,7 +623,7 @@ public class HostActivity extends AppCompatActivity implements
                 }
             };
             requestUsed = true;
-            mServerHelper.playNextSong(mRoom, callback);
+            mServerHelper.playNextSong(mRoom, callback);*/
         }
 
     }
@@ -727,7 +715,7 @@ public class HostActivity extends AppCompatActivity implements
         dialog.show();
     }
 
-    public void createRoom() {
+    /*public void createRoom() {
         final TextView status = (TextView) findViewById(R.id.tv_RoomId);
 
         final IRequestCallback callback = new IRequestCallback() {
@@ -862,6 +850,42 @@ public class HostActivity extends AppCompatActivity implements
         mServerHelper.setSongPlayTimeCallback(playTime);
         mServerHelper.setConnectedToRoomCallback(connectedRoom);
         mServerHelper.setSongSkippedCallback(skipCallback);
+    }*/
+
+    private void setUpRoomChangeHandler(){
+        mRoomService.subscribe(new RoomService.OnChangeSubscriber() {
+            @Override
+            public void callback(String[] changes) {
+                for(int i = 0; i < changes.length; i++){
+                    if(changes[i].equals(RoomService.PAST_SONGS_UPDATED)){
+                        ArrayList<String> pastSongs = mRoomService.getPastSongs();
+                        Toast.makeText(getApplicationContext(), "Got past songs from server", Toast.LENGTH_SHORT).show();
+                    } else if (changes[i].equals(RoomService.PLAYTIME_UPDATED)){
+                        long playTime = mRoomService.getPlayTime();
+                        ErrorHandler.handleMessegeWithToast(Long.toString(playTime));
+                    } else if (changes[i].equals(RoomService.ROOM_UPDATED)){
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                TextView loginInfo = findViewById(R.id.tv_RoomId);
+                                loginInfo.setText(mRoomService.getRoom().getLoginCode());
+                            }
+                        });
+                    } else if (changes[i].equals(RoomService.SONG_LIST_UPDATED)){
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                updatePlaylistView(mRoomService.getSongs());
+                            }
+                        });
+                    } else if (changes[i].equals(RoomService.SONG_UPDATED)){
+                        Log.w(TAG, "Current song updated notification not handled. Remove it or change it");
+                    } else if (changes[i].equals(RoomService.STATUS_UPDATED)){
+                        Log.w(TAG, "Playing status changed notification not handled. Remove it or change it");
+                    }
+                }
+            }
+        });
     }
 
     //endregion
@@ -886,7 +910,7 @@ public class HostActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         Spotify.destroyPlayer(this);
-        mServerHelper.closeWebSocket();
+        mRoomService.disconnect(mUser.getEmail());
         super.onDestroy();
     }
     //endregion
