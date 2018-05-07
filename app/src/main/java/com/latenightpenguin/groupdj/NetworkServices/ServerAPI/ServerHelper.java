@@ -1,16 +1,9 @@
 package com.latenightpenguin.groupdj.NetworkServices.ServerAPI;
 
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests.ConnectionManager;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests.IRequestCallback;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests.RequestsHelper;
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests.ServerRequest;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets.IWebSocketCallback;
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets.ServerListener;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets.WebSocketHelper;
-
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.WebSocket;
 
 public class ServerHelper implements IServerHelper{
     public static final String METHOD_GET = "GET";
