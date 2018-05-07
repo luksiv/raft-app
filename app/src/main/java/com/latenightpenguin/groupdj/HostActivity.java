@@ -111,6 +111,7 @@ public class HostActivity extends AppCompatActivity implements
     private Button btnToggleViews;
     private Button btnRefreshPlaylist;
     private ListView lwPlaylist;
+    private TextView loginInfo;
     //endregiongit
 
     @Override
@@ -136,6 +137,7 @@ public class HostActivity extends AppCompatActivity implements
 
     //region Methods that onCreate uses
     private void setUpElements() {
+        loginInfo = findViewById(R.id.tv_RoomId);
         btnAdd = findViewById(R.id.btn_AddSong);
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -625,35 +627,42 @@ public class HostActivity extends AppCompatActivity implements
     private void setUpRoomChangeHandler(){
         mRoomService.subscribe(new RoomService.OnChangeSubscriber() {
             @Override
-            public void callback(String[] changes) {
-                for(int i = 0; i < changes.length; i++){
-                    if(changes[i].equals(RoomService.PAST_SONGS_UPDATED)){
-                        ArrayList<String> pastSongs = mRoomService.getPastSongs();
-                        Toast.makeText(getApplicationContext(), "Got past songs from server", Toast.LENGTH_SHORT).show();
-                    } else if (changes[i].equals(RoomService.PLAYTIME_UPDATED)){
-                        long playTime = mRoomService.getPlayTime();
-                        ErrorHandler.handleMessegeWithToast(Long.toString(playTime));
-                    } else if (changes[i].equals(RoomService.ROOM_UPDATED)){
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                TextView loginInfo = findViewById(R.id.tv_RoomId);
-                                loginInfo.setText(mRoomService.getRoom().getLoginCode());
+            public void callback(final String[] changes) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        for(int i = 0; i < changes.length; i++){
+                            if(changes[i].equals(RoomService.PAST_SONGS_UPDATED)){
+                                ArrayList<String> pastSongs = mRoomService.getPastSongs();
+                                Toast.makeText(getApplicationContext(), "Got past songs from server", Toast.LENGTH_SHORT).show();
+                            } else if (changes[i].equals(RoomService.PLAYTIME_UPDATED)){
+                                long playTime = mRoomService.getPlayTime();
+                                ErrorHandler.handleMessegeWithToast(Long.toString(playTime));
+                            } else if (changes[i].equals(RoomService.ROOM_UPDATED)){
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if(loginInfo == null){
+                                            Log.w(TAG, "loginInfo is null");
+                                        }
+                                        loginInfo.setText(Long.toString(mRoomService.getRoom().getLoginCode()));
+                                    }
+                                });
+                            } else if (changes[i].equals(RoomService.SONG_LIST_UPDATED)){
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        updatePlaylistView(mRoomService.getSongs());
+                                    }
+                                });
+                            } else if (changes[i].equals(RoomService.SONG_UPDATED)){
+                                Log.w(TAG, "Current song updated notification not handled. Remove it or change it");
+                            } else if (changes[i].equals(RoomService.STATUS_UPDATED)){
+                                Log.w(TAG, "Playing status changed notification not handled. Remove it or change it");
                             }
-                        });
-                    } else if (changes[i].equals(RoomService.SONG_LIST_UPDATED)){
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                updatePlaylistView(mRoomService.getSongs());
-                            }
-                        });
-                    } else if (changes[i].equals(RoomService.SONG_UPDATED)){
-                        Log.w(TAG, "Current song updated notification not handled. Remove it or change it");
-                    } else if (changes[i].equals(RoomService.STATUS_UPDATED)){
-                        Log.w(TAG, "Playing status changed notification not handled. Remove it or change it");
+                        }
                     }
-                }
+                });
             }
         });
     }
