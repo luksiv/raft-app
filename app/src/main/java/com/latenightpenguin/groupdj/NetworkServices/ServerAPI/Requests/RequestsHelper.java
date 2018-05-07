@@ -43,7 +43,7 @@ public class RequestsHelper {
                 .post(body)
                 .build();
 
-        Log.d("ServerAPI", url);
+        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -58,7 +58,7 @@ public class RequestsHelper {
                 .post(body)
                 .build();
 
-        Log.d("ServerAPI", url);
+        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -73,7 +73,7 @@ public class RequestsHelper {
                 .put(body)
                 .build();
 
-        Log.d("ServerAPI", url);
+        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -88,7 +88,7 @@ public class RequestsHelper {
                 .put(body)
                 .build();
 
-        Log.d("ServerAPI", url);
+        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -100,36 +100,36 @@ public class RequestsHelper {
         final Request request = new Request.Builder()
                 .header("Content-Type", "application/json")
                 .url(url)
-                .post(body)
+                .put(body)
                 .build();
 
-        Log.d("ServerAPI", url);
+        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
 
     public void getCurrentSong(RoomInfo room, final IRequestCallback callback) {
-        String url = serverUrl + "api/songs" + room.getId() + "/current";
+        String url = serverUrl + "api/songs/" + room.getId() + "/current";
         Callback cb = GetCallback(callback);
         final Request request = new Request.Builder()
                 .header("Content-Type", "application/json")
                 .url(url)
                 .build();
 
-        Log.d("ServerAPI", url);
+        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
 
     public void getSongs(RoomInfo room, final IRequestCallback callback) {
-        String url = serverUrl + "api/songs" + room.getId();
+        String url = serverUrl + "api/songs/" + room.getId();
         Callback cb = GetCallback(callback);
         final Request request = new Request.Builder()
                 .header("Content-Type", "application/json")
                 .url(url)
                 .build();
 
-        Log.d("ServerAPI", url);
+        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -145,7 +145,7 @@ public class RequestsHelper {
                 .put(body)
                 .build();
 
-        Log.d("ServerAPI", url);
+        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -160,7 +160,7 @@ public class RequestsHelper {
                 .put(body)
                 .build();
 
-        Log.d("ServerAPI", url);
+        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -173,7 +173,7 @@ public class RequestsHelper {
                 .url(url)
                 .build();
 
-        Log.d("ServerAPI", url);
+        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -186,7 +186,7 @@ public class RequestsHelper {
                 .url(url)
                 .build();
 
-        Log.d("ServerAPI", url);
+        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -201,7 +201,7 @@ public class RequestsHelper {
                 .put(body)
                 .build();
 
-        Log.d("ServerAPI", url);
+        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -216,7 +216,7 @@ public class RequestsHelper {
                 .put(body)
                 .build();
 
-        Log.d("ServerAPI", url);
+        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -246,9 +246,9 @@ public class RequestsHelper {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
+                        Log.d("ServerAPI", response.toString());
                         try {
                             if (response.code() == 200) {
-
                                 callback.onSuccess(response.body().string());
                             } else {
                                 callback.onError(response.code(), response.body().string());
