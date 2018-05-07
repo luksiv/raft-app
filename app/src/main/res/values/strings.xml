@@ -4,4 +4,5 @@
     <string name="token">#1$s</string>
     <string name="default_error">Error</string>
     <string-array name="bitratesValues"><item>96 kbit/s</item><item>160 kbit/s</item><item>320 kbit/s</item></string-array>
+    <string name="offline">Device is offline</string>
 </resources>

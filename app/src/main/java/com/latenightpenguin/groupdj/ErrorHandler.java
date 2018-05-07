@@ -24,7 +24,7 @@ public class ErrorHandler implements java.lang.Thread.UncaughtExceptionHandler{
         _view = view;
     }
 
-    static void handleExeption(Exception ex)
+    public static void handleExeption(Exception ex)
     {
         Log.v(_tag, formatErrorMsg(ex, true));
     }
