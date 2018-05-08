@@ -128,7 +128,7 @@ public class HostActivity extends AppCompatActivity implements
         setUpElements();
 
         IServerHelper serverHelper = ServerFactory.make(getResources().getString(R.string.url));
-        mRoomService = new RoomService(this, serverHelper);
+        mRoomService = new RoomService(getApplicationContext(), serverHelper);
         setUpRoomChangeHandler();
 
         TracksRepository.setUp();
@@ -639,22 +639,12 @@ public class HostActivity extends AppCompatActivity implements
                                 long playTime = mRoomService.getPlayTime();
                                 ErrorHandler.handleMessegeWithToast(Long.toString(playTime));
                             } else if (changes[i].equals(RoomService.ROOM_UPDATED)){
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if(loginInfo == null){
-                                            Log.w(TAG, "loginInfo is null");
-                                        }
-                                        loginInfo.setText(Long.toString(mRoomService.getRoom().getLoginCode()));
-                                    }
-                                });
+                                if(loginInfo == null){
+                                    Log.w(TAG, "loginInfo is null");
+                                }
+                                loginInfo.setText(Long.toString(mRoomService.getRoom().getLoginCode()));
                             } else if (changes[i].equals(RoomService.SONG_LIST_UPDATED)){
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        updatePlaylistView(mRoomService.getSongs());
-                                    }
-                                });
+                                updatePlaylistView(mRoomService.getSongs());
                             } else if (changes[i].equals(RoomService.SONG_UPDATED)){
                                 Log.w(TAG, "Current song updated notification not handled. Remove it or change it");
                             } else if (changes[i].equals(RoomService.STATUS_UPDATED)){

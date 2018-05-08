@@ -2,7 +2,6 @@ package com.latenightpenguin.groupdj.Services;
 
 import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.latenightpenguin.groupdj.ErrorHandler;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.IServerHelper;
@@ -11,7 +10,6 @@ import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.RoomInfo;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.SongConverter;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSocketStatus;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets.IWebSocketCallback;
-import com.latenightpenguin.groupdj.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,6 +17,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 public class RoomService {
+    private final String TAG = "RoomService";
     private IServerHelper mServerHelper;
     private Context mContext;
     private ArrayList<OnChangeSubscriber> subscribers;
@@ -164,11 +163,7 @@ public class RoomService {
 
                     @Override
                     public void onError(int code, String message) {
-                        if(code == -1){
-                            Toast.makeText(mContext, "Device is offline", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(mContext, "Error creating room", Toast.LENGTH_SHORT).show();
-                        }
+                        handleError(code, message);
                     }
                 });
             }
@@ -208,7 +203,8 @@ public class RoomService {
         mServerHelper.disconnectFromRoom(user, new IRequestCallback() {
             @Override
             public void onSuccess(String response) {
-                Toast.makeText(mContext, "Disconnected successfully", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Disconnected successfully");
+                //Toast.makeText(mContext, "Disconnected successfully", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -222,7 +218,8 @@ public class RoomService {
         mServerHelper.addSong(mRoom, song, new IRequestCallback() {
             @Override
             public void onSuccess(String response) {
-                Toast.makeText(mContext, "Song added", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Song added");
+                //Toast.makeText(mContext, "Song added", Toast.LENGTH_SHORT).show();
                 refreshSongList();
             }
 
@@ -235,7 +232,8 @@ public class RoomService {
 
     public void voteSkipSong(){
         if(voted){
-            Toast.makeText(mContext, "Already voted", Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "Already voted");
+            //Toast.makeText(mContext, "Already voted", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -243,7 +241,8 @@ public class RoomService {
         mServerHelper.voteSkipSong(mRoom, new IRequestCallback() {
             @Override
             public void onSuccess(String response) {
-                Toast.makeText(mContext, "Voted", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Voted");
+                //Toast.makeText(mContext, "Voted", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -258,7 +257,8 @@ public class RoomService {
         mServerHelper.setSkipThreshold(mRoom, threshold, new IRequestCallback() {
             @Override
             public void onSuccess(String response) {
-                Toast.makeText(mContext, "Skip setting updated", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Skip setting updated");
+                //Toast.makeText(mContext, "Skip setting updated", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -313,7 +313,8 @@ public class RoomService {
     public void ensureWebSocketIsConnected(){
         if(mServerHelper != null && mServerHelper.getWebSocketStatus() == WebSocketStatus.DISCONNECTED){
             if(mRoom.getId() == -1){
-                Toast.makeText(mContext, "Not connected to room", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Not connected to room");
+                //Toast.makeText(mContext, "Not connected to room", Toast.LENGTH_SHORT).show();
             } else {
                 mServerHelper.connectWebSocket();
                 mServerHelper.setRoomUpdates(mRoom.getId());
@@ -325,7 +326,8 @@ public class RoomService {
         mServerHelper.setConnectedToRoomCallback(new IWebSocketCallback() {
             @Override
             public void execute(String message) {
-                Toast.makeText(mContext, "Connected to room", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Connected to room");
+                //Toast.makeText(mContext, "Connected to room", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -407,9 +409,11 @@ public class RoomService {
     private void handleError(int code, String message){
         Log.d("RoomService", String.format("code: %d, message: %s", code, message));
         if(code == -1){
-            Toast.makeText(mContext, mContext.getString(R.string.offline), Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "Device is offline");
+            //Toast.makeText(mContext, mContext.getString(R.string.offline), Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show();
+            Log.d(TAG, message);
+            //Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show();
         }
     }
 
