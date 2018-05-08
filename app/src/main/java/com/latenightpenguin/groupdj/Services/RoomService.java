@@ -110,6 +110,7 @@ public class RoomService {
                 } else {
                     mSongs = SongConverter.convertToList(response);
                 }
+                Log.d(TAG, SONG_LIST_UPDATED);
                 notifyDataChanged(SONG_LIST_UPDATED);
             }
 
@@ -125,6 +126,7 @@ public class RoomService {
             @Override
             public void onSuccess(String response) {
                 mSong = SongConverter.getSongId(response);
+                Log.d(TAG, SONG_UPDATED);
                 notifyDataChanged(SONG_UPDATED);
             }
 
@@ -135,8 +137,9 @@ public class RoomService {
         });
     }
 
-    public void refreshCurrentSong(String json){
+    private void refreshCurrentSong(String json){
         mSong = SongConverter.getSongId(json);
+        Log.d(TAG, SONG_UPDATED);
         notifyDataChanged(SONG_UPDATED);
     }
 
@@ -145,6 +148,7 @@ public class RoomService {
             @Override
             public void onSuccess(String response) {
                 mPastSongs = SongConverter.convertToList(response);
+                Log.d(TAG, PAST_SONGS_UPDATED);
                 notifyDataChanged(PAST_SONGS_UPDATED);
             }
 
@@ -225,6 +229,10 @@ public class RoomService {
                 Log.d(TAG, "Song added");
                 //Toast.makeText(mContext, "Song added", Toast.LENGTH_SHORT).show();
                 refreshSongList();
+                refreshLastPlayedSongs();
+                if(mSong == null || mSong.isEmpty()){
+                    refreshCurrentSong();
+                }
             }
 
             @Override
@@ -280,6 +288,7 @@ public class RoomService {
                     voted = false;
 
                     mSong = SongConverter.getSongId(response);
+                    Log.d(TAG, SONG_UPDATED);
                     notifyDataChanged(SONG_UPDATED);
 
                     refreshLastPlayedSongs();
@@ -298,6 +307,7 @@ public class RoomService {
                     voted = false;
 
                     mSong = SongConverter.getSongId(response);
+                    Log.d(TAG, SONG_UPDATED);
                     notifyDataChanged(SONG_UPDATED);
 
                     refreshLastPlayedSongs();
@@ -363,9 +373,11 @@ public class RoomService {
                 if(status != SongStatus.PAUSED) {
                     status = SongStatus.PAUSED;
                     mPlayTime = Long.getLong(message);
+                    Log.d(TAG, PLAYTIME_UPDATED + " " + STATUS_UPDATED);
                     notifyDataChanged(PLAYTIME_UPDATED, STATUS_UPDATED);
                 } else {
                     mPlayTime = Long.getLong(message);
+                    Log.d(TAG, PLAYTIME_UPDATED);
                     notifyDataChanged(PLAYTIME_UPDATED);
                 }
             }
@@ -377,9 +389,11 @@ public class RoomService {
                 if(status != SongStatus.PLAYING) {
                     status = SongStatus.PLAYING;
                     mPlayTime = Long.getLong(message);
+                    Log.d(TAG, PLAYTIME_UPDATED + " " + STATUS_UPDATED);
                     notifyDataChanged(PLAYTIME_UPDATED, STATUS_UPDATED);
                 } else {
                     mPlayTime = Long.getLong(message);
+                    Log.d(TAG, PLAYTIME_UPDATED);
                     notifyDataChanged(PLAYTIME_UPDATED);
                 }
             }
@@ -405,6 +419,7 @@ public class RoomService {
                 mRoom.setId(roomId);
                 mRoom.setLoginCode(loginCode);
 
+                Log.d(TAG, ROOM_UPDATED);
                 notifyDataChanged(ROOM_UPDATED);
                 refreshCurrentSong();
                 refreshSongList();

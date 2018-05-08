@@ -197,6 +197,8 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 mRoomService.refreshSongList();
+                mRoomService.refreshCurrentSong();
+                mRoomService.refreshLastPlayedSongs();
                 IServerHelper serverHelper = mRoomService.getServerHelper();
                 ServerFactory.AdditionalCallbacks callbacks = ServerFactory.getAdditionalCallbacks(serverHelper);
                 if(callbacks != null) {
@@ -522,7 +524,9 @@ public class HostActivity extends AppCompatActivity implements
             }
         }
         if (procentageDone >= 99 && !requestUsed) {
-            queueNext();
+            //queueNext();
+            mRoomService.playNextSong(null);
+            requestUsed = true;
         }
         mHandler.postDelayed(run, 1000);
 
@@ -530,9 +534,26 @@ public class HostActivity extends AppCompatActivity implements
 
     private void queueNext() {
         if (mPlayer.getMetadata().nextTrack == null) {
-            mRoomService.playNextSong(null);
-        }
+            String songid = mRoomService.getCurrent();
+            // Toast.makeText(HostActivity.this, "Next song queued", Toast.LENGTH_SHORT).show();
+            ErrorHandler.handleMessegeWithToast("Next song queued");
+            // Log.d(TAG, response.toString());
+            ErrorHandler.handleMessege(songid);
+            String uri;
+            if (songid.isEmpty() && !TracksRepository.generatedTracks.isEmpty()) {
+                String generatedTrackUri = TracksRepository.getFromGeneratedTracks();
+                mRoomService.playNextSong(generatedTrackUri.split(":")[2]);
+                //putSongToPlaylist(generatedTrackUri.split(":")[2]);
+            }
 
+            if (firstRun) {
+                mPlayer.playUri(mOperationCallback, songid, 0, 0);
+                firstRun = false;
+            } else {
+                mPlayer.queue(mOperationCallback, songid);
+            }
+            requestUsed = false;
+        }
     }
 
     private void generatePlaylist() {
@@ -647,6 +668,7 @@ public class HostActivity extends AppCompatActivity implements
                                     updatePlaylistView(mRoomService.getSongs());
                                     break;
                                 case RoomService.SONG_UPDATED:
+                                    queueNext();
                                     Log.w(TAG, "Current song updated notification not handled. Remove it or change it");
                                     break;
                                 case RoomService.STATUS_UPDATED:
