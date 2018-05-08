@@ -31,7 +31,7 @@ public interface IServerHelper {
      * @param user user's identifier
      * @param callback callback which will be executed when request finishes
      */
-    void disconnectFromRoom(String user, IRequestCallback callback);
+    void disconnectFromRoom(int room, String user, IRequestCallback callback);
 
     /**
      * Adds song to room's queue

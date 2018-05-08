@@ -107,8 +107,8 @@ public class ServerHelper implements IServerHelper{
     }
 
     @Override
-    public void disconnectFromRoom(String user, final IRequestCallback callback) {
-        requestsHelper.disconnectFromRoom(user, callback);
+    public void disconnectFromRoom(int room, String user, final IRequestCallback callback) {
+        requestsHelper.disconnectFromRoom(room, user, callback);
     }
 
     @Override

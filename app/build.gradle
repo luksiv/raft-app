@@ -23,7 +23,7 @@ android {
             dimension "server"
         }
         localhost {
-            resValue "string", "url", "192.168.0.39:61135/"
+            resValue "string", "url", "localhost:61134/"
             dimension "server"
         }
         production {

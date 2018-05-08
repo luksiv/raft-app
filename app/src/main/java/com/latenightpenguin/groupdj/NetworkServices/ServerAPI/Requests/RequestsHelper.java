@@ -78,8 +78,8 @@ public class RequestsHelper {
         activeRequests++;
     }
 
-    public void disconnectFromRoom(String user, final IRequestCallback callback) {
-        String url = serverUrl + "api/users/disconnect";
+    public void disconnectFromRoom(int room, String user, final IRequestCallback callback) {
+        String url = serverUrl + "api/users/disconnect/" + room;
         Callback cb = GetCallback(callback);
         RequestBody body = RequestBody.create(MEDIA_TYPE, String.format("\"%s\"", user));
         final Request request = new Request.Builder()

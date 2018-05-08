@@ -63,6 +63,10 @@ public class RoomService {
         return mSongs;
     }
 
+    public int getSongCount(){
+        return mSongs.size();
+    }
+
     public RoomInfo getRoom(){
         return mRoom;
     }
@@ -200,7 +204,7 @@ public class RoomService {
     }
 
     public void disconnect(String user){
-        mServerHelper.disconnectFromRoom(user, new IRequestCallback() {
+        mServerHelper.disconnectFromRoom(mRoom.getId(), user, new IRequestCallback() {
             @Override
             public void onSuccess(String response) {
                 Log.d(TAG, "Disconnected successfully");
@@ -274,9 +278,12 @@ public class RoomService {
                 @Override
                 public void onSuccess(String response) {
                     voted = false;
+
+                    mSong = SongConverter.getSongId(response);
+                    notifyDataChanged(SONG_UPDATED);
+
                     refreshLastPlayedSongs();
                     refreshSongList();
-                    refreshCurrentSong(response);
                 }
 
                 @Override
@@ -289,9 +296,12 @@ public class RoomService {
                 @Override
                 public void onSuccess(String response) {
                     voted = false;
+
+                    mSong = SongConverter.getSongId(response);
+                    notifyDataChanged(SONG_UPDATED);
+
                     refreshLastPlayedSongs();
                     refreshSongList();
-                    refreshCurrentSong(response);
                 }
 
                 @Override

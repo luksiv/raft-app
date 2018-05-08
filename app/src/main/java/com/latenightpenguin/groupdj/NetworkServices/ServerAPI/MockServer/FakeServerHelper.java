@@ -79,7 +79,7 @@ public class FakeServerHelper implements IServerHelper {
     }
 
     @Override
-    public void disconnectFromRoom(String user, IRequestCallback callback) {
+    public void disconnectFromRoom(int room, String user, IRequestCallback callback) {
         if(user != null && !user.equals("")){
             if(!user.equals(mUser)){
                 callback.onError(404,"user does not exist");
