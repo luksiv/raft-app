@@ -632,23 +632,31 @@ public class HostActivity extends AppCompatActivity implements
                     @Override
                     public void run() {
                         for(int i = 0; i < changes.length; i++){
-                            if(changes[i].equals(RoomService.PAST_SONGS_UPDATED)){
-                                ArrayList<String> pastSongs = mRoomService.getPastSongs();
-                                Toast.makeText(getApplicationContext(), "Got past songs from server", Toast.LENGTH_SHORT).show();
-                            } else if (changes[i].equals(RoomService.PLAYTIME_UPDATED)){
-                                long playTime = mRoomService.getPlayTime();
-                                ErrorHandler.handleMessegeWithToast(Long.toString(playTime));
-                            } else if (changes[i].equals(RoomService.ROOM_UPDATED)){
-                                if(loginInfo == null){
-                                    Log.w(TAG, "loginInfo is null");
-                                }
-                                loginInfo.setText(Long.toString(mRoomService.getRoom().getLoginCode()));
-                            } else if (changes[i].equals(RoomService.SONG_LIST_UPDATED)){
-                                updatePlaylistView(mRoomService.getSongs());
-                            } else if (changes[i].equals(RoomService.SONG_UPDATED)){
-                                Log.w(TAG, "Current song updated notification not handled. Remove it or change it");
-                            } else if (changes[i].equals(RoomService.STATUS_UPDATED)){
-                                Log.w(TAG, "Playing status changed notification not handled. Remove it or change it");
+                            switch (changes[i])
+                            {
+                                case RoomService.PAST_SONGS_UPDATED:
+                                    ArrayList<String> pastSongs = mRoomService.getPastSongs();
+                                    Toast.makeText(getApplicationContext(), "Got past songs from server", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case RoomService.PLAYTIME_UPDATED:
+                                    long playTime = mRoomService.getPlayTime();
+                                    ErrorHandler.handleMessegeWithToast(Long.toString(playTime));
+                                    break;
+                                case RoomService.ROOM_UPDATED:
+                                    if(loginInfo == null){
+                                        Log.w(TAG, "loginInfo is null");
+                                    }
+                                    loginInfo.setText(Long.toString(mRoomService.getRoom().getLoginCode()));
+                                    break;
+                                case RoomService.SONG_LIST_UPDATED:
+                                    updatePlaylistView(mRoomService.getSongs());
+                                    break;
+                                case RoomService.SONG_UPDATED:
+                                    Log.w(TAG, "Current song updated notification not handled. Remove it or change it");
+                                    break;
+                                case RoomService.STATUS_UPDATED:
+                                    Log.w(TAG, "Playing status changed notification not handled. Remove it or change it");
+                                    break;
                             }
                         }
                     }
