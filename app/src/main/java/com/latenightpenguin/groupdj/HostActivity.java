@@ -111,7 +111,7 @@ public class HostActivity extends AppCompatActivity implements
     private Button btnToggleViews;
     private Button btnRefreshPlaylist;
     private ListView lwPlaylist;
-    private TextView loginInfo;
+    private TextView txLoginCode;
     //endregiongit
 
     @Override
@@ -137,7 +137,7 @@ public class HostActivity extends AppCompatActivity implements
 
     //region Methods that onCreate uses
     private void setUpElements() {
-        loginInfo = findViewById(R.id.tv_RoomId);
+        txLoginCode = findViewById(R.id.tv_RoomId);
         btnAdd = findViewById(R.id.btn_AddSong);
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -514,13 +514,11 @@ public class HostActivity extends AppCompatActivity implements
         updateTextView(R.id.tv_trackTime,
                 Utilities.formatSeconds(mPlayer.getPlaybackState().positionMs));
 
-
         if (procentageDone >= 90 && !requestUsed) {
             String currentUri = mPlayer.getMetadata().currentTrack.uri;
             if (TracksRepository.isNOTLastAdded(currentUri)) {
                 TracksRepository.addToLastPlayed(currentUri);
                 generatePlaylist();
-
             }
         }
         if (procentageDone >= 99 && !requestUsed) {
@@ -643,10 +641,7 @@ public class HostActivity extends AppCompatActivity implements
                                     ErrorHandler.handleMessegeWithToast(Long.toString(playTime));
                                     break;
                                 case RoomService.ROOM_UPDATED:
-                                    if(loginInfo == null){
-                                        Log.w(TAG, "loginInfo is null");
-                                    }
-                                    loginInfo.setText(Long.toString(mRoomService.getRoom().getLoginCode()));
+                                    txLoginCode.setText(Long.toString(mRoomService.getRoom().getLoginCode()));
                                     break;
                                 case RoomService.SONG_LIST_UPDATED:
                                     updatePlaylistView(mRoomService.getSongs());

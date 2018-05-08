@@ -26,6 +26,7 @@ import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSocketStatus;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets.IWebSocketCallback;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrappedSpotifyCallback;
+import com.latenightpenguin.groupdj.Services.RoomService;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -56,19 +57,15 @@ public class ClientActivity extends AppCompatActivity {
     //region Fields
     private String mAccessToken;
     private User mUser;
-    private RoomInfo mRoom;
-    private ArrayList<String> mSongs;
-    private OkHttpClient mOkHttpClient = new OkHttpClient();
-    private Call mCall;
     private PlaylistArrayAdapter mPlaylistAdapter;
     private SpotifyData mSpotifyData;
-    private IServerHelper mServerHelper;
+    private RoomService mRoomService;
     private Handler mHandler = new Handler();
     private long positionMs;
     private long durationMs;
     private boolean isPlaying = false;
     private boolean isSeekbarUpdaterRunning = false;
-    private Boolean voted = false;
+    private int logincode;
     //endregion
 
     //region UI elements
@@ -79,6 +76,7 @@ public class ClientActivity extends AppCompatActivity {
     private Button btnRefreshPlaylist;
     private ListView lwPlaylist;
     private SeekBar sbProgress;
+    private TextView tvLoginCode;
 
     //endregion
 
@@ -90,10 +88,10 @@ public class ClientActivity extends AppCompatActivity {
         ErrorHandler.setView(findViewById(R.id.root_clientactivity));
         setContentView(R.layout.activity_client);
 
-        mServerHelper = ServerFactory.make(getResources().getString(R.string.url));
-        setUpWebSocketCallbacks();
-        mRoom = new RoomInfo();
-        mRoom.setLoginCode(getIntent().getIntExtra("roomId", -1));
+        IServerHelper serverHelper = ServerFactory.make(getResources().getString(R.string.url));
+        mRoomService = new RoomService(this, serverHelper);
+        setUpRoomChangeHandler();
+        logincode = getIntent().getIntExtra("roomId", -1);
 
         authentication();
         setUpElements();
@@ -103,14 +101,12 @@ public class ClientActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if (mServerHelper != null && mServerHelper.getWebSocketStatus() == WebSocketStatus.DISCONNECTED) {
-            mServerHelper.connectWebSocket();
-            mServerHelper.setRoomUpdates(mRoom.getId());
-        }
+        mRoomService.ensureWebSocketIsConnected();
     }
 
     //region Methods that onCreate uses
     private void setUpElements() {
+        tvLoginCode = findViewById(R.id.tv_RoomId);
         btnAdd = findViewById(R.id.btn_AddSong);
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -126,21 +122,7 @@ public class ClientActivity extends AppCompatActivity {
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!voted) {
-                    IRequestCallback callback = new IRequestCallback() {
-                        @Override
-                        public void onSuccess(String response) {
-                            Toast.makeText(ClientActivity.this, "You voted", Toast.LENGTH_SHORT).show();
-                        }
-
-                        @Override
-                        public void onError(int code, String message) {
-                            Log.w(TAG, "Error handling for voting is not implemented");
-                        }
-                    };
-                    mServerHelper.voteSkipSong(mRoom, callback);
-                    voted = true;
-                }
+                mRoomService.voteSkipSong();
             }
         });
 
@@ -163,47 +145,13 @@ public class ClientActivity extends AppCompatActivity {
         btnRefreshPlaylist.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                updatePlaylist();
-                IRequestCallback callback = new IRequestCallback() {
-                    @Override
-                    public void onSuccess(String response) {
-                        Log.d("CSong", response);
-                        String song = SongConverter.getSongId(response);
-                        Log.d("CSong", song);
-                    }
+                mRoomService.refreshSongList();
+                mRoomService.refreshCurrentSong();
+                mRoomService.refreshLastPlayedSongs();
+                mRoomService.refreshSongList();
 
-                    @Override
-                    public void onError(int code, String response) {
-                        Log.w(TAG, "Error handling not used in refresh button");
-                    }
-                };
-                mServerHelper.getCurrentSong(mRoom, callback);
-                IRequestCallback callback1 = new IRequestCallback() {
-                    @Override
-                    public void onSuccess(String response) {
-                        Log.d("CLast", response);
-                    }
-
-                    @Override
-                    public void onError(int code, String message) {
-                        Log.w(TAG, "Error handling not used in current song");
-                    }
-                };
-                mServerHelper.getLastPlayedSongs(mRoom, 5, callback1);
-                IRequestCallback callback2 = new IRequestCallback() {
-                    @Override
-                    public void onSuccess(String response) {
-                        Log.d("CLeft", response);
-                    }
-
-                    @Override
-                    public void onError(int code, String message) {
-                        Log.w(TAG, "Error handling not used in current song");
-                    }
-                };
-                mServerHelper.getLeftSongCount(mRoom, callback2);
-
-                ServerFactory.AdditionalCallbacks callbacks = ServerFactory.getAdditionalCallbacks(mServerHelper);
+                IServerHelper serverHelper = mRoomService.getServerHelper();
+                ServerFactory.AdditionalCallbacks callbacks = ServerFactory.getAdditionalCallbacks(serverHelper);
                 if(callbacks != null) {
                     callbacks.add();
                     callbacks.next();
@@ -225,8 +173,6 @@ public class ClientActivity extends AppCompatActivity {
         lwPlaylist = findViewById(R.id.lw_playlist);
         mPlaylistAdapter = new PlaylistArrayAdapter(this, new ArrayList<SongItem>());
         lwPlaylist.setAdapter(mPlaylistAdapter);
-
-
     }
 
     private void authentication() {
@@ -258,28 +204,14 @@ public class ClientActivity extends AppCompatActivity {
         if (requestCode == 333) {
             if (resultCode == AddSongActivity.RESULT_OK) {
                 String songId = intent.getStringExtra("uri");
-
-                IRequestCallback addSongCallback = new IRequestCallback() {
-                    @Override
-                    public void onSuccess(String response) {
-                        //Toast.makeText(ClientActivity.this, "Song added", Toast.LENGTH_SHORT).show();
-                        ErrorHandler.handleMessegeWithToast("Song added");
-                        updatePlaylist();
-                    }
-
-                    @Override
-                    public void onError(int code, String message) {
-                        Log.w(TAG, "Error handling not used in current song");
-                    }
-                };
-                mServerHelper.addSong(mRoom, songId, addSongCallback);
+                mRoomService.addSong(songId);
             }
         }
     }
 
     @Override
     protected void onDestroy() {
-        mServerHelper.closeWebSocket();
+        mRoomService.disconnect(mUser.getEmail());
         super.onDestroy();
     }
 
@@ -289,7 +221,7 @@ public class ClientActivity extends AppCompatActivity {
             public void success(UserPrivate userPrivate, retrofit.client.Response response) {
                 mUser = new User(userPrivate.id, userPrivate.display_name,
                         userPrivate.email, userPrivate.country);
-                connectToRoom();
+                mRoomService.connectToRoom(mUser.getEmail(), logincode);
             }
         });
     }
@@ -344,7 +276,7 @@ public class ClientActivity extends AppCompatActivity {
             }
         });
     }
-
+/*
     private void updatePlaylist() {
         IRequestCallback getSongsCallback = new IRequestCallback() {
             @Override
@@ -363,10 +295,10 @@ public class ClientActivity extends AppCompatActivity {
             }
         };
         mServerHelper.getSongs(mRoom, getSongsCallback);
-    }
+    }*/
 
-    private void updatePlaylistView() {
-        mSpotifyData.getTracks(mSongs, new WrappedSpotifyCallback<Tracks>() {
+    private void updatePlaylistView(ArrayList<String> songs) {
+        mSpotifyData.getTracks(songs, new WrappedSpotifyCallback<Tracks>() {
             @Override
             public void success(Tracks tracks, retrofit.client.Response response) {
 
@@ -430,76 +362,16 @@ public class ClientActivity extends AppCompatActivity {
 
     }
 
-    private void connectToRoom() {
-        final TextView status = findViewById(R.id.tv_RoomId);
-        IRequestCallback callback = new IRequestCallback() {
-
-            @Override
-            public void onSuccess(String response) {
-                IRequestCallback insideCallback = new IRequestCallback() {
-                    @Override
-                    public void onSuccess(String response) {
-                        if (response != null) {
-                            try {
-                                JSONObject roomInfo = new JSONObject(response.toString());
-                                int roomId = roomInfo.getInt("id");
-                                int loginCode = roomInfo.getInt("logincode");
-
-                                mRoom.setId(roomId);
-                                mRoom.setLoginCode(loginCode);
-                                mServerHelper.setRoomUpdates(roomId);
-
-                                getCurrentSong();
-
-                                status.setText("Login code is " + String.valueOf(mRoom.getLoginCode()));
-                            } catch (JSONException e) {
-                                status.setText("Not connected");
-                                ErrorHandler.handleExeptionWithSnackbar(e, "Not connected");
-                                //e.printStackTrace();
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onError(int code, String message) {
-                        Log.w(TAG, "Error handling not used in update playlist");
-                    }
-                };
-                mServerHelper.connectToRoom(mUser.getEmail(), mRoom.getLoginCode(), insideCallback);
-            }
-
-            @Override
-            public void onError(int code, String message) {
-                Log.w(TAG, "Error handling not used in connect to room");
-            }
-        };
-        mServerHelper.registerUser(mUser.getEmail(), callback);
-    }
-
     private void getCurrentSong() {
         try {
-            IRequestCallback currentSongCallback = new IRequestCallback() {
+            mRoomService.refreshCurrentSong();
+            /*IRequestCallback currentSongCallback = new IRequestCallback() {
                 @Override
                 public void onSuccess(String response) {
                     if (response.length() > 0) {
                         final String songId = SongConverter.getSongId(response);
                         Log.d(TAG, songId);
-                        mSpotifyData.getTrack(songId.split(":")[2], new WrappedSpotifyCallback<Track>() {
-                            @Override
-                            public void success(Track track, retrofit.client.Response response) {
-                                updatePlayerView(track);
-                                if (!isSeekbarUpdaterRunning) {
-                                    isSeekbarUpdaterRunning = true;
-                                    seekUpdation();
-                                }
-                            }
 
-                            @Override
-                            public void failure(SpotifyError spotifyError) {
-                                // Log.d(TAG, "next track name: failed");
-                                ErrorHandler.handleExeptionWithToast(spotifyError, "Failure");
-                            }
-                        });
 
                     }
                 }
@@ -509,58 +381,14 @@ public class ClientActivity extends AppCompatActivity {
                     Log.w(TAG, "Error handling not implemented");
                 }
             };
-            mServerHelper.getCurrentSong(mRoom, currentSongCallback);
+            mServerHelper.getCurrentSong(mRoom, currentSongCallback);*/
         } catch (Exception e){
             ErrorHandler.handleExeption(e);
             //Log.d(TAG, "getCurrentSong: " + e.getMessage());
         }
     }
 
-    private void setUpWebSocketCallbacks() {
-        IWebSocketCallback playingNext = new IWebSocketCallback() {
-            @Override
-            public void execute(String response) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(ClientActivity.this, "Next Song is played", Toast.LENGTH_SHORT).show();
-                        updatePlaylist();
-
-                        IRequestCallback currentSongCallback = new IRequestCallback() {
-                            @Override
-                            public void onSuccess(String response) {
-                                final String songId = SongConverter.getSongId(response);
-                                Log.d(TAG, songId);
-                                mSpotifyData.getTrack(songId.split(":")[2], new WrappedSpotifyCallback<Track>() {
-                                    @Override
-                                    public void success(Track track, retrofit.client.Response response) {
-                                        updatePlayerView(track);
-                                        if (!isSeekbarUpdaterRunning) {
-                                            isSeekbarUpdaterRunning = true;
-                                            seekUpdation();
-                                        }
-                                    }
-
-                                    @Override
-                                    public void failure(SpotifyError spotifyError) {
-                                        // Log.d(TAG, "next track name: failed");
-                                        ErrorHandler.handleExeptionWithToast(spotifyError, "Failure");
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void onError(int code, String message) {
-                                Log.w(TAG, "Error handling not implemented in callback");
-                            }
-                        };
-
-                        mServerHelper.getCurrentSong(mRoom, currentSongCallback);
-                    }
-                });
-            }
-        };
-
+    /*private void setUpWebSocketCallbacks() {
         IWebSocketCallback songAdded = new IWebSocketCallback() {
             @Override
             public void execute(String response) {
@@ -643,25 +471,61 @@ public class ClientActivity extends AppCompatActivity {
                 });
             }
         };
+    }*/
 
-        IWebSocketCallback skipCallback = new IWebSocketCallback() {
+    private void setUpRoomChangeHandler(){
+        mRoomService.subscribe(new RoomService.OnChangeSubscriber() {
             @Override
-            public void execute(final String response) {
+            public void callback(final String[] changes) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        //Toast.makeText(HostActivity.this, "play time: " + response, Toast.LENGTH_SHORT).show();
-                        ErrorHandler.handleMessegeWithToast("song skipped");
+                        for(int i = 0; i < changes.length; i++){
+                            switch (changes[i])
+                            {
+                                case RoomService.PAST_SONGS_UPDATED:
+                                    ArrayList<String> pastSongs = mRoomService.getPastSongs();
+                                    Toast.makeText(getApplicationContext(), "Got past songs from server", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case RoomService.PLAYTIME_UPDATED:
+                                    positionMs = mRoomService.getPlayTime();
+                                    ErrorHandler.handleMessegeWithToast(Long.toString(mRoomService.getPlayTime()));
+                                    break;
+                                case RoomService.ROOM_UPDATED:
+                                    tvLoginCode.setText(Long.toString(mRoomService.getRoom().getLoginCode()));
+                                    break;
+                                case RoomService.SONG_LIST_UPDATED:
+                                    updatePlaylistView(mRoomService.getSongs());
+                                    break;
+                                case RoomService.SONG_UPDATED:
+                                    Log.w(TAG, "Current song updated notification not handled. Remove it or change it");
+                                    String songId = mRoomService.getCurrent();
+                                    mSpotifyData.getTrack(songId.split(":")[2], new WrappedSpotifyCallback<Track>() {
+                                        @Override
+                                        public void success(Track track, retrofit.client.Response response) {
+                                            updatePlayerView(track);
+                                            if (!isSeekbarUpdaterRunning) {
+                                                isSeekbarUpdaterRunning = true;
+                                                seekUpdation();
+                                            }
+                                        }
 
+                                        @Override
+                                        public void failure(SpotifyError spotifyError) {
+                                            // Log.d(TAG, "next track name: failed");
+                                            ErrorHandler.handleExeptionWithToast(spotifyError, "Failure");
+                                        }
+                                    });
+                                    break;
+                                case RoomService.STATUS_UPDATED:
+                                    Log.w(TAG, "Playing status changed notification not handled. Remove it or change it");
+                                    isPlaying = mRoomService.getStatus() == RoomService.SongStatus.PLAYING ? true : false;
+                                    break;
+                            }
+                        }
                     }
                 });
             }
-        };
-
-        mServerHelper.setPlayingNextCallback(playingNext);
-        mServerHelper.setSongAddedCallback(songAdded);
-        mServerHelper.setSongPausedCallback(paused);
-        mServerHelper.setSongPlayTimeCallback(playTime);
-        mServerHelper.setSongSkippedCallback(skipCallback);
+        });
     }
 }
