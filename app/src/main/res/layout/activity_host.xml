@@ -18,31 +18,30 @@
         <Button
             android:id="@+id/btn_roomInfo"
             android:layout_width="51dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_height="51dp"
             android:background="@drawable/ic_information_outline_white_48dp" />
 
         <Button
             android:id="@+id/btn_toggleView"
-            android:layout_width="65dp"
-            android:layout_height="match_parent"
+            android:layout_width="51dp"
+            android:layout_height="51dp"
             android:background="@drawable/ic_view_list_white_48dp" />
 
         <Space
-            android:layout_width="143dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1" />
 
         <Button
             android:id="@+id/btn_AddSong"
-            android:layout_width="65dp"
-            android:layout_height="match_parent"
+            android:layout_width="51dp"
+            android:layout_height="51dp"
             android:background="@drawable/ic_magnify_white_48dp" />
 
         <Button
             android:id="@+id/btn_roomSettings"
-            android:layout_width="63dp"
-            android:layout_height="match_parent"
+            android:layout_width="51dp"
+            android:layout_height="51dp"
             android:background="@drawable/ic_settings_white_48dp" />
     </LinearLayout>
 

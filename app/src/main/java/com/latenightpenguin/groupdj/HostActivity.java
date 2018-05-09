@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -594,6 +595,7 @@ public class HostActivity extends AppCompatActivity implements
         mBuilder.setView(mView);
         final AlertDialog dialog = mBuilder.create();
         dialog.show();
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
         Button btn_low = (Button) mView.findViewById(R.id.btn_lowBitrate);
         btn_low.setText(bitratesValues[0]);
         btn_low.setOnClickListener(new View.OnClickListener() {
