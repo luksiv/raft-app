@@ -34,6 +34,8 @@ public class ServerListener extends WebSocketListener {
 
     @Override
     public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+        t.printStackTrace();
+        String exception = t.getMessage();
         Log.d("WebSocket", "Error connecting to server " + response);
         errorHandler.handle("failed");
         //throw new Exception("Can't connect to server");

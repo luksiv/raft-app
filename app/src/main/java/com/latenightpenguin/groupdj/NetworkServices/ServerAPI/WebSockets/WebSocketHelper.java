@@ -1,5 +1,7 @@
 package com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets;
 
+import android.util.Log;
+
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSocketStatus;
 
 import okhttp3.OkHttpClient;
@@ -7,6 +9,7 @@ import okhttp3.Request;
 import okhttp3.WebSocket;
 
 public class WebSocketHelper {
+    private static final String TAG = "WebSocketHelper";
     private String serverURL;
     private OkHttpClient client;
     private WebSocket websocket;
@@ -88,36 +91,56 @@ public class WebSocketHelper {
     private ServerListener.MessageHandler messageHandler = new ServerListener.MessageHandler() {
         @Override
         public void handle(String message) {
+            Log.d(TAG, "Recieved message from websocket");
+            Log.d(TAG, message);
             switch (message) {
                 case "song added":
                     if (songAddedCallback != null) {
+                        Log.d(TAG, "calling songAddedCallback");
                         songAddedCallback.execute("");
+                    } else {
+                        Log.d(TAG, "songAddedCallback is null");
                     }
                     break;
                 case "next song":
                     if (playingNextCallback != null) {
+                        Log.d(TAG, "calling playingNextCallback");
                         playingNextCallback.execute("");
+                    } else {
+                        Log.d(TAG, "playingNextCallback is null");
                     }
                     break;
                 case "skip":
                     if(songSkippedCallback != null){
+                        Log.d(TAG, "calling songSkippedCallback");
                         songSkippedCallback.execute("");
+                    } else {
+                        Log.d(TAG, "songSkippedCallback is null");
                     }
                     break;
                 default:
                     if(message.startsWith("play")){
                         String[] fields = message.split(":");
                         if (songPlayTimeCallback != null) {
+                            Log.d(TAG, "calling songPlayTimeCallback " + fields[1] );
                             songPlayTimeCallback.execute(fields[1]);
+                        } else {
+                            Log.d(TAG, "songPlayTimeCallback is null");
                         }
                     } else if(message.startsWith("paused")){
                         String[] fields = message.split(":");
                         if (songPausedCallback != null) {
+                            Log.d(TAG, "calling songPausedCallback");
                             songPausedCallback.execute(fields[1]);
+                        } else {
+                            Log.d(TAG, "songPausedCallback is null");
                         }
                     } else {
                         if(connectedToRoomCallback != null){
+                            Log.d(TAG, "calling connectedToRoomCallback");
                             connectedToRoomCallback.execute(message);
+                        } else {
+                            Log.d(TAG, "connectedToRoomCallback is null");
                         }
                     }
                     break;
