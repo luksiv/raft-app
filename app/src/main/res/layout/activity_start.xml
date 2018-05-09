@@ -2,19 +2,23 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_startactivity"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".StartActivity"
-    android:id="@+id/root_startactivity">
+    android:background="@drawable/ic_gradiant_black_to_grey">
 
     <EditText
         android:id="@+id/et_RoomId"
         android:layout_width="128dp"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
         android:layout_marginTop="180dp"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/ic_edit_text_background"
         android:hint="Enter Room ID"
-        android:inputType="number"/>
+        android:inputType="number"
+        android:textAlignment="center"
+        android:textColorHint="@color/colorWhite" />
 
     <Button
         android:id="@+id/btn_JoinRoom"
@@ -22,23 +26,26 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/et_RoomId"
         android:layout_centerHorizontal="true"
+        android:background="@drawable/ic_button_background"
         android:text="Join" />
 
     <Button
         android:id="@+id/btn_HostRoom"
         android:layout_width="128dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
         android:layout_below="@id/btn_JoinRoom"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="64dp"
+        android:background="@drawable/ic_button_background"
         android:text="Host" />
 
     <Button
         android:id="@+id/btn_LogOut"
-        android:layout_width="wrap_content"
+        android:layout_width="176dp"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
+        android:background="@drawable/ic_button_background"
         android:text="Log Out &amp; Exit App" />
 
 </RelativeLayout>

@@ -356,12 +356,14 @@ public class HostActivity extends AppCompatActivity implements
         //Log.d(TAG, "Metadata: " + mMetadata.toString());
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyPlay) {
             mRoomService.announcePlayTime(mCurrentPlaybackState.positionMs);
-            btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_media_pause));
+            btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_circle_white_48dp));
+            btnPause.setBackground(getResources().getDrawable(R.drawable.ic_pause_circle_white_48dp));
             seekUpdation();
         }
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyPause) {
             mRoomService.announcePause(mCurrentPlaybackState.positionMs);
-            btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_media_play));
+            btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_circle_white_48dp));
+            btnPause.setBackground(getResources().getDrawable(R.drawable.ic_play_circle_white_48dp));
         }
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged) {
 
@@ -575,11 +577,11 @@ public class HostActivity extends AppCompatActivity implements
         if (player.getVisibility() == View.VISIBLE) {
             player.setVisibility(View.INVISIBLE);
             playlist.setVisibility(View.VISIBLE);
-            button.setText("Show player");
+            //button.setText("Show player");
         } else {
             player.setVisibility(View.VISIBLE);
             playlist.setVisibility(View.INVISIBLE);
-            button.setText("Show playlist");
+            //button.setText("Show playlist");
         }
 
     }

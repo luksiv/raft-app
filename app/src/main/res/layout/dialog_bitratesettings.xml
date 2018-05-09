@@ -2,7 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="5dp">
+    android:padding="5dp"
+    android:background="@color/colorDarkGrey">
 
     <TextView
         android:id="@+id/tv_bitrateText"
@@ -11,23 +12,33 @@
         android:layout_gravity="center"
         android:text="Choose Bit Rate"
         android:textSize="25sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:textColor="@color/colorWhite"/>
 
     <Button
         android:id="@+id/btn_lowBitrate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:background="@drawable/ic_button_background"
         android:text="BITRATE LOW" />
 
     <Button
         android:id="@+id/btn_normalBitrate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:background="@drawable/ic_button_background"
         android:text="BITRATE NORMAL" />
 
     <Button
         android:id="@+id/btn_highBitrate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:background="@drawable/ic_button_background"
         android:text="BITRATE HIGH" />
 </LinearLayout>

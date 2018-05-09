@@ -5,44 +5,45 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ClientActivity"
-    android:id="@+id/root_clientactivity">
+    android:id="@+id/root_clientactivity"
+    android:background="@drawable/ic_gradiant_black_to_grey">
 
     <!-- top bar -->
     <LinearLayout
         android:id="@+id/root_topBar"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:orientation="horizontal"
-        android:background="@android:color/black">
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/btn_roomInfo"
-            android:layout_width="wrap_content"
+            android:layout_width="80dp"
             android:layout_height="match_parent"
-            android:text="Info"
-            android:textSize="12sp"
-            android:layout_weight="1"/>
+            android:layout_weight="1"
+            android:background="@drawable/ic_information_outline_white_36dp"/>
 
         <Button
             android:id="@+id/btn_toggleView"
-            android:layout_width="wrap_content"
+            android:layout_width="55dp"
             android:layout_height="match_parent"
-            android:text="Show playlist"
-            android:textSize="12sp" />
+            android:background="@drawable/ic_view_list_white_36dp" />
+
+        <Space
+            android:layout_width="200dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
 
         <Button
             android:id="@+id/btn_AddSong"
-            android:layout_width="wrap_content"
+            android:layout_width="55dp"
             android:layout_height="match_parent"
-            android:text="Add song"
-            android:textSize="12sp" />
+            android:background="@drawable/ic_magnify_white_36dp"  />
 
         <Button
             android:id="@+id/btn_roomSettings"
-            android:layout_width="wrap_content"
+            android:layout_width="62dp"
             android:layout_height="match_parent"
-            android:text="Settings"
-            android:textSize="12sp" />
+            android:background="@drawable/ic_settings_white_36dp"  />
     </LinearLayout>
 
     <!-- player -->

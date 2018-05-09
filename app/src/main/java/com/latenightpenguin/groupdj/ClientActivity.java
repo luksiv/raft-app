@@ -353,11 +353,11 @@ public class ClientActivity extends AppCompatActivity {
         if (player.getVisibility() == View.VISIBLE) {
             player.setVisibility(View.INVISIBLE);
             playlist.setVisibility(View.VISIBLE);
-            button.setText("Show player");
+            //button.setText("Show player");
         } else {
             player.setVisibility(View.VISIBLE);
             playlist.setVisibility(View.INVISIBLE);
-            button.setText("Show playlist");
+            //button.setText("Show playlist");
         }
 
     }
