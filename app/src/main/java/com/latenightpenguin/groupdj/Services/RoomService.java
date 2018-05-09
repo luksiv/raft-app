@@ -167,6 +167,8 @@ public class RoomService {
                     @Override
                     public void onSuccess(String response) {
                         parseRoomInfo(response);
+                        mServerHelper.connectWebSocket();
+                        mServerHelper.setRoomUpdates(mRoom.getId());
                     }
 
                     @Override
@@ -191,6 +193,8 @@ public class RoomService {
                     @Override
                     public void onSuccess(String response) {
                         parseRoomInfo(response);
+                        mServerHelper.connectWebSocket();
+                        mServerHelper.setRoomUpdates(mRoom.getId());
                     }
 
                     @Override

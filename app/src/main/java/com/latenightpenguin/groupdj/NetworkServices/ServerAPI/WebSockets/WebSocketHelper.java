@@ -24,6 +24,7 @@ public class WebSocketHelper {
     }
 
     public void connectWebSocket() {
+        client = new OkHttpClient();
         Request request = new Request.Builder().url(serverURL).build();
         ServerListener serverListener = new ServerListener();
         serverListener.setMessageHandler(messageHandler);

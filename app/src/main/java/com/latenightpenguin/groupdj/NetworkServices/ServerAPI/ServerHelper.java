@@ -26,7 +26,7 @@ public class ServerHelper implements IServerHelper{
 
     public ServerHelper(String url) {
         requestsHelper = new RequestsHelper("http://" + url);
-        webSocketHelper = new WebSocketHelper("ws://" + url);
+        webSocketHelper = new WebSocketHelper("ws://" + url + "realtime");
     }
 
     //region WebSockets
