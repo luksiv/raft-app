@@ -39,6 +39,8 @@ public class RoomService {
     private int lastPlayedCount;
     private boolean isHost;
 
+    public boolean connected = false;
+
     public RoomService(Context context, IServerHelper serverHelper){
         mServerHelper = serverHelper;
         mContext = context;
@@ -200,6 +202,7 @@ public class RoomService {
                         mServerHelper.connectWebSocket();
                         mServerHelper.setRoomUpdates(mRoom.getId());
                         isHost = false;
+                        connected = true;
                     }
 
                     @Override

@@ -36,7 +36,6 @@
             android:theme="@style/AppTheme"/>
         <activity
             android:name="com.spotify.sdk.android.authentication.LoginActivity"
-            android:screenOrientation="portrait"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity android:name=".CrashActivity"
             android:theme="@style/AppTheme"></activity>

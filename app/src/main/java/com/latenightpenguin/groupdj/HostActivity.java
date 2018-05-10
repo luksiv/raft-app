@@ -100,6 +100,8 @@ public class HostActivity extends AppCompatActivity implements
 
     private Boolean requestUsed = false;
     private Boolean firstRun = true;
+
+    private int updateCount = 0;
     //endregion
 
     //region UI elements
@@ -202,7 +204,7 @@ public class HostActivity extends AppCompatActivity implements
                 mRoomService.refreshLastPlayedSongs();
                 IServerHelper serverHelper = mRoomService.getServerHelper();
                 ServerFactory.AdditionalCallbacks callbacks = ServerFactory.getAdditionalCallbacks(serverHelper);
-                if(callbacks != null) {
+                if (callbacks != null) {
                     callbacks.add();
                     callbacks.next();
                     callbacks.vote();
@@ -268,7 +270,7 @@ public class HostActivity extends AppCompatActivity implements
             public void onReceive(Context context, Intent intent) {
                 if (mPlayer != null) {
                     Connectivity connectivity = getNetworkConnectivity(getBaseContext());
-                   // Log.i(TAG, "Network state changed: " + connectivity.toString());
+                    // Log.i(TAG, "Network state changed: " + connectivity.toString());
                     ErrorHandler.handleMessege("Network state changed: " + connectivity.toString());
                     mPlayer.setConnectivityStatus(mOperationCallback, connectivity);
                 }
@@ -328,8 +330,8 @@ public class HostActivity extends AppCompatActivity implements
 
                     @Override
                     public void onError(Throwable throwable) {
-                    //    Toast.makeText(HostActivity.super.getApplicationContext(), "Could not initialize player", Toast.LENGTH_LONG).show();
-                    //    Log.e(TAG, "Could not initialize player: " + throwable.getMessage());
+                        //    Toast.makeText(HostActivity.super.getApplicationContext(), "Could not initialize player", Toast.LENGTH_LONG).show();
+                        //    Log.e(TAG, "Could not initialize player: " + throwable.getMessage());
                         ErrorHandler.handleExeptionWithSnackbar(new Exception(throwable), "Could not initialize player");
                     }
                 });
@@ -355,21 +357,21 @@ public class HostActivity extends AppCompatActivity implements
         mMetadata = mPlayer.getMetadata();
         //Log.d(TAG, "Playback State: " + mCurrentPlaybackState.toString());
         //Log.d(TAG, "Metadata: " + mMetadata.toString());
-        if (playerEvent == PlayerEvent.kSpPlaybackNotifyPlay) {
+        if(playerEvent == PlayerEvent.kSpPlaybackNotifyPlay) {
             mRoomService.announcePlayTime(mCurrentPlaybackState.positionMs);
             btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_circle_white_48dp));
             btnPause.setBackground(getResources().getDrawable(R.drawable.ic_pause_circle_white_48dp));
             seekUpdation();
         }
-        if (playerEvent == PlayerEvent.kSpPlaybackNotifyPause) {
+        if(playerEvent == PlayerEvent.kSpPlaybackNotifyPause) {
             mRoomService.announcePause(mCurrentPlaybackState.positionMs);
             btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_circle_white_48dp));
             btnPause.setBackground(getResources().getDrawable(R.drawable.ic_play_circle_white_48dp));
         }
-        if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged) {
+        if(playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged) {
 
         }
-        if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackDelivered) {
+        if(playerEvent == PlayerEvent.kSpPlaybackNotifyTrackDelivered) {
 
         }
         updatePlayerView();
@@ -400,7 +402,7 @@ public class HostActivity extends AppCompatActivity implements
 
     @Override
     public void onLoggedOut() {
-       // Toast.makeText(this, "User logged out", Toast.LENGTH_LONG).show();
+        // Toast.makeText(this, "User logged out", Toast.LENGTH_LONG).show();
         //Log.d(TAG, "User logged out");
         ErrorHandler.handleMessegeWithToast("User logged out");
         finish();
@@ -531,6 +533,12 @@ public class HostActivity extends AppCompatActivity implements
             mRoomService.playNextSong(null);
             requestUsed = true;
         }
+        if (updateCount >= 5 && mCurrentPlaybackState.isPlaying) {
+            mRoomService.announcePlayTime(mPlayer.getPlaybackState().positionMs);
+            updateCount = 0;
+        } else {
+            updateCount++;
+        }
         mHandler.postDelayed(run, 1000);
 
     }
@@ -564,7 +572,7 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void success(Recommendations recommendations, retrofit.client.Response response) {
                 super.success(recommendations, response);
-               // Toast.makeText(HostActivity.this, "Generated track", Toast.LENGTH_SHORT).show();
+                // Toast.makeText(HostActivity.this, "Generated track", Toast.LENGTH_SHORT).show();
                 TracksRepository.addToGeneratedTracks(SpotifyData.ConvertRecomendedTracks(recommendations).get(0).getUri());
             }
         });
@@ -602,7 +610,7 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[0]);
-               // Toast.makeText(HostActivity.this, "Bit rate = " + bitratesValues[0], Toast.LENGTH_SHORT).show();
+                // Toast.makeText(HostActivity.this, "Bit rate = " + bitratesValues[0], Toast.LENGTH_SHORT).show();
                 ErrorHandler.handleMessegeWithToast("Bit rate = " + bitratesValues[0]);
                 dialog.dismiss();
             }
@@ -647,16 +655,15 @@ public class HostActivity extends AppCompatActivity implements
         dialog.show();
     }
 
-    private void setUpRoomChangeHandler(){
+    private void setUpRoomChangeHandler() {
         mRoomService.subscribe(new RoomService.OnChangeSubscriber() {
             @Override
             public void callback(final String[] changes) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        for(int i = 0; i < changes.length; i++){
-                            switch (changes[i])
-                            {
+                        for (int i = 0; i < changes.length; i++) {
+                            switch (changes[i]) {
                                 case RoomService.PAST_SONGS_UPDATED:
                                     ArrayList<String> pastSongs = mRoomService.getPastSongs();
                                     Toast.makeText(getApplicationContext(), "Got past songs from server", Toast.LENGTH_SHORT).show();

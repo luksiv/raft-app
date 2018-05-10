@@ -13,17 +13,13 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests.IRequestCallback;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.IServerHelper;
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.RoomInfo;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ServerFactory;
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.SongConverter;
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSocketStatus;
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets.IWebSocketCallback;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrappedSpotifyCallback;
 import com.latenightpenguin.groupdj.Services.RoomService;
@@ -32,17 +28,12 @@ import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 import com.squareup.picasso.Picasso;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 
 import kaaes.spotify.webapi.android.SpotifyError;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
 import kaaes.spotify.webapi.android.models.UserPrivate;
-import okhttp3.Call;
-import okhttp3.OkHttpClient;
 
 
 public class ClientActivity extends AppCompatActivity {
@@ -66,6 +57,7 @@ public class ClientActivity extends AppCompatActivity {
     private boolean isPlaying = false;
     private boolean isSeekbarUpdaterRunning = false;
     private int logincode;
+    private boolean firstRun = true;
     //endregion
 
     //region UI elements
@@ -77,6 +69,8 @@ public class ClientActivity extends AppCompatActivity {
     private ListView lwPlaylist;
     private SeekBar sbProgress;
     private TextView tvLoginCode;
+    private LinearLayout llPlayer;
+    private Button btnSettings;
 
     //endregion
 
@@ -93,8 +87,10 @@ public class ClientActivity extends AppCompatActivity {
         setUpRoomChangeHandler();
         logincode = getIntent().getIntExtra("roomId", -1);
 
-        authentication();
         setUpElements();
+        authentication();
+        //setUpElements();
+
     }
 
     @Override
@@ -152,7 +148,7 @@ public class ClientActivity extends AppCompatActivity {
 
                 IServerHelper serverHelper = mRoomService.getServerHelper();
                 ServerFactory.AdditionalCallbacks callbacks = ServerFactory.getAdditionalCallbacks(serverHelper);
-                if(callbacks != null) {
+                if (callbacks != null) {
                     callbacks.add();
                     callbacks.next();
                     callbacks.vote();
@@ -173,6 +169,11 @@ public class ClientActivity extends AppCompatActivity {
         lwPlaylist = findViewById(R.id.lw_playlist);
         mPlaylistAdapter = new PlaylistArrayAdapter(this, new ArrayList<SongItem>());
         lwPlaylist.setAdapter(mPlaylistAdapter);
+
+        llPlayer = findViewById(R.id.root_player);
+        btnSettings = findViewById(R.id.btn_roomSettings);
+
+        setVisibilityForUiElements(View.INVISIBLE);
     }
 
     private void authentication() {
@@ -180,6 +181,19 @@ public class ClientActivity extends AppCompatActivity {
         builder.setScopes(new String[]{"user-read-email"});
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, AUTH_CODE, request);
+    }
+
+    private void setVisibilityForUiElements(int visibility) {
+        btnAdd.setVisibility(visibility);
+        btnNext.setVisibility(visibility);
+        btnInfo.setVisibility(visibility);
+        btnToggleViews.setVisibility(visibility);
+        btnRefreshPlaylist.setVisibility(visibility);
+        lwPlaylist.setVisibility(visibility);
+        sbProgress.setVisibility(visibility);
+        tvLoginCode.setVisibility(visibility);
+        llPlayer.setVisibility(visibility);
+        btnSettings.setVisibility(visibility);
     }
     //endregion
 
@@ -195,7 +209,7 @@ public class ClientActivity extends AppCompatActivity {
                 getUserInfo();
             }
             if (response.getType() == AuthenticationResponse.Type.ERROR) {
-            //    Log.e("Authentification", response.getError());
+                //    Log.e("Authentification", response.getError());
                 ErrorHandler.handleMessegeWithSnackbar(response.getError());
             }
         }
@@ -222,6 +236,7 @@ public class ClientActivity extends AppCompatActivity {
                 mUser = new User(userPrivate.id, userPrivate.display_name,
                         userPrivate.email, userPrivate.country);
                 mRoomService.connectToRoom(mUser.getEmail(), logincode);
+                Log.d(TAG, String.valueOf(mRoomService.connected));
             }
         });
     }
@@ -382,12 +397,13 @@ public class ClientActivity extends AppCompatActivity {
                 }
             };
             mServerHelper.getCurrentSong(mRoom, currentSongCallback);*/
-        } catch (Exception e){
+        } catch (Exception e) {
             ErrorHandler.handleExeption(e);
             //Log.d(TAG, "getCurrentSong: " + e.getMessage());
         }
     }
 
+    //TODO: remove if not necessary
     /*private void setUpWebSocketCallbacks() {
         IWebSocketCallback songAdded = new IWebSocketCallback() {
             @Override
@@ -473,19 +489,22 @@ public class ClientActivity extends AppCompatActivity {
         };
     }*/
 
-    private void setUpRoomChangeHandler(){
+    private void setUpRoomChangeHandler() {
         mRoomService.subscribe(new RoomService.OnChangeSubscriber() {
             @Override
             public void callback(final String[] changes) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        for(int i = 0; i < changes.length; i++){
-                            switch (changes[i])
-                            {
+                        for (int i = 0; i < changes.length; i++) {
+                            switch (changes[i]) {
                                 case RoomService.PAST_SONGS_UPDATED:
                                     ArrayList<String> pastSongs = mRoomService.getPastSongs();
                                     Toast.makeText(getApplicationContext(), "Got past songs from server", Toast.LENGTH_SHORT).show();
+                                    if (firstRun) {
+                                        setVisibilityForUiElements(View.VISIBLE);
+                                        firstRun = false;
+                                    }
                                     break;
                                 case RoomService.PLAYTIME_UPDATED:
                                     positionMs = mRoomService.getPlayTime();
