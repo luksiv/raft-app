@@ -231,7 +231,7 @@ public class RequestsHelper {
             @Override
             public void onFailure(Call call, IOException e) {
                 activeRequests--;
-                Log.d("ServerAPI", e.getMessage());
+                //Log.d("ServerAPI", e.getMessage());
                 callback.onError(-1, "Error connecting to internet");
             }
 

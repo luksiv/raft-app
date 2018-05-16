@@ -93,6 +93,13 @@
             android:background="@drawable/ic_skip_next_circle_white_48dp"
             android:cropToPadding="false"
             android:src="@drawable/ic_skip_next_circle_white_48dp" />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/test_seek_to_end"
+            android:text="seek to 96%"/>
     </LinearLayout>
+
+
 
 </LinearLayout>

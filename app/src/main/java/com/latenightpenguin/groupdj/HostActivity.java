@@ -100,6 +100,7 @@ public class HostActivity extends AppCompatActivity implements
 
     private Boolean requestUsed = false;
     private Boolean firstRun = true;
+    private Boolean queued = false;
 
     private int updateCount = 0;
     //endregion
@@ -115,7 +116,8 @@ public class HostActivity extends AppCompatActivity implements
     private Button btnRefreshPlaylist;
     private ListView lwPlaylist;
     private TextView txLoginCode;
-    //endregiongit
+    private Button testSkip;
+    //endregion
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -247,6 +249,16 @@ public class HostActivity extends AppCompatActivity implements
         lwPlaylist = findViewById(R.id.lw_playlist);
         mPlaylistAdapter = new PlaylistArrayAdapter(this, new ArrayList<SongItem>());
         lwPlaylist.setAdapter(mPlaylistAdapter);
+
+        testSkip = findViewById(R.id.test_seek_to_end);
+        testSkip.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                long dur = mPlayer.getMetadata().currentTrack.durationMs;
+                int skip = (int) ((double) dur / 100 * 96);
+                mPlayer.seekToPosition(mOperationCallback, skip);
+            }
+        });
     }
 
     private void authentication() {
@@ -357,6 +369,11 @@ public class HostActivity extends AppCompatActivity implements
         mMetadata = mPlayer.getMetadata();
         //Log.d(TAG, "Playback State: " + mCurrentPlaybackState.toString());
         //Log.d(TAG, "Metadata: " + mMetadata.toString());
+        if(queued){
+            if(mMetadata.nextTrack == null){
+                queued = false;
+            }
+        }
         if(playerEvent == PlayerEvent.kSpPlaybackNotifyPlay) {
             mRoomService.announcePlayTime(mCurrentPlaybackState.positionMs);
             btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_circle_white_48dp));
@@ -528,7 +545,7 @@ public class HostActivity extends AppCompatActivity implements
                 generatePlaylist();
             }
         }
-        if (procentageDone >= 99 && !requestUsed) {
+        if (procentageDone >= 97 && !requestUsed && !queued) {
             //queueNext();
             mRoomService.playNextSong(null);
             requestUsed = true;
@@ -559,9 +576,12 @@ public class HostActivity extends AppCompatActivity implements
 
             if (firstRun) {
                 mPlayer.playUri(mOperationCallback, songid, 0, 0);
+                mRoomService.refreshCurrentSong();
                 firstRun = false;
+                queued = true;
             } else {
                 mPlayer.queue(mOperationCallback, songid);
+                queued = true;
             }
             requestUsed = false;
         }
@@ -666,7 +686,7 @@ public class HostActivity extends AppCompatActivity implements
                             switch (changes[i]) {
                                 case RoomService.PAST_SONGS_UPDATED:
                                     ArrayList<String> pastSongs = mRoomService.getPastSongs();
-                                    Toast.makeText(getApplicationContext(), "Got past songs from server", Toast.LENGTH_SHORT).show();
+                                    //Toast.makeText(getApplicationContext(), "Got past songs from server", Toast.LENGTH_SHORT).show();
                                     break;
                                 case RoomService.PLAYTIME_UPDATED:
                                     long playTime = mRoomService.getPlayTime();
