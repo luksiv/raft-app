@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Group DJ</string>
+    <string name="app_name">Raft</string>
     <string name="creating_room">Creating room</string>
     <string name="token">#1$s</string>
     <string name="default_error">Error</string>
