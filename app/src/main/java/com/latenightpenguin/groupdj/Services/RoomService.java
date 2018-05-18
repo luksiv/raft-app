@@ -50,6 +50,7 @@ public class RoomService {
         mRoom = new RoomInfo();
         subscribers = new ArrayList<>();
         isHost = false;
+        mSong = "";
         setUpWebSocketCallbacks();
 
         subscribe(new OnChangeSubscriber() {
