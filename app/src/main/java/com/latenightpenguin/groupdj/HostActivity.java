@@ -545,13 +545,23 @@ public class HostActivity extends AppCompatActivity implements
                 generatePlaylist();
             }
         }
-        if (procentageDone >= 97 && !requestUsed && !queued) {
-            //queueNext();
-            mRoomService.playNextSong(null);
-            requestUsed = true;
+        if (procentageDone >= 97 ) {//&& !requestUsed && !queued
+            //Log.d("ADDEDTRACK", "Current: " + mPlayer.getMetadata().currentTrack.name);
+            if(mPlayer.getMetadata().nextTrack == null)
+            {
+                queueNext();
+            //    String uri = TracksRepository.getFromGeneratedTracks();
+            //    mRoomService.playNextSong(uri);
+            //    Log.d("ADDEDTRACK", "Next: " + uri);
+            }
+            else{
+             //   mRoomService.playNextSong(null);
+             //   Log.d("ADDEDTRACK", "NULL");
+            }
+          //  requestUsed = true;
         }
         if (updateCount >= 5 && mCurrentPlaybackState.isPlaying) {
-            mRoomService.announcePlayTime(mPlayer.getPlaybackState().positionMs);
+        //    mRoomService.announcePlayTime(mPlayer.getPlaybackState().positionMs);
             updateCount = 0;
         } else {
             updateCount++;
@@ -561,11 +571,34 @@ public class HostActivity extends AppCompatActivity implements
     }
 
     private void queueNext() {
+        mRoomService.playNextSong(null);
+        String songid = mRoomService.getCurrent();
+        Log.d("ADDEDTRACK", songid);
+        if (firstRun) {
+            mPlayer.playUri(mOperationCallback, songid, 0, 0);
+            mRoomService.refreshCurrentSong();
+            firstRun = false;
+            queued = true;
+            Log.d("ADDEDTRACK", "*" + songid);
+            mRoomService.playNextSong("spotify:track:5eXlvP0dxI3Xo2ngmNoj9X");
+        }else if(mPlayer.getMetadata().nextTrack == null){
+            if (mPlayer.getMetadata().currentTrack.uri.equals(songid) && !TracksRepository.generatedTracks.isEmpty()) {
+                String generatedTrackUri = TracksRepository.getFromGeneratedTracks();
+                mRoomService.playNextSong(generatedTrackUri);
+                //Test fix, songid should be retrieved via mRoomService .getCurrent(), but we need to sync server put and get requests
+                songid = generatedTrackUri;
+                Log.d("ADDEDTRACK", "---" + songid);
+            }
+            Log.d("ADDEDTRACK", "+" + songid + " | " +  mPlayer.getMetadata().currentTrack.uri);
+            mPlayer.queue(mOperationCallback, songid);
+        }
+    }
+
+    /*
+    private void queueNext() {
         if (mPlayer.getMetadata().nextTrack == null) {
             String songid = mRoomService.getCurrent();
-            // Toast.makeText(HostActivity.this, "Next song queued", Toast.LENGTH_SHORT).show();
             ErrorHandler.handleMessegeWithToast("Next song queued");
-            // Log.d(TAG, response.toString());
             ErrorHandler.handleMessege(songid);
             String uri;
             if (songid.isEmpty() && !TracksRepository.generatedTracks.isEmpty()) {
@@ -586,6 +619,7 @@ public class HostActivity extends AppCompatActivity implements
             requestUsed = false;
         }
     }
+    */
 
     private void generatePlaylist() {
         mSpotifyData.getRecomendationList(mSpotifyData.convertArrayToString(TracksRepository.toArray()), new WrappedSpotifyCallback<Recommendations>() {
