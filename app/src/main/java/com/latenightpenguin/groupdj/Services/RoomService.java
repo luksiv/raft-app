@@ -130,9 +130,12 @@ public class RoomService {
         mServerHelper.getCurrentSong(mRoom, new IRequestCallback() {
             @Override
             public void onSuccess(String response) {
-                mSong = SongConverter.getSongId(response);
-                Log.d(TAG, SONG_UPDATED);
-                notifyDataChanged(SONG_UPDATED);
+                String song = SongConverter.getSongId(response);
+                if(!mSong.equals(song)) {
+                    mSong = song;
+                    Log.d(TAG, SONG_UPDATED);
+                    notifyDataChanged(SONG_UPDATED);
+                }
             }
 
             @Override
@@ -143,9 +146,12 @@ public class RoomService {
     }
 
     private void refreshCurrentSong(String json){
-        mSong = SongConverter.getSongId(json);
-        Log.d(TAG, SONG_UPDATED);
-        notifyDataChanged(SONG_UPDATED);
+        String song = SongConverter.getSongId(json);
+        if(!mSong.equals(song)) {
+            mSong = song;
+            Log.d(TAG, SONG_UPDATED);
+            notifyDataChanged(SONG_UPDATED);
+        }
     }
 
     public void refreshLastPlayedSongs(){
@@ -300,9 +306,12 @@ public class RoomService {
                 public void onSuccess(String response) {
                     voted = false;
 
-                    mSong = SongConverter.getSongId(response);
-                    Log.d(TAG, SONG_UPDATED);
-                    notifyDataChanged(SONG_UPDATED);
+                    String song = SongConverter.getSongId(response);
+                    if(!mSong.equals(song)) {
+                        mSong = song;
+                        Log.d(TAG, SONG_UPDATED);
+                        notifyDataChanged(SONG_UPDATED);
+                    }
 
                     refreshLastPlayedSongs();
                     refreshSongList();
@@ -319,9 +328,12 @@ public class RoomService {
                 public void onSuccess(String response) {
                     voted = false;
 
-                    mSong = SongConverter.getSongId(response);
-                    Log.d(TAG, SONG_UPDATED);
-                    notifyDataChanged(SONG_UPDATED);
+                    String song = SongConverter.getSongId(response);
+                    if(!mSong.equals(song)) {
+                        mSong = song;
+                        Log.d(TAG, SONG_UPDATED);
+                        notifyDataChanged(SONG_UPDATED);
+                    }
 
                     refreshLastPlayedSongs();
                     refreshSongList();

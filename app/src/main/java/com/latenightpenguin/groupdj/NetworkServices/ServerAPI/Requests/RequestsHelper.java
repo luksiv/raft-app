@@ -136,7 +136,7 @@ public class RequestsHelper {
 
     // TODO: change to use new endpoint when it is created
     public void playNext(RoomInfo room, String song, final IRequestCallback callback) {
-        String url = serverUrl + "api/songs/" + room.getId() + "/next";
+        String url = serverUrl + "api/songs/" + room.getId() + "/next/" + song;
         Callback cb = GetCallback(callback);
         RequestBody body = RequestBody.create(MEDIA_TYPE, "");
         final Request request = new Request.Builder()
