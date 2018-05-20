@@ -13,11 +13,12 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.latenightpenguin.groupdj.Models.SongItem;
+import com.latenightpenguin.groupdj.Models.User;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.IServerHelper;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ServerFactory;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;

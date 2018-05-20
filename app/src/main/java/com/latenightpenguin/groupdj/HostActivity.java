@@ -20,15 +20,11 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.Requests.IRequestCallback;
+import com.latenightpenguin.groupdj.Models.SongItem;
+import com.latenightpenguin.groupdj.Models.User;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.IServerHelper;
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.RoomInfo;
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.ServerFactory;
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.SongConverter;
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSocketStatus;
-import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets.IWebSocketCallback;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
 import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrappedSpotifyCallback;
 import com.latenightpenguin.groupdj.Services.RoomService;
@@ -48,9 +44,6 @@ import com.spotify.sdk.android.player.Spotify;
 import com.spotify.sdk.android.player.SpotifyPlayer;
 import com.squareup.picasso.Picasso;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -58,8 +51,6 @@ import kaaes.spotify.webapi.android.models.Recommendations;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
 import kaaes.spotify.webapi.android.models.UserPrivate;
-import okhttp3.Call;
-import okhttp3.OkHttpClient;
 
 import static com.spotify.sdk.android.player.PlaybackBitrate.BITRATE_HIGH;
 import static com.spotify.sdk.android.player.PlaybackBitrate.BITRATE_LOW;

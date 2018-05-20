@@ -38,6 +38,7 @@ public class RoomService {
     private boolean voted;
     private int lastPlayedCount;
     private boolean isHost;
+    private boolean updated;
 
     public boolean connected = false;
 
@@ -132,11 +133,7 @@ public class RoomService {
             @Override
             public void onSuccess(String response) {
                 String song = SongConverter.getSongId(response);
-                if(!mSong.equals(song)) {
-                    mSong = song;
-                    Log.d(TAG, SONG_UPDATED);
-                    notifyDataChanged(SONG_UPDATED);
-                }
+                updateSong(song);
             }
 
             @Override
@@ -148,11 +145,7 @@ public class RoomService {
 
     private void refreshCurrentSong(String json){
         String song = SongConverter.getSongId(json);
-        if(!mSong.equals(song)) {
-            mSong = song;
-            Log.d(TAG, SONG_UPDATED);
-            notifyDataChanged(SONG_UPDATED);
-        }
+        updateSong(song);
     }
 
     public void refreshLastPlayedSongs(){
@@ -301,6 +294,10 @@ public class RoomService {
     }
 
     public void playNextSong(String optionalSong){
+        if(!updated) {
+            return;
+        }
+
         if(optionalSong == null){
             mServerHelper.playNextSong(mRoom, new IRequestCallback() {
                 @Override
@@ -308,11 +305,7 @@ public class RoomService {
                     voted = false;
 
                     String song = SongConverter.getSongId(response);
-                    if(!mSong.equals(song)) {
-                        mSong = song;
-                        Log.d(TAG, SONG_UPDATED);
-                        notifyDataChanged(SONG_UPDATED);
-                    }
+                    updateSong(song);
 
                     refreshLastPlayedSongs();
                     refreshSongList();
@@ -323,6 +316,7 @@ public class RoomService {
                     handleError(code, message);
                 }
             });
+            updated = false;
         } else {
             mServerHelper.playNext(mRoom, optionalSong, new IRequestCallback() {
                 @Override
@@ -330,11 +324,7 @@ public class RoomService {
                     voted = false;
 
                     String song = SongConverter.getSongId(response);
-                    if(!mSong.equals(song)) {
-                        mSong = song;
-                        Log.d(TAG, SONG_UPDATED);
-                        notifyDataChanged(SONG_UPDATED);
-                    }
+                    updateSong(song);
 
                     refreshLastPlayedSongs();
                     refreshSongList();
@@ -345,6 +335,7 @@ public class RoomService {
                     handleError(code, message);
                 }
             });
+            updated = false;
         }
     }
 
@@ -472,6 +463,15 @@ public class RoomService {
         } else {
             Log.d(TAG, message);
             //Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void updateSong(String newSong) {
+        if(!mSong.equals(newSong)) {
+            mSong = newSong;
+            Log.d(TAG, SONG_UPDATED);
+            notifyDataChanged(SONG_UPDATED);
+            updated = true;
         }
     }
 

@@ -1,4 +1,4 @@
-package com.latenightpenguin.groupdj;
+package com.latenightpenguin.groupdj.Models;
 
 import org.json.JSONObject;
 
