@@ -320,6 +320,7 @@ public class HostActivity extends AppCompatActivity implements
             if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                 mAccessToken = response.getAccessToken();
                 mSpotifyData = new SpotifyData(mAccessToken);
+
                 Config playerConfig = new Config(this, mAccessToken, CLIENT_ID);
                 Spotify.getPlayer(playerConfig, this, new SpotifyPlayer.InitializationObserver() {
                     @Override
@@ -514,7 +515,7 @@ public class HostActivity extends AppCompatActivity implements
             String currentUri = mPlayer.getMetadata().currentTrack.uri;
             if (TracksRepository.isNOTLastAdded(currentUri)) {
                 TracksRepository.addToLastPlayed(currentUri);
-                generateTrack();
+                TracksRepository.generateTrack(mSpotifyData);
             }
         }
         if (procentageDone >= 97 && mPlayer.getMetadata().nextTrack == null) {
@@ -551,17 +552,6 @@ public class HostActivity extends AppCompatActivity implements
         firstRun = false;
         queued = true;
     }
-
-    private void generateTrack() {
-        mSpotifyData.getRecomendationList(mSpotifyData.convertArrayToString(TracksRepository.toArray()), new WrappedSpotifyCallback<Recommendations>() {
-            @Override
-            public void success(Recommendations recommendations, retrofit.client.Response response) {
-                super.success(recommendations, response);
-                TracksRepository.addToGeneratedTracks(SpotifyData.ConvertRecomendedTracks(recommendations).get(0).getUri());
-            }
-        });
-    }
-
 
     private void changeViews(Button button) {
         LinearLayout player = findViewById(R.id.root_player);

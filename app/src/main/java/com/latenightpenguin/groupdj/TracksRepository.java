@@ -2,8 +2,13 @@ package com.latenightpenguin.groupdj;
 
 import android.util.Log;
 
+import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.SpotifyData;
+import com.latenightpenguin.groupdj.NetworkServices.SpotifyAPI.WrappedSpotifyCallback;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
+
+import kaaes.spotify.webapi.android.models.Recommendations;
 
 
 public class TracksRepository {
@@ -61,5 +66,15 @@ public class TracksRepository {
         }
 
         return "spotify:track:4uLU6hMCjMI75M1A2tKUQC";
+    }
+
+    static public void generateTrack(SpotifyData spotifyData) {
+        spotifyData.getRecomendationList(spotifyData.convertArrayToString(toArray()), new WrappedSpotifyCallback<Recommendations>() {
+            @Override
+            public void success(Recommendations recommendations, retrofit.client.Response response) {
+                super.success(recommendations, response);
+                addToGeneratedTracks(SpotifyData.ConvertRecomendedTracks(recommendations).get(0).getUri());
+            }
+        });
     }
 }
