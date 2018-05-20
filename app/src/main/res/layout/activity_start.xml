@@ -8,39 +8,47 @@
     android:background="@drawable/ic_gradiant_black_to_grey"
     tools:context=".StartActivity">
 
-    <EditText
-        android:id="@+id/et_RoomId"
-        android:layout_width="150dp"
-        android:layout_height="48dp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="180dp"
-        android:background="@drawable/ic_edit_text_background"
-        android:hint="Enter Room ID"
-        android:inputType="number"
-        android:textAlignment="center"
-        android:textColorHint="@color/colorWhite" />
-
-    <Button
-        android:id="@+id/btn_JoinRoom"
-        android:layout_width="128dp"
+    <LinearLayout
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/et_RoomId"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/ic_button_background"
-        android:text="Join" />
+        android:orientation="vertical"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:padding="16dp">
+
+        <EditText
+            android:id="@+id/et_RoomId"
+            android:layout_width="150dp"
+            android:layout_height="48dp"
+            android:layout_centerHorizontal="true"
+            android:background="@drawable/ic_edit_text_background"
+            android:hint="Enter Room ID"
+            android:inputType="number"
+            android:textAlignment="center"
+            android:textColorHint="@color/colorWhite" />
+
+        <Button
+            android:id="@+id/btn_JoinRoom"
+            android:layout_width="128dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/ic_button_background"
+            android:text="Join" />
+
+        <Button
+            android:id="@+id/btn_HostRoom"
+            android:layout_width="128dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="64dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/ic_button_background"
+            android:text="Host"
+            android:padding="16dp"/>
+    </LinearLayout>
+
 
     <Button
-        android:id="@+id/btn_HostRoom"
-        android:layout_width="128dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/btn_JoinRoom"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="64dp"
-        android:background="@drawable/ic_button_background"
-        android:text="Host" />
-
-    <Button
+        android:visibility="invisible"
         android:id="@+id/btn_LogOut"
         android:layout_width="176dp"
         android:layout_height="wrap_content"

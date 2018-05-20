@@ -100,7 +100,10 @@ public class HostActivity extends AppCompatActivity implements
 
     private Boolean requestUsed = false;
     private Boolean firstRun = true;
+    private Boolean firstRunSkip = false;
     private Boolean queued = false;
+
+    private String lastQueued = "";
 
     private int updateCount = 0;
     //endregion
@@ -129,8 +132,8 @@ public class HostActivity extends AppCompatActivity implements
         ErrorHandler.setContext(HostActivity.this);
         ErrorHandler.setView(findViewById(R.id.root_hostactivity));
 
-        authentication();
         setUpElements();
+        authentication();
 
         IServerHelper serverHelper = ServerFactory.make(getResources().getString(R.string.url));
         mRoomService = new RoomService(getApplicationContext(), serverHelper);
@@ -255,10 +258,14 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void onClick(View v) {
                 long dur = mPlayer.getMetadata().currentTrack.durationMs;
-                int skip = (int) ((double) dur / 100 * 96);
+                int skip = (int) ((double) dur / 100 * 95);
                 mPlayer.seekToPosition(mOperationCallback, skip);
             }
         });
+
+        setVisibilityForUiElements(View.INVISIBLE);
+        findViewById(R.id.root_player).setVisibility(View.INVISIBLE);
+        findViewById(R.id.ll_start).setVisibility(View.INVISIBLE);
     }
 
     private void authentication() {
@@ -267,6 +274,20 @@ public class HostActivity extends AppCompatActivity implements
         builder.setScopes(new String[]{"user-read-private", "user-read-email", "streaming"});
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, AUTH_CODE, request);
+    }
+
+    private void setVisibilityForUiElements(int visibility) {
+        btnAdd.setVisibility(visibility);
+        btnPause.setVisibility(visibility);
+        btnNext.setVisibility(visibility);
+        sbTrack.setVisibility(visibility);
+        btnSettings.setVisibility(visibility);
+        btnInfo.setVisibility(visibility);
+        btnToggleViews.setVisibility(visibility);
+        btnRefreshPlaylist.setVisibility(visibility);
+        lwPlaylist.setVisibility(visibility);
+        txLoginCode.setVisibility(visibility);
+        testSkip.setVisibility(visibility);
     }
     //endregion
 
@@ -369,26 +390,26 @@ public class HostActivity extends AppCompatActivity implements
         mMetadata = mPlayer.getMetadata();
         //Log.d(TAG, "Playback State: " + mCurrentPlaybackState.toString());
         //Log.d(TAG, "Metadata: " + mMetadata.toString());
-        if(queued){
-            if(mMetadata.nextTrack == null){
+        if (queued) {
+            if (mMetadata.nextTrack == null) {
                 queued = false;
             }
         }
-        if(playerEvent == PlayerEvent.kSpPlaybackNotifyPlay) {
+        if (playerEvent == PlayerEvent.kSpPlaybackNotifyPlay) {
             mRoomService.announcePlayTime(mCurrentPlaybackState.positionMs);
             btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_circle_white_48dp));
             btnPause.setBackground(getResources().getDrawable(R.drawable.ic_pause_circle_white_48dp));
             seekUpdation();
         }
-        if(playerEvent == PlayerEvent.kSpPlaybackNotifyPause) {
+        if (playerEvent == PlayerEvent.kSpPlaybackNotifyPause) {
             mRoomService.announcePause(mCurrentPlaybackState.positionMs);
             btnPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_circle_white_48dp));
             btnPause.setBackground(getResources().getDrawable(R.drawable.ic_play_circle_white_48dp));
         }
-        if(playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged) {
+        if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged) {
 
         }
-        if(playerEvent == PlayerEvent.kSpPlaybackNotifyTrackDelivered) {
+        if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackDelivered) {
 
         }
         updatePlayerView();
@@ -545,13 +566,16 @@ public class HostActivity extends AppCompatActivity implements
                 generatePlaylist();
             }
         }
-        if (procentageDone >= 97 && !requestUsed && !queued) {
-            //queueNext();
+        if (procentageDone >= 98 && !requestUsed && !queued) {
             mRoomService.playNextSong(null);
             requestUsed = true;
         }
-        if (updateCount >= 5 && mCurrentPlaybackState.isPlaying) {
-            mRoomService.announcePlayTime(mPlayer.getPlaybackState().positionMs);
+        if (updateCount >= 3) {
+            if(mCurrentPlaybackState.isPlaying) {
+                mRoomService.announcePlayTime(mPlayer.getPlaybackState().positionMs);
+            } else {
+                mRoomService.announcePause(mPlayer.getPlaybackState().positionMs);
+            }
             updateCount = 0;
         } else {
             updateCount++;
@@ -561,24 +585,35 @@ public class HostActivity extends AppCompatActivity implements
     }
 
     private void queueNext() {
-        if (mPlayer.getMetadata().nextTrack == null) {
+        Log.d(TAG, "test/ queueNext called");
+        if (mPlayer.getMetadata().nextTrack != null) {
+            Log.d(TAG, "test/ next track from metadata: " + mPlayer.getMetadata().nextTrack.uri);
+        } else {
+            Log.d(TAG, "test/ next track from metadata: null");
+        }
+        if (mPlayer.getMetadata().nextTrack == null && mRoomService.getCurrent() != null) {
             String songid = mRoomService.getCurrent();
-            // Toast.makeText(HostActivity.this, "Next song queued", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(HostActivity.this, "Next song queued", Toast.LENGTH_SHORT).show();
             ErrorHandler.handleMessegeWithToast("Next song queued");
-            // Log.d(TAG, response.toString());
+//            Log.d(TAG, response.toString());
             ErrorHandler.handleMessege(songid);
-            String uri;
+            Log.d(TAG, "test/ next track from server: " + songid);
             if (songid.isEmpty() && !TracksRepository.generatedTracks.isEmpty()) {
                 String generatedTrackUri = TracksRepository.getFromGeneratedTracks();
                 mRoomService.playNextSong(generatedTrackUri.split(":")[2]);
                 //putSongToPlaylist(generatedTrackUri.split(":")[2]);
             }
-
-            if (firstRun) {
-                mPlayer.playUri(mOperationCallback, songid, 0, 0);
-                mRoomService.refreshCurrentSong();
-                firstRun = false;
-                queued = true;
+            if (firstRun || !firstRunSkip) {
+                if(firstRun) {
+                    mPlayer.playUri(mOperationCallback, songid, 0, 0);
+                    mRoomService.refreshCurrentSong();
+                    firstRun = false;
+                    queued = true;
+                    findViewById(R.id.root_player).setVisibility(View.VISIBLE);
+                    findViewById(R.id.ll_start).setVisibility(View.INVISIBLE);
+                } else {
+                    firstRunSkip = true;
+                }
             } else {
                 mPlayer.queue(mOperationCallback, songid);
                 queued = true;
@@ -694,15 +729,21 @@ public class HostActivity extends AppCompatActivity implements
                                     break;
                                 case RoomService.ROOM_UPDATED:
                                     txLoginCode.setText(Long.toString(mRoomService.getRoom().getLoginCode()));
+                                    setVisibilityForUiElements(View.VISIBLE);
+                                    findViewById(R.id.root_player).setVisibility(View.INVISIBLE);
+                                    findViewById(R.id.ll_start).setVisibility(View.VISIBLE);
                                     break;
                                 case RoomService.SONG_LIST_UPDATED:
+                                    if(firstRun){
+                                        queueNext();
+                                    }
                                     updatePlaylistView(mRoomService.getSongs());
                                     break;
                                 case RoomService.SONG_UPDATED:
                                     queueNext();
                                     Log.w(TAG, "Current song updated notification not handled. Remove it or change it");
                                     break;
-                                case RoomService.STATUS_UPDATED:
+                                case RoomService.STATUS_UPDATED:                                    
                                     Log.w(TAG, "Playing status changed notification not handled. Remove it or change it");
                                     break;
                             }

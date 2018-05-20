@@ -193,7 +193,6 @@ public class ClientActivity extends AppCompatActivity {
         sbProgress.setVisibility(visibility);
         tvLoginCode.setVisibility(visibility);
         llPlayer.setVisibility(visibility);
-        btnSettings.setVisibility(visibility);
     }
     //endregion
 
@@ -298,26 +297,26 @@ public class ClientActivity extends AppCompatActivity {
             }
         });
     }
-/*
-    private void updatePlaylist() {
-        IRequestCallback getSongsCallback = new IRequestCallback() {
-            @Override
-            public void onSuccess(String response) {
-                mSongs = SongConverter.convertToList(response);
-                for (String song : mSongs) {
-                    //Log.d(TAG, song);
-                    ErrorHandler.handleMessege(song);
-                }
-                updatePlaylistView();
-            }
 
-            @Override
-            public void onError(int code, String message) {
-                Log.w(TAG, "Error handling not used in update playlist");
-            }
-        };
-        mServerHelper.getSongs(mRoom, getSongsCallback);
-    }*/
+//    private void updatePlaylist() {
+//        IRequestCallback getSongsCallback = new IRequestCallback() {
+//            @Override
+//            public void onSuccess(String response) {
+//                mSongs = SongConverter.convertToList(response);
+//                for (String song : mSongs) {
+//                    //Log.d(TAG, song);
+//                    ErrorHandler.handleMessege(song);
+//                }
+//                updatePlaylistView();
+//            }
+//
+//            @Override
+//            public void onError(int code, String message) {
+//                Log.w(TAG, "Error handling not used in update playlist");
+//            }
+//        };
+//        mServerHelper.getSongs(mRoom, getSongsCallback);
+//    }
 
     private void updatePlaylistView(ArrayList<String> songs) {
         mSpotifyData.getTracks(songs, new WrappedSpotifyCallback<Tracks>() {
@@ -523,6 +522,7 @@ public class ClientActivity extends AppCompatActivity {
                                     tvLoginCode.setText(Long.toString(mRoomService.getRoom().getLoginCode()));
                                     break;
                                 case RoomService.SONG_LIST_UPDATED:
+                                    mRoomService.refreshCurrentSong();
                                     updatePlaylistView(mRoomService.getSongs());
                                     break;
                                 case RoomService.SONG_UPDATED:

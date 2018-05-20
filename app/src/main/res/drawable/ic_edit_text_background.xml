@@ -11,8 +11,8 @@
         android:radius="25dp"
         />
     <gradient
-        android:startColor="@color/colorGrey"
-        android:endColor="@color/colorGrey"
+        android:startColor="@color/colorRaftLightBrown"
+        android:endColor="@color/colorDarkGrey"
         android:type="linear"
         android:angle="270"/>
     <padding
