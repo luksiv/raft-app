@@ -273,7 +273,6 @@ public class HostActivity extends AppCompatActivity implements
             public void onReceive(Context context, Intent intent) {
                 if (mPlayer != null) {
                     Connectivity connectivity = getNetworkConnectivity(getBaseContext());
-                    // Log.i(TAG, "Network state changed: " + connectivity.toString());
                     ErrorHandler.handleMessege("Network state changed: " + connectivity.toString());
                     mPlayer.setConnectivityStatus(mOperationCallback, connectivity);
                 }
@@ -333,8 +332,6 @@ public class HostActivity extends AppCompatActivity implements
 
                     @Override
                     public void onError(Throwable throwable) {
-                        //    Toast.makeText(HostActivity.super.getApplicationContext(), "Could not initialize player", Toast.LENGTH_LONG).show();
-                        //    Log.e(TAG, "Could not initialize player: " + throwable.getMessage());
                         ErrorHandler.handleExeptionWithSnackbar(new Exception(throwable), "Could not initialize player");
                     }
                 });
@@ -354,12 +351,9 @@ public class HostActivity extends AppCompatActivity implements
     //region Playback events
     @Override
     public void onPlaybackEvent(PlayerEvent playerEvent) {
-        //Log.d(TAG, "Playback event received: " + playerEvent.name());
         ErrorHandler.handleMessege("Playback event received: " + playerEvent.name());
         mCurrentPlaybackState = mPlayer.getPlaybackState();
         mMetadata = mPlayer.getMetadata();
-        //Log.d(TAG, "Playback State: " + mCurrentPlaybackState.toString());
-        //Log.d(TAG, "Metadata: " + mMetadata.toString());
         if(queued){
             if(mMetadata.nextTrack == null){
                 queued = false;
@@ -388,7 +382,6 @@ public class HostActivity extends AppCompatActivity implements
 
     @Override
     public void onPlaybackError(Error error) {
-        //Log.d(TAG, "Playback error received: " + error.name());
         ErrorHandler.handleMessege(error.name());
         switch (error) {
             // Handle error type as necessary
@@ -401,8 +394,6 @@ public class HostActivity extends AppCompatActivity implements
     //region Callback methods
     @Override
     public void onLoggedIn() {
-        //Log.d(TAG, "User logged in");
-        //Toast.makeText(this, "User logged in", Toast.LENGTH_LONG).show();
         ErrorHandler.handleMessegeWithToast("User logged in");
         mCurrentPlaybackState = mPlayer.getPlaybackState();
         mMetadata = mPlayer.getMetadata();
@@ -410,8 +401,6 @@ public class HostActivity extends AppCompatActivity implements
 
     @Override
     public void onLoggedOut() {
-        // Toast.makeText(this, "User logged out", Toast.LENGTH_LONG).show();
-        //Log.d(TAG, "User logged out");
         ErrorHandler.handleMessegeWithToast("User logged out");
         finish();
     }
@@ -419,11 +408,9 @@ public class HostActivity extends AppCompatActivity implements
     @Override
     public void onLoginFailed(Error error) {
         if (Objects.equals(error.toString(), "kSpErrorNeedsPremium")) {
-            //Toast.makeText(this, "Premium account needed to be a host", Toast.LENGTH_LONG).show();
             ErrorHandler.handleMessegeWithToast("Premium account needed to be a host");
-            //finish();
+            finish();
         }
-        //Log.d(TAG, "Login failed : " + error.toString());
 
         ErrorHandler.handleMessegeWithToast("Login failed");
         ErrorHandler.handleMessege(error.toString());
@@ -432,15 +419,11 @@ public class HostActivity extends AppCompatActivity implements
 
     @Override
     public void onTemporaryError() {
-        //Log.d(TAG, "Temporary error occurred");
-        //Toast.makeText(this, "Temporary error occurred", Toast.LENGTH_LONG).show();
         ErrorHandler.handleMessegeWithToast("Temporary error occurred");
     }
 
     @Override
     public void onConnectionMessage(String message) {
-        //Log.d(TAG, "Received connection message: " + message);
-        //Toast.makeText(this, "Received connection message: " + message, Toast.LENGTH_LONG).show();
         ErrorHandler.handleMessegeWithToast("Received connection message: " + message);
     }
     //endregion
@@ -507,7 +490,6 @@ public class HostActivity extends AppCompatActivity implements
                             load(mMetadata.currentTrack.albumCoverWebUrl)
                             .into((ImageView) findViewById(R.id.iv_albumArt));
                 } catch (NullPointerException e) {
-                    //Log.e(TAG, "Metadata is null: " + mMetadata);
                     ErrorHandler.handleExeption(e);
                 }
             }
@@ -536,23 +518,15 @@ public class HostActivity extends AppCompatActivity implements
                 generatePlaylist();
             }
         }
-        if (procentageDone >= 97 ) {//&& !requestUsed && !queued
-            //Log.d("ADDEDTRACK", "Current: " + mPlayer.getMetadata().currentTrack.name);
-            if(mPlayer.getMetadata().nextTrack == null)
-            {
-                queueNext();
-            //    String uri = TracksRepository.getFromGeneratedTracks();
-            //    mRoomService.playNextSong(uri);
-            //    Log.d("ADDEDTRACK", "Next: " + uri);
+        if (procentageDone >= 97 ) {
+            if(mPlayer.getMetadata().nextTrack == null) {
+                requestNext();
             }
-            else{
-             //   mRoomService.playNextSong(null);
-             //   Log.d("ADDEDTRACK", "NULL");
+            else {
             }
-          //  requestUsed = true;
         }
         if (updateCount >= 5 && mCurrentPlaybackState.isPlaying) {
-        //    mRoomService.announcePlayTime(mPlayer.getPlaybackState().positionMs);
+            mRoomService.announcePlayTime(mPlayer.getPlaybackState().positionMs);
             updateCount = 0;
         } else {
             updateCount++;
@@ -561,63 +535,29 @@ public class HostActivity extends AppCompatActivity implements
 
     }
 
+    private void requestNext() {
+        // TODO: add auto generating logic
+        String generatedTrackUri = TracksRepository.getFromGeneratedTracks();
+        mRoomService.playNextSong(generatedTrackUri);
+    }
+
     private void queueNext() {
-        mRoomService.playNextSong(null);
         String songid = mRoomService.getCurrent();
-        Log.d("ADDEDTRACK", songid);
         if (firstRun) {
             mPlayer.playUri(mOperationCallback, songid, 0, 0);
             mRoomService.refreshCurrentSong();
             firstRun = false;
             queued = true;
-            Log.d("ADDEDTRACK", "*" + songid);
-            mRoomService.playNextSong("spotify:track:5eXlvP0dxI3Xo2ngmNoj9X");
         }else if(mPlayer.getMetadata().nextTrack == null){
-            if (mPlayer.getMetadata().currentTrack.uri.equals(songid) && !TracksRepository.generatedTracks.isEmpty()) {
-                String generatedTrackUri = TracksRepository.getFromGeneratedTracks();
-                mRoomService.playNextSong(generatedTrackUri);
-                //Test fix, songid should be retrieved via mRoomService .getCurrent(), but we need to sync server put and get requests
-                songid = generatedTrackUri;
-                Log.d("ADDEDTRACK", "---" + songid);
-            }
-            Log.d("ADDEDTRACK", "+" + songid + " | " +  mPlayer.getMetadata().currentTrack.uri);
             mPlayer.queue(mOperationCallback, songid);
         }
     }
-
-    /*
-    private void queueNext() {
-        if (mPlayer.getMetadata().nextTrack == null) {
-            String songid = mRoomService.getCurrent();
-            ErrorHandler.handleMessegeWithToast("Next song queued");
-            ErrorHandler.handleMessege(songid);
-            String uri;
-            if (songid.isEmpty() && !TracksRepository.generatedTracks.isEmpty()) {
-                String generatedTrackUri = TracksRepository.getFromGeneratedTracks();
-                mRoomService.playNextSong(generatedTrackUri.split(":")[2]);
-                //putSongToPlaylist(generatedTrackUri.split(":")[2]);
-            }
-
-            if (firstRun) {
-                mPlayer.playUri(mOperationCallback, songid, 0, 0);
-                mRoomService.refreshCurrentSong();
-                firstRun = false;
-                queued = true;
-            } else {
-                mPlayer.queue(mOperationCallback, songid);
-                queued = true;
-            }
-            requestUsed = false;
-        }
-    }
-    */
 
     private void generatePlaylist() {
         mSpotifyData.getRecomendationList(mSpotifyData.convertArrayToString(TracksRepository.toArray()), new WrappedSpotifyCallback<Recommendations>() {
             @Override
             public void success(Recommendations recommendations, retrofit.client.Response response) {
                 super.success(recommendations, response);
-                // Toast.makeText(HostActivity.this, "Generated track", Toast.LENGTH_SHORT).show();
                 TracksRepository.addToGeneratedTracks(SpotifyData.ConvertRecomendedTracks(recommendations).get(0).getUri());
             }
         });
@@ -631,11 +571,9 @@ public class HostActivity extends AppCompatActivity implements
         if (player.getVisibility() == View.VISIBLE) {
             player.setVisibility(View.INVISIBLE);
             playlist.setVisibility(View.VISIBLE);
-            //button.setText("Show player");
         } else {
             player.setVisibility(View.VISIBLE);
             playlist.setVisibility(View.INVISIBLE);
-            //button.setText("Show playlist");
         }
 
     }
@@ -655,7 +593,6 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[0]);
-                // Toast.makeText(HostActivity.this, "Bit rate = " + bitratesValues[0], Toast.LENGTH_SHORT).show();
                 ErrorHandler.handleMessegeWithToast("Bit rate = " + bitratesValues[0]);
                 dialog.dismiss();
             }
@@ -666,7 +603,6 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[1]);
-                //Toast.makeText(HostActivity.this, "Bit rate = " + bitratesValues[1], Toast.LENGTH_SHORT).show();
                 ErrorHandler.handleMessegeWithToast("Bit rate = " + bitratesValues[1]);
                 dialog.dismiss();
             }
@@ -677,7 +613,6 @@ public class HostActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 mPlayer.setPlaybackBitrate(mOperationCallback, bitrates[2]);
-                //Toast.makeText(HostActivity.this, "Bit rate = " + bitratesValues[2], Toast.LENGTH_SHORT).show();
                 ErrorHandler.handleMessegeWithToast("Bit rate = " + bitratesValues[2]);
                 dialog.dismiss();
             }
@@ -711,11 +646,9 @@ public class HostActivity extends AppCompatActivity implements
                             switch (changes[i]) {
                                 case RoomService.PAST_SONGS_UPDATED:
                                     ArrayList<String> pastSongs = mRoomService.getPastSongs();
-                                    //Toast.makeText(getApplicationContext(), "Got past songs from server", Toast.LENGTH_SHORT).show();
                                     break;
                                 case RoomService.PLAYTIME_UPDATED:
                                     long playTime = mRoomService.getPlayTime();
-                                    ErrorHandler.handleMessegeWithToast(Long.toString(playTime));
                                     break;
                                 case RoomService.ROOM_UPDATED:
                                     txLoginCode.setText(Long.toString(mRoomService.getRoom().getLoginCode()));
