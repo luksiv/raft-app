@@ -41,8 +41,10 @@ public class RoomService {
     private boolean updated;
 
     public boolean connected = false;
+    public boolean connectedToRoom = false;
+    public boolean done = false;
 
-    public RoomService(Context context, IServerHelper serverHelper){
+    public RoomService(Context context, IServerHelper serverHelper) {
         mServerHelper = serverHelper;
         mContext = context;
         status = SongStatus.PAUSED;
@@ -57,8 +59,8 @@ public class RoomService {
         subscribe(new OnChangeSubscriber() {
             @Override
             public void callback(String[] changes) {
-                for(int i = 0; i < changes.length; i++){
-                    if(changes[i].equals(ROOM_UPDATED)){
+                for (int i = 0; i < changes.length; i++) {
+                    if (changes[i].equals(ROOM_UPDATED)) {
                         mServerHelper.setRoomUpdates(mRoom.getId());
                     }
                 }
@@ -66,23 +68,23 @@ public class RoomService {
         });
     }
 
-    public ArrayList<String> getSongs(){
+    public ArrayList<String> getSongs() {
         return mSongs;
     }
 
-    public int getSongCount(){
+    public int getSongCount() {
         return mSongs.size();
     }
 
-    public RoomInfo getRoom(){
+    public RoomInfo getRoom() {
         return mRoom;
     }
 
-    public String getCurrent(){
+    public String getCurrent() {
         return mSong;
     }
 
-    public long getPlayTime(){
+    public long getPlayTime() {
         return mPlayTime;
     }
 
@@ -98,21 +100,21 @@ public class RoomService {
         return mServerHelper;
     }
 
-    public void subscribe(OnChangeSubscriber subscriber){
+    public void subscribe(OnChangeSubscriber subscriber) {
         subscribers.add(subscriber);
     }
 
-    public void notifyDataChanged(String ... changes){
-        for(OnChangeSubscriber subscriber : subscribers){
+    public void notifyDataChanged(String... changes) {
+        for (OnChangeSubscriber subscriber : subscribers) {
             subscriber.callback(changes);
         }
     }
 
-    public void refreshSongList(){
+    public void refreshSongList() {
         mServerHelper.getSongs(mRoom, new IRequestCallback() {
             @Override
             public void onSuccess(String response) {
-                if(response.equals("[]")){
+                if (response.equals("[]")) {
                     mSongs = new ArrayList<>();
                 } else {
                     mSongs = SongConverter.convertToList(response);
@@ -128,7 +130,7 @@ public class RoomService {
         });
     }
 
-    public void refreshCurrentSong(){
+    public void refreshCurrentSong() {
         mServerHelper.getCurrentSong(mRoom, new IRequestCallback() {
             @Override
             public void onSuccess(String response) {
@@ -148,7 +150,7 @@ public class RoomService {
         updateSong(song);
     }
 
-    public void refreshLastPlayedSongs(){
+    public void refreshLastPlayedSongs() {
         mServerHelper.getLastPlayedSongs(mRoom, lastPlayedCount, new IRequestCallback() {
             @Override
             public void onSuccess(String response) {
@@ -164,7 +166,7 @@ public class RoomService {
         });
     }
 
-    public void createRoom(final String user){
+    public void createRoom(final String user) {
         mServerHelper.registerUser(user, new IRequestCallback() {
             @Override
             public void onSuccess(String response) {
@@ -191,7 +193,7 @@ public class RoomService {
         });
     }
 
-    public void connectToRoom(final String user, final int logincode){
+    public void connectToRoom(final String user, final int logincode) {
         mServerHelper.registerUser(user, new IRequestCallback() {
             @Override
             public void onSuccess(String response) {
@@ -202,12 +204,15 @@ public class RoomService {
                         mServerHelper.connectWebSocket();
                         mServerHelper.setRoomUpdates(mRoom.getId());
                         isHost = false;
-                        connected = true;
+                        connectedToRoom = true;
+                        done = true;
                     }
 
                     @Override
                     public void onError(int code, String message) {
                         handleError(code, message);
+                        connectedToRoom = false;
+                        done = true;
                     }
                 });
             }
@@ -215,11 +220,13 @@ public class RoomService {
             @Override
             public void onError(int code, String message) {
                 handleError(code, message);
+                connectedToRoom = false;
+                done = true;
             }
         });
     }
 
-    public void disconnect(String user){
+    public void disconnect(String user) {
         mServerHelper.closeWebSocket();
         mServerHelper.disconnectFromRoom(mRoom.getId(), user, new IRequestCallback() {
             @Override
@@ -235,7 +242,7 @@ public class RoomService {
         });
     }
 
-    public void addSong(String song){
+    public void addSong(String song) {
         mServerHelper.addSong(mRoom, song, new IRequestCallback() {
             @Override
             public void onSuccess(String response) {
@@ -243,7 +250,7 @@ public class RoomService {
                 //Toast.makeText(mContext, "Song added", Toast.LENGTH_SHORT).show();
                 refreshSongList();
                 refreshLastPlayedSongs();
-                if(mSong == null || mSong.isEmpty()){
+                if (mSong == null || mSong.isEmpty()) {
                     refreshCurrentSong();
                 }
             }
@@ -255,8 +262,8 @@ public class RoomService {
         });
     }
 
-    public void voteSkipSong(){
-        if(voted){
+    public void voteSkipSong() {
+        if (voted) {
             Log.d(TAG, "Already voted");
             //Toast.makeText(mContext, "Already voted", Toast.LENGTH_SHORT).show();
             return;
@@ -278,7 +285,7 @@ public class RoomService {
         });
     }
 
-    public void setSkipThreshold(double threshold){
+    public void setSkipThreshold(double threshold) {
         mServerHelper.setSkipThreshold(mRoom, threshold, new IRequestCallback() {
             @Override
             public void onSuccess(String response) {
@@ -339,17 +346,17 @@ public class RoomService {
         }
     }
 
-    public void announcePlayTime(long milliseconds){
+    public void announcePlayTime(long milliseconds) {
         mServerHelper.announcePlayTime(milliseconds);
     }
 
-    public void announcePause(long milliseconds){
+    public void announcePause(long milliseconds) {
         mServerHelper.announcePause(milliseconds);
     }
 
-    public void ensureWebSocketIsConnected(){
-        if(mServerHelper != null && mServerHelper.getWebSocketStatus() == WebSocketStatus.DISCONNECTED){
-            if(mRoom.getId() == -1){
+    public void ensureWebSocketIsConnected() {
+        if (mServerHelper != null && mServerHelper.getWebSocketStatus() == WebSocketStatus.DISCONNECTED) {
+            if (mRoom.getId() == -1) {
                 Log.d(TAG, "Not connected to room");
                 //Toast.makeText(mContext, "Not connected to room", Toast.LENGTH_SHORT).show();
             } else {
@@ -359,7 +366,7 @@ public class RoomService {
         }
     }
 
-    private void setUpWebSocketCallbacks(){
+    private void setUpWebSocketCallbacks() {
         mServerHelper.setConnectedToRoomCallback(new IWebSocketCallback() {
             @Override
             public void execute(String message) {
@@ -391,7 +398,7 @@ public class RoomService {
             @Override
             public void execute(String message) {
                 Log.d(TAG, "pausedcallback");//veikia
-                if(status != SongStatus.PAUSED) {
+                if (status != SongStatus.PAUSED) {
                     status = SongStatus.PAUSED;
                     mPlayTime = Long.parseLong(message);
                     Log.d(TAG, PLAYTIME_UPDATED + " " + STATUS_UPDATED);
@@ -408,7 +415,7 @@ public class RoomService {
             @Override
             public void execute(String message) {
                 Log.d(TAG, "playtimecallback");//veikia
-                if(status != SongStatus.PLAYING) {
+                if (status != SongStatus.PLAYING) {
                     status = SongStatus.PLAYING;
                     Log.d(TAG, "message:" + message);
                     mPlayTime = Long.parseLong(message);
@@ -426,14 +433,14 @@ public class RoomService {
             @Override
             public void execute(String message) {
                 Log.d(TAG, "skipcallback");//neveikia
-                if(isHost) {
+                if (isHost) {
                     playNextSong(null);
                 }
             }
         });
     }
 
-    private void parseRoomInfo(String json){
+    private void parseRoomInfo(String json) {
         if (json != null) {
             try {
                 JSONObject roomInfo = new JSONObject(json.toString());
@@ -455,9 +462,9 @@ public class RoomService {
         }
     }
 
-    private void handleError(int code, String message){
+    private void handleError(int code, String message) {
         Log.d("RoomService", String.format("code: %d, message: %s", code, message));
-        if(code == -1){
+        if (code == -1) {
             Log.d(TAG, "Device is offline");
             //Toast.makeText(mContext, mContext.getString(R.string.offline), Toast.LENGTH_SHORT).show();
         } else {
@@ -479,7 +486,7 @@ public class RoomService {
         void callback(String[] changes);
     }
 
-    public enum SongStatus{
+    public enum SongStatus {
         PLAYING,
         PAUSED
     }

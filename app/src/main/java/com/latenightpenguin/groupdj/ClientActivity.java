@@ -237,7 +237,14 @@ public class ClientActivity extends AppCompatActivity {
                 mUser = new User(userPrivate.id, userPrivate.display_name,
                         userPrivate.email, userPrivate.country);
                 mRoomService.connectToRoom(mUser.getEmail(), logincode);
-                Log.d(TAG, String.valueOf(mRoomService.connected));
+                while(!mRoomService.done){
+                    ;
+                }
+                Log.d(TAG, "Is connected to room successfully: " + String.valueOf(mRoomService.connectedToRoom));
+                if(!mRoomService.connectedToRoom){
+                    ErrorHandler.handleMessegeWithToast("Room with this ID doesn't exist");
+                    finish();
+                }
             }
         });
     }
@@ -404,6 +411,7 @@ public class ClientActivity extends AppCompatActivity {
         }
     }
 
+    //region commented shz
     //TODO: remove if not necessary
     /*private void setUpWebSocketCallbacks() {
         IWebSocketCallback songAdded = new IWebSocketCallback() {
@@ -489,6 +497,7 @@ public class ClientActivity extends AppCompatActivity {
             }
         };
     }*/
+    //endregion
 
     private void setUpRoomChangeHandler() {
         mRoomService.subscribe(new RoomService.OnChangeSubscriber() {
