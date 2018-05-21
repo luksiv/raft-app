@@ -551,6 +551,8 @@ public class HostActivity extends AppCompatActivity implements
         }else if(mPlayer.getMetadata().nextTrack == null){
             mPlayer.queue(mOperationCallback, songid);
         }
+
+        mPlayer.skipToNext(mOperationCallback);
     }
 
     private void generatePlaylist() {
@@ -643,6 +645,7 @@ public class HostActivity extends AppCompatActivity implements
                     @Override
                     public void run() {
                         for (int i = 0; i < changes.length; i++) {
+                            Log.d("Change", changes[i]);
                             switch (changes[i]) {
                                 case RoomService.PAST_SONGS_UPDATED:
                                     ArrayList<String> pastSongs = mRoomService.getPastSongs();
@@ -655,6 +658,9 @@ public class HostActivity extends AppCompatActivity implements
                                     break;
                                 case RoomService.SONG_LIST_UPDATED:
                                     updatePlaylistView(mRoomService.getSongs());
+                                    if(firstRun) {
+                                        mRoomService.refreshCurrentSong();
+                                    }
                                     break;
                                 case RoomService.SONG_UPDATED:
                                     queueNext();
