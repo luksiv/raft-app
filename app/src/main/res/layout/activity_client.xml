@@ -2,11 +2,11 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_clientactivity"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ClientActivity"
-    android:id="@+id/root_clientactivity"
-    android:background="@drawable/ic_gradiant_black_to_grey">
+    android:background="@drawable/ic_gradiant_black_to_grey"
+    tools:context=".ClientActivity">
 
     <!-- top bar -->
     <LinearLayout
@@ -37,25 +37,20 @@
             android:layout_width="51dp"
             android:layout_height="51dp"
             android:background="@drawable/ic_magnify_white_36dp" />
-
-        <Button
-            android:id="@+id/btn_roomSettings"
-            android:layout_width="51dp"
-            android:layout_height="51dp"
-            android:background="@drawable/ic_settings_white_36dp" />
     </LinearLayout>
 
     <!-- player -->
-    <include layout="@layout/layout_player_client"/>
+    <include layout="@layout/layout_player_client" />
 
     <!-- playlist -->
-    <include layout="@layout/layout_playlist_host"/>
+    <include layout="@layout/layout_playlist_host" />
 
     <TextView
         android:id="@+id/tv_RoomId"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
-        android:text="RoomID" />
+        android:layout_centerHorizontal="true"
+        android:text="null"
+        android:textSize="32sp" />
 </RelativeLayout>

@@ -11,4 +11,10 @@
     <color name="colorLighterBlack">#191414</color>
     <color name="colorWhite">#ffffff</color>
     <color name="colorRaftBlue">#05B5ED</color>
+    <color name="colorRaftLightBlue">#4CCAFA</color>
+    <color name="colorRaftBrown">#4E4039</color>
+    <color name="colorRaftLightBrown">#958072</color>
+    <color name="colorRaftYellow">#B7952B</color>
+    <color name="colorRaftLightYellow">#EEC41B</color>
+
 </resources>

@@ -12,14 +12,17 @@
     <LinearLayout
         android:id="@+id/root_searchBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="60dp"
         android:gravity="center"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:layout_margin="4dp">
 
         <EditText
             android:id="@+id/et_searchInput"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="36dp"
+            android:textSize="24sp"
+            android:hint="Enter song name or artist name"
             android:layout_weight="12"
             android:background="@drawable/ic_edit_text_background"/>
 
@@ -27,7 +30,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:src="@drawable/ic_magnify_white_18dp" />
+            android:src="@drawable/ic_magnify_white_48dp" />
     </LinearLayout>
 
     <ListView

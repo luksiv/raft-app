@@ -33,11 +33,9 @@ public class ResultArrayAdapter extends ArrayAdapter<SongItem> {
 
         TextView song = convertView.findViewById(R.id.item_songName);
         TextView artists = convertView.findViewById(R.id.item_artist);
-        TextView album = convertView.findViewById(R.id.item_album);
 
         song.setText(item.getmSongName());
         artists.setText(item.getmArtists());
-        album.setText(item.getmAlbum());
 
         convertView.setOnClickListener(new View.OnClickListener() {
             @Override

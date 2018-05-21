@@ -2,29 +2,29 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_hostactivity"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".HostActivity"
-    android:id="@+id/root_hostactivity"
-    android:background="@drawable/ic_gradiant_black_to_grey">
+    android:background="@drawable/ic_gradiant_black_to_grey"
+    tools:context=".HostActivity">
 
     <!-- top bar -->
     <LinearLayout
         android:id="@+id/root_topBar"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:orientation="horizontal">
-
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:padding="5dp">
         <Button
             android:id="@+id/btn_roomInfo"
-            android:layout_width="51dp"
-            android:layout_height="51dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="@drawable/ic_information_outline_white_48dp" />
 
         <Button
             android:id="@+id/btn_toggleView"
-            android:layout_width="51dp"
-            android:layout_height="51dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="@drawable/ic_view_list_white_48dp" />
 
         <Space
@@ -34,19 +34,124 @@
 
         <Button
             android:id="@+id/btn_AddSong"
-            android:layout_width="51dp"
-            android:layout_height="51dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="@drawable/ic_magnify_white_48dp" />
 
         <Button
             android:id="@+id/btn_roomSettings"
-            android:layout_width="51dp"
-            android:layout_height="51dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="@drawable/ic_settings_white_48dp" />
     </LinearLayout>
 
     <!-- player -->
-    <include layout="@layout/layout_player"/>
+    <LinearLayout
+        android:id="@+id/root_player"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="60dp"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:visibility="invisible">
+
+        <!-- album art -->
+        <ImageView
+            android:id="@+id/iv_albumArt"
+            android:layout_width="match_parent"
+            android:layout_height="256dp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp" />
+        <!-- track information -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_artist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Artist" />
+
+            <TextView
+                android:id="@+id/tv_songName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Song name" />
+        </LinearLayout>
+        <!-- seek bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:id="@+id/tv_trackTime"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="0:00" />
+
+            <SeekBar
+                android:id="@+id/sb_seekTrack"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="10"
+                android:progressBackgroundTint="@color/colorWhite"
+                android:progressTint="@color/colorGreen"
+                android:thumbTint="@color/colorDarkGreen" />
+
+            <TextView
+                android:id="@+id/tv_trackLenght"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="0:00" />
+        </LinearLayout>
+        <!-- player controls -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btn_playPause"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_margin="8dp"
+                android:background="@drawable/ic_pause_circle_white_48dp"
+                android:src="@drawable/ic_pause_circle_white_48dp" />
+
+            <ImageButton
+                android:id="@+id/btn_next"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_margin="8dp"
+                android:adjustViewBounds="false"
+                android:background="@drawable/ic_skip_next_circle_white_48dp"
+                android:cropToPadding="false"
+                android:src="@drawable/ic_skip_next_circle_white_48dp" />
+
+            <Button
+                android:id="@+id/test_seek_to_end"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="seek to 96%" />
+        </LinearLayout>
+
+
+    </LinearLayout>
 
     <!-- playlist -->
     <include layout="@layout/layout_playlist_host" />
@@ -56,5 +161,35 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:text="null" />
+        android:layout_centerHorizontal="true"
+        android:text="null"
+        android:textSize="32sp" />
+
+    <LinearLayout
+        android:id="@+id/ll_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Start by pressing"
+            android:textSize="28sp" />
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_magnify_white_48dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="located in the top right corner" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="and adding a song" />
+    </LinearLayout>
 </RelativeLayout>
