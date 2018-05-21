@@ -126,7 +126,7 @@ public class HostActivity extends AppCompatActivity implements
         authentication();
 
         IServerHelper serverHelper = ServerFactory.make(getResources().getString(R.string.url));
-        mRoomService = new RoomService(getApplicationContext(), serverHelper);
+        mRoomService = new RoomService(serverHelper);
         setUpRoomChangeHandler();
 
         TracksRepository.setUp();
@@ -539,9 +539,8 @@ public class HostActivity extends AppCompatActivity implements
                 TracksRepository.generateTrack(mSpotifyData);
             }
         }
-        if (procentageDone >= 98 && !requestUsed && !queued) {
-            mRoomService.playNextSong(null);
-            requestUsed = true;
+        if (procentageDone >= 98) {
+            requestNext();
         }
         if (updateCount >= 3) {
             if(mCurrentPlaybackState.isPlaying) {
@@ -559,6 +558,7 @@ public class HostActivity extends AppCompatActivity implements
 
     private void requestNext() {
         String generatedTrackUri = TracksRepository.getFromGeneratedTracks();
+        Log.d(TAG, "requestNext: " + generatedTrackUri);
         mRoomService.playNextSong(generatedTrackUri);
     }
 
@@ -570,7 +570,7 @@ public class HostActivity extends AppCompatActivity implements
             mPlayer.queue(mOperationCallback, songid);
         }
 
-        mPlayer.skipToNext(mOperationCallback);
+        //mPlayer.skipToNext(mOperationCallback);
     }
 
     private void setUpFirstTrack(String songid)
@@ -675,9 +675,6 @@ public class HostActivity extends AppCompatActivity implements
                                     findViewById(R.id.ll_start).setVisibility(View.VISIBLE);
                                     break;
                                 case RoomService.SONG_LIST_UPDATED:
-                                    if(firstRun){
-                                        queueNext();
-                                    }
                                     updatePlaylistView(mRoomService.getSongs());
                                     if(firstRun) {
                                         mRoomService.refreshCurrentSong();
@@ -685,7 +682,6 @@ public class HostActivity extends AppCompatActivity implements
                                     break;
                                 case RoomService.SONG_UPDATED:
                                     queueNext();
-                                    Log.w(TAG, "Current song updated notification not handled. Remove it or change it");
                                     break;
                                 case RoomService.STATUS_UPDATED:                                    
                                     Log.w(TAG, "Playing status changed notification not handled. Remove it or change it");

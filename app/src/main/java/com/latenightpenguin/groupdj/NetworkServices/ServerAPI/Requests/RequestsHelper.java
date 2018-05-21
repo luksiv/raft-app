@@ -43,7 +43,6 @@ public class RequestsHelper {
                 .post(body)
                 .build();
 
-        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -58,7 +57,6 @@ public class RequestsHelper {
                 .post(body)
                 .build();
 
-        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -73,7 +71,6 @@ public class RequestsHelper {
                 .put(body)
                 .build();
 
-        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -88,7 +85,6 @@ public class RequestsHelper {
                 .put(body)
                 .build();
 
-        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -103,7 +99,6 @@ public class RequestsHelper {
                 .put(body)
                 .build();
 
-        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -116,7 +111,6 @@ public class RequestsHelper {
                 .url(url)
                 .build();
 
-        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -129,7 +123,6 @@ public class RequestsHelper {
                 .url(url)
                 .build();
 
-        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -145,7 +138,6 @@ public class RequestsHelper {
                 .put(body)
                 .build();
 
-        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -160,7 +152,6 @@ public class RequestsHelper {
                 .put(body)
                 .build();
 
-        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -173,7 +164,6 @@ public class RequestsHelper {
                 .url(url)
                 .build();
 
-        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -186,7 +176,6 @@ public class RequestsHelper {
                 .url(url)
                 .build();
 
-        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -201,7 +190,6 @@ public class RequestsHelper {
                 .put(body)
                 .build();
 
-        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -216,7 +204,6 @@ public class RequestsHelper {
                 .put(body)
                 .build();
 
-        Log.d("ServerAPI", request.method() + ": " + url);
         client.newCall(request).enqueue(cb);
         activeRequests++;
     }
@@ -231,14 +218,12 @@ public class RequestsHelper {
             @Override
             public void onFailure(Call call, IOException e) {
                 activeRequests--;
-                //Log.d("ServerAPI", e.getMessage());
                 callback.onError(-1, "Error connecting to internet");
             }
 
             @Override
             public void onResponse(Call call, final Response response) throws IOException {
                 activeRequests--;
-                Log.d("ServerAPI", response.toString());
                 if (response.code() == 200) {
                     callback.onSuccess(response.body().string());
                 } else {

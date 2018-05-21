@@ -19,7 +19,6 @@ public class ServerListener extends WebSocketListener {
     @Override
     public void onMessage(WebSocket webSocket, String text) {
         super.onMessage(webSocket, text);
-        Log.d("WebSocket", text);
 
         if(messageHandler != null) {
             messageHandler.handle(text);

@@ -84,7 +84,7 @@ public class ClientActivity extends AppCompatActivity {
         setContentView(R.layout.activity_client);
 
         IServerHelper serverHelper = ServerFactory.make(getResources().getString(R.string.url));
-        mRoomService = new RoomService(this, serverHelper);
+        mRoomService = new RoomService(serverHelper);
         setUpRoomChangeHandler();
         logincode = getIntent().getIntExtra("roomId", -1);
 

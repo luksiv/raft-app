@@ -6,23 +6,8 @@ import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets.IWebSoc
 import com.latenightpenguin.groupdj.NetworkServices.ServerAPI.WebSockets.WebSocketHelper;
 
 public class ServerHelper implements IServerHelper{
-    public static final String METHOD_GET = "GET";
-    public static final String METHOD_POST = "POST";
-    public static final String METHOD_PUT = "PUT";
-    public static final String METHOD_DELETE = "DELETE";
-    public static final String CONNECTION_ERROR = "There was error connecting to the server";
-    public static final String RESPONSE_ERROR = "There was error getting response";
-
     private RequestsHelper requestsHelper;
     private WebSocketHelper webSocketHelper;
-
-    // websocket callbacks
-    private IWebSocketCallback playingNextCallback;
-    private IWebSocketCallback songAddedCallback;
-    private IWebSocketCallback songPausedCallback;
-    private IWebSocketCallback songPlayTimeCallback;
-    private IWebSocketCallback songSkippedCallback;
-    private IWebSocketCallback connectedToRoomCallback;
 
     public ServerHelper(String url) {
         requestsHelper = new RequestsHelper("http://" + url);

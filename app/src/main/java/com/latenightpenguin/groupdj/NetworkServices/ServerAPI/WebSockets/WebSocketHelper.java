@@ -91,12 +91,9 @@ public class WebSocketHelper {
     private ServerListener.MessageHandler messageHandler = new ServerListener.MessageHandler() {
         @Override
         public void handle(String message) {
-            Log.d(TAG, "Recieved message from websocket");
-            Log.d(TAG, message);
             switch (message) {
                 case "song added":
                     if (songAddedCallback != null) {
-                        Log.d(TAG, "calling songAddedCallback");
                         songAddedCallback.execute("");
                     } else {
                         Log.d(TAG, "songAddedCallback is null");
@@ -104,7 +101,6 @@ public class WebSocketHelper {
                     break;
                 case "next song":
                     if (playingNextCallback != null) {
-                        Log.d(TAG, "calling playingNextCallback");
                         playingNextCallback.execute("");
                     } else {
                         Log.d(TAG, "playingNextCallback is null");
@@ -112,7 +108,6 @@ public class WebSocketHelper {
                     break;
                 case "skip":
                     if(songSkippedCallback != null){
-                        Log.d(TAG, "calling songSkippedCallback");
                         songSkippedCallback.execute("");
                     } else {
                         Log.d(TAG, "songSkippedCallback is null");
@@ -122,7 +117,6 @@ public class WebSocketHelper {
                     if(message.startsWith("play")){
                         String[] fields = message.split(":");
                         if (songPlayTimeCallback != null) {
-                            Log.d(TAG, "calling songPlayTimeCallback " + fields[1] );
                             songPlayTimeCallback.execute(fields[1]);
                         } else {
                             Log.d(TAG, "songPlayTimeCallback is null");
@@ -130,14 +124,12 @@ public class WebSocketHelper {
                     } else if(message.startsWith("paused")){
                         String[] fields = message.split(":");
                         if (songPausedCallback != null) {
-                            Log.d(TAG, "calling songPausedCallback");
                             songPausedCallback.execute(fields[1]);
                         } else {
                             Log.d(TAG, "songPausedCallback is null");
                         }
                     } else {
                         if(connectedToRoomCallback != null){
-                            Log.d(TAG, "calling connectedToRoomCallback");
                             connectedToRoomCallback.execute(message);
                         } else {
                             Log.d(TAG, "connectedToRoomCallback is null");
