@@ -89,7 +89,6 @@ public class HostActivity extends AppCompatActivity implements
     private SpotifyData mSpotifyData;
     private RoomService mRoomService;
 
-    private Boolean requestUsed = false;
     private Boolean firstRun = true;
     private Boolean queued = false;
 
@@ -321,6 +320,7 @@ public class HostActivity extends AppCompatActivity implements
             if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                 mAccessToken = response.getAccessToken();
                 mSpotifyData = new SpotifyData(mAccessToken);
+
                 Config playerConfig = new Config(this, mAccessToken, CLIENT_ID);
                 Spotify.getPlayer(playerConfig, this, new SpotifyPlayer.InitializationObserver() {
                     @Override
@@ -511,19 +511,15 @@ public class HostActivity extends AppCompatActivity implements
         updateTextView(R.id.tv_trackTime,
                 Utilities.formatSeconds(mPlayer.getPlaybackState().positionMs));
 
-        if (procentageDone >= 90 && !requestUsed) {
+        if (procentageDone >= 90) {
             String currentUri = mPlayer.getMetadata().currentTrack.uri;
             if (TracksRepository.isNOTLastAdded(currentUri)) {
                 TracksRepository.addToLastPlayed(currentUri);
-                generatePlaylist();
+                TracksRepository.generateTrack(mSpotifyData);
             }
         }
-        if (procentageDone >= 97 ) {
-            if(mPlayer.getMetadata().nextTrack == null) {
+        if (procentageDone >= 97 && mPlayer.getMetadata().nextTrack == null) {
                 requestNext();
-            }
-            else {
-            }
         }
         if (updateCount >= 5 && mCurrentPlaybackState.isPlaying) {
             mRoomService.announcePlayTime(mPlayer.getPlaybackState().positionMs);
@@ -536,7 +532,6 @@ public class HostActivity extends AppCompatActivity implements
     }
 
     private void requestNext() {
-        // TODO: add auto generating logic
         String generatedTrackUri = TracksRepository.getFromGeneratedTracks();
         mRoomService.playNextSong(generatedTrackUri);
     }
@@ -544,10 +539,7 @@ public class HostActivity extends AppCompatActivity implements
     private void queueNext() {
         String songid = mRoomService.getCurrent();
         if (firstRun) {
-            mPlayer.playUri(mOperationCallback, songid, 0, 0);
-            mRoomService.refreshCurrentSong();
-            firstRun = false;
-            queued = true;
+            setUpFirstTrack(songid);
         }else if(mPlayer.getMetadata().nextTrack == null){
             mPlayer.queue(mOperationCallback, songid);
         }
@@ -555,16 +547,13 @@ public class HostActivity extends AppCompatActivity implements
         mPlayer.skipToNext(mOperationCallback);
     }
 
-    private void generatePlaylist() {
-        mSpotifyData.getRecomendationList(mSpotifyData.convertArrayToString(TracksRepository.toArray()), new WrappedSpotifyCallback<Recommendations>() {
-            @Override
-            public void success(Recommendations recommendations, retrofit.client.Response response) {
-                super.success(recommendations, response);
-                TracksRepository.addToGeneratedTracks(SpotifyData.ConvertRecomendedTracks(recommendations).get(0).getUri());
-            }
-        });
+    private void setUpFirstTrack(String songid)
+    {
+        mPlayer.playUri(mOperationCallback, songid, 0, 0);
+        mRoomService.refreshCurrentSong();
+        firstRun = false;
+        queued = true;
     }
-
 
     private void changeViews(Button button) {
         LinearLayout player = findViewById(R.id.root_player);
