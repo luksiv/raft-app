@@ -165,6 +165,7 @@
         android:text="null"
         android:textSize="32sp" />
 
+    <!-- guide -->
     <LinearLayout
         android:id="@+id/ll_start"
         android:layout_width="wrap_content"

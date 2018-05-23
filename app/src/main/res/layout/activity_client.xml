@@ -40,10 +40,128 @@
     </LinearLayout>
 
     <!-- player -->
-    <include layout="@layout/layout_player_client" />
+    <LinearLayout
+        android:id="@+id/root_player"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="60dp"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:visibility="invisible">
+
+        <!-- album art -->
+        <ImageView
+            android:id="@+id/iv_albumArt"
+            android:layout_width="256dp"
+            android:layout_height="256dp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp" />
+        <!-- track information -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_artist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Artist" />
+
+            <TextView
+                android:id="@+id/tv_songName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Song name" />
+        </LinearLayout>
+        <!-- seek bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:id="@+id/tv_trackTime"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="0:00" />
+
+            <SeekBar
+                android:id="@+id/sb_seekTrack"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="10"
+                android:progressBackgroundTint="@color/colorWhite"
+                android:progressTint="@color/colorGreen"
+                android:thumbTint="@color/colorDarkGreen" />
+
+            <TextView
+                android:id="@+id/tv_trackLenght"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="0:00" />
+        </LinearLayout>
+        <!-- player controls -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btn_next"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_margin="8dp"
+                android:background="@drawable/ic_skip_next_circle_white_48dp"
+                android:src="@drawable/ic_skip_next_circle_white_48dp" />
+        </LinearLayout>
+
+    </LinearLayout>
 
     <!-- playlist -->
     <include layout="@layout/layout_playlist_host" />
+
+    <!-- guide -->
+    <LinearLayout
+        android:id="@+id/ll_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="invisible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Start by pressing"
+            android:textSize="28sp" />
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_magnify_white_48dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="located in the top right corner" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="and adding a song" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tv_RoomId"
