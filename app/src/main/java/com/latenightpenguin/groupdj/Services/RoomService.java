@@ -38,8 +38,9 @@ public class RoomService {
     private int lastPlayedCount;
     private boolean isHost;
     private boolean updated;
-    private boolean skip;
 
+    public boolean skipQueued = false;
+    public boolean skip;
     public boolean connected = false;
     public boolean connectedToRoom = false;
     public boolean done = false;
@@ -150,7 +151,7 @@ public class RoomService {
         });
     }
 
-    private void refreshCurrentSong(String json){
+    private void refreshCurrentSong(String json) {
         String song = SongConverter.getSongId(json);
         updateSong(song);
     }
@@ -299,13 +300,13 @@ public class RoomService {
         });
     }
 
-    public void playNextSong(String optionalSong){
+    public void playNextSong(String optionalSong) {
         Log.d(TAG, "playNextSong: " + updated);
-        if(!updated) {
+        if (!updated) {
             return;
         }
 
-        if(optionalSong == null){
+        if (optionalSong == null) {
             mServerHelper.playNextSong(mRoom, new IRequestCallback() {
                 @Override
                 public void onSuccess(String response) {
@@ -419,9 +420,11 @@ public class RoomService {
         mServerHelper.setSongSkippedCallback(new IWebSocketCallback() {
             @Override
             public void execute(String message) {
+                voted = false;
                 if (isHost && !skip) {
                     playNextSong(null);
                     skip = true;
+                    skipQueued = true;
                 }
             }
         });
@@ -458,7 +461,7 @@ public class RoomService {
     }
 
     private void updateSong(String newSong) {
-        if(!mSong.equals(newSong)) {
+        if (!mSong.equals(newSong)) {
             mSong = newSong;
             Log.d(TAG, SONG_UPDATED);
             notifyDataChanged(SONG_UPDATED);
@@ -466,7 +469,7 @@ public class RoomService {
         }
     }
 
-    public interface OnChangeSubscriber{
+    public interface OnChangeSubscriber {
         void callback(String[] changes);
     }
 

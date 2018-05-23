@@ -59,6 +59,7 @@ public class ClientActivity extends AppCompatActivity {
     private boolean isSeekbarUpdaterRunning = false;
     private int logincode;
     private boolean firstRun = true;
+    private boolean firstPastSongs = true;
     //endregion
 
     //region UI elements
@@ -193,7 +194,6 @@ public class ClientActivity extends AppCompatActivity {
         lwPlaylist.setVisibility(visibility);
         sbProgress.setVisibility(visibility);
         tvLoginCode.setVisibility(visibility);
-        llPlayer.setVisibility(visibility);
     }
     //endregion
 
@@ -236,11 +236,11 @@ public class ClientActivity extends AppCompatActivity {
                 mUser = new User(userPrivate.id, userPrivate.display_name,
                         userPrivate.email, userPrivate.country);
                 mRoomService.connectToRoom(mUser.getEmail(), logincode);
-                while(!mRoomService.done){
+                while (!mRoomService.done) {
                     ;
                 }
                 Log.d(TAG, "Is connected to room successfully: " + String.valueOf(mRoomService.connectedToRoom));
-                if(!mRoomService.connectedToRoom){
+                if (!mRoomService.connectedToRoom) {
                     ErrorHandler.handleMessegeWithToast("Room with this ID doesn't exist");
                     finish();
                 }
@@ -372,14 +372,16 @@ public class ClientActivity extends AppCompatActivity {
         LinearLayout player = findViewById(R.id.root_player);
         LinearLayout playlist = findViewById(R.id.root_playlist);
 
-        if (player.getVisibility() == View.VISIBLE) {
-            player.setVisibility(View.INVISIBLE);
-            playlist.setVisibility(View.VISIBLE);
-            //button.setText("Show player");
-        } else {
-            player.setVisibility(View.VISIBLE);
-            playlist.setVisibility(View.INVISIBLE);
-            //button.setText("Show playlist");
+        if (!firstRun) {
+            if (player.getVisibility() == View.VISIBLE) {
+                player.setVisibility(View.INVISIBLE);
+                playlist.setVisibility(View.VISIBLE);
+                //button.setText("Show player");
+            } else {
+                player.setVisibility(View.VISIBLE);
+                playlist.setVisibility(View.INVISIBLE);
+                //button.setText("Show playlist");
+            }
         }
 
     }
@@ -510,9 +512,11 @@ public class ClientActivity extends AppCompatActivity {
                                 case RoomService.PAST_SONGS_UPDATED:
                                     ArrayList<String> pastSongs = mRoomService.getPastSongs();
                                     Toast.makeText(getApplicationContext(), "Got past songs from server", Toast.LENGTH_SHORT).show();
-                                    if (firstRun) {
+                                    if (firstPastSongs && firstRun) {
                                         setVisibilityForUiElements(View.VISIBLE);
-                                        firstRun = false;
+                                        findViewById(R.id.ll_start).setVisibility(View.VISIBLE);
+                                        findViewById(R.id.root_player).setVisibility(View.INVISIBLE);
+                                        firstPastSongs = false;
                                     }
                                     break;
                                 case RoomService.PLAYTIME_UPDATED:
@@ -545,6 +549,13 @@ public class ClientActivity extends AppCompatActivity {
                                             ErrorHandler.handleExeptionWithToast(spotifyError, "Failure");
                                         }
                                     });
+                                    if (firstRun) {
+                                        firstRun = false;
+                                        if (firstPastSongs) firstPastSongs = false;
+                                        setVisibilityForUiElements(View.VISIBLE);
+                                        findViewById(R.id.ll_start).setVisibility(View.INVISIBLE);
+                                        findViewById(R.id.root_player).setVisibility(View.VISIBLE);
+                                    }
                                     break;
                                 case RoomService.STATUS_UPDATED:
                                     Log.w(TAG, "Playing status changed notification not handled. Remove it or change it");

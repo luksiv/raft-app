@@ -376,8 +376,8 @@ public class HostActivity extends AppCompatActivity implements
         ErrorHandler.handleMessege("Playback event received: " + playerEvent.name());
         mCurrentPlaybackState = mPlayer.getPlaybackState();
         mMetadata = mPlayer.getMetadata();
-        if(queued){
-            if(mMetadata.nextTrack == null){
+        if (queued) {
+            if (mMetadata.nextTrack == null) {
                 queued = false;
             }
         }
@@ -393,7 +393,7 @@ public class HostActivity extends AppCompatActivity implements
             btnPause.setBackground(getResources().getDrawable(R.drawable.ic_play_circle_white_48dp));
         }
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackChanged) {
-
+            if(mRoomService.skipQueued) mRoomService.skipQueued = false;
         }
         if (playerEvent == PlayerEvent.kSpPlaybackNotifyTrackDelivered) {
 
@@ -540,14 +540,14 @@ public class HostActivity extends AppCompatActivity implements
                 TracksRepository.generateTrack(mSpotifyData);
             }
         }
-        if (procentageDone >= 98 && !requestedNext) {
+        if (procentageDone >= 98 && !requestedNext && !mRoomService.skipQueued) {
             requestNext();
             requestedNext = true;
-        } else if(procentageDone <= 5){
+        } else if (procentageDone <= 5) {
             requestedNext = false;
         }
         if (updateCount >= 3) {
-            if(mCurrentPlaybackState.isPlaying) {
+            if (mCurrentPlaybackState.isPlaying) {
                 mRoomService.announcePlayTime(mPlayer.getPlaybackState().positionMs);
             } else {
                 mRoomService.announcePause(mPlayer.getPlaybackState().positionMs);
@@ -570,15 +570,14 @@ public class HostActivity extends AppCompatActivity implements
         String songid = mRoomService.getCurrent();
         if (firstRun) {
             setUpFirstTrack(songid);
-        }else if(mPlayer.getMetadata().nextTrack == null){
+        } else if (mPlayer.getMetadata().nextTrack == null) {
             mPlayer.queue(mOperationCallback, songid);
         }
 
         //mPlayer.skipToNext(mOperationCallback);
     }
 
-    private void setUpFirstTrack(String songid)
-    {
+    private void setUpFirstTrack(String songid) {
         findViewById(R.id.root_player).setVisibility(View.VISIBLE);
         findViewById(R.id.ll_start).setVisibility(View.INVISIBLE);
         mPlayer.playUri(mOperationCallback, songid, 0, 0);
@@ -591,13 +590,16 @@ public class HostActivity extends AppCompatActivity implements
         LinearLayout player = findViewById(R.id.root_player);
         LinearLayout playlist = findViewById(R.id.root_playlist);
 
-        if (player.getVisibility() == View.VISIBLE) {
-            player.setVisibility(View.INVISIBLE);
-            playlist.setVisibility(View.VISIBLE);
-        } else {
-            player.setVisibility(View.VISIBLE);
-            playlist.setVisibility(View.INVISIBLE);
+        if (!firstRun) {
+            if (player.getVisibility() == View.VISIBLE) {
+                player.setVisibility(View.INVISIBLE);
+                playlist.setVisibility(View.VISIBLE);
+            } else {
+                player.setVisibility(View.VISIBLE);
+                playlist.setVisibility(View.INVISIBLE);
+            }
         }
+
 
     }
 
@@ -666,8 +668,8 @@ public class HostActivity extends AppCompatActivity implements
         }
 
         long dur = mPlayer.getMetadata().currentTrack.durationMs;
-        int skip = (int) ((double) dur / 100 * 98);
-        mPlayer.seekToPosition(mOperationCallback, skip);
+        long skip = dur - 1000;
+        mPlayer.seekToPosition(mOperationCallback, (int)skip);
     }
 
     private void setUpRoomChangeHandler() {
@@ -694,17 +696,17 @@ public class HostActivity extends AppCompatActivity implements
                                     break;
                                 case RoomService.SONG_LIST_UPDATED:
                                     updatePlaylistView(mRoomService.getSongs());
-                                    if(mRoomService.isSkipped()) {
+                                    if (mRoomService.isSkipped()) {
                                         skipToEnd();
                                     }
-                                    if(firstRun) {
+                                    if (firstRun) {
                                         mRoomService.refreshCurrentSong();
                                     }
                                     break;
                                 case RoomService.SONG_UPDATED:
                                     queueNext();
                                     break;
-                                case RoomService.STATUS_UPDATED:                                    
+                                case RoomService.STATUS_UPDATED:
                                     Log.w(TAG, "Playing status changed notification not handled. Remove it or change it");
                                     break;
                             }
