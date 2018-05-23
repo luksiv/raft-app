@@ -92,6 +92,7 @@ public class HostActivity extends AppCompatActivity implements
     private Boolean firstRun = true;
     private Boolean firstRunSkip = false;
     private Boolean queued = false;
+    private boolean requestedNext = false;
 
     private String lastQueued = "";
 
@@ -539,8 +540,11 @@ public class HostActivity extends AppCompatActivity implements
                 TracksRepository.generateTrack(mSpotifyData);
             }
         }
-        if (procentageDone >= 98) {
+        if (procentageDone >= 98 && !requestedNext) {
             requestNext();
+            requestedNext = true;
+        } else if(procentageDone <= 5){
+            requestedNext = false;
         }
         if (updateCount >= 3) {
             if(mCurrentPlaybackState.isPlaying) {
@@ -575,6 +579,8 @@ public class HostActivity extends AppCompatActivity implements
 
     private void setUpFirstTrack(String songid)
     {
+        findViewById(R.id.root_player).setVisibility(View.VISIBLE);
+        findViewById(R.id.ll_start).setVisibility(View.INVISIBLE);
         mPlayer.playUri(mOperationCallback, songid, 0, 0);
         mRoomService.refreshCurrentSong();
         firstRun = false;
@@ -652,6 +658,18 @@ public class HostActivity extends AppCompatActivity implements
         dialog.show();
     }
 
+    private void skipToEnd() {
+        String currentUri = mPlayer.getMetadata().currentTrack.uri;
+        if (TracksRepository.isNOTLastAdded(currentUri)) {
+            TracksRepository.addToLastPlayed(currentUri);
+            TracksRepository.generateTrack(mSpotifyData);
+        }
+
+        long dur = mPlayer.getMetadata().currentTrack.durationMs;
+        int skip = (int) ((double) dur / 100 * 98);
+        mPlayer.seekToPosition(mOperationCallback, skip);
+    }
+
     private void setUpRoomChangeHandler() {
         mRoomService.subscribe(new RoomService.OnChangeSubscriber() {
             @Override
@@ -676,6 +694,9 @@ public class HostActivity extends AppCompatActivity implements
                                     break;
                                 case RoomService.SONG_LIST_UPDATED:
                                     updatePlaylistView(mRoomService.getSongs());
+                                    if(mRoomService.isSkipped()) {
+                                        skipToEnd();
+                                    }
                                     if(firstRun) {
                                         mRoomService.refreshCurrentSong();
                                     }

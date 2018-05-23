@@ -38,6 +38,7 @@ public class RoomService {
     private int lastPlayedCount;
     private boolean isHost;
     private boolean updated;
+    private boolean skip;
 
     public boolean connected = false;
     public boolean connectedToRoom = false;
@@ -52,6 +53,7 @@ public class RoomService {
         subscribers = new ArrayList<>();
         isHost = false;
         mSong = "";
+        skip = false;
         setUpWebSocketCallbacks();
 
         subscribe(new OnChangeSubscriber() {
@@ -96,6 +98,12 @@ public class RoomService {
 
     public IServerHelper getServerHelper() {
         return mServerHelper;
+    }
+
+    public boolean isSkipped() {
+        boolean skipValue = skip;
+        skip = false;
+        return skipValue;
     }
 
     public void subscribe(OnChangeSubscriber subscriber) {
@@ -257,6 +265,7 @@ public class RoomService {
     }
 
     public void voteSkipSong() {
+        Log.d(TAG, "voteSkipSong: " + skip);
         if (voted) {
             Log.d(TAG, "Already voted");
             return;
@@ -291,6 +300,7 @@ public class RoomService {
     }
 
     public void playNextSong(String optionalSong){
+        Log.d(TAG, "playNextSong: " + updated);
         if(!updated) {
             return;
         }
@@ -409,8 +419,9 @@ public class RoomService {
         mServerHelper.setSongSkippedCallback(new IWebSocketCallback() {
             @Override
             public void execute(String message) {
-                if (isHost) {
+                if (isHost && !skip) {
                     playNextSong(null);
+                    skip = true;
                 }
             }
         });
